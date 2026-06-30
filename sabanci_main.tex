@@ -1,0 +1,104 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% IMPORTANT: PLEASE READ THE README FILE BEFORE EDITING!
+% This template contains mandatory fields and validation rules that should be followed.
+% Failure to follow the instructions in README.md WILL cause errors.
+% For any questions/problems: samet.apaydin@sabanciuniv.edu
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass{sabanci-template} % Do not remove!
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{setspace}
+\usepackage{graphicx}
+
+\begin{document} % Do not remove!
+%---------------------------------------------------------------------------------------------------------------------------------------
+% Students should complete the following fields:
+%---------------------------------------------------------------------------------------------------------------------------------------
+\degree{Master}
+% Use \degree{PhD} for doctoral dissertations.
+%---------------------------------------------------------------------------------------------------------------------------------------
+\thesistitle{On Formal Verification Techniques for Masked Circuits: Approaches and Theoretical Underpinnings}
+%---------------------------------------------------------------------------------------------------------------------------------------
+\tezbaslik{Maskelenmiş Devreler İçin Formal Doğrulama Teknikleri Üzerine: Yaklaşımlar ve Kuramsal Temeller}
+%---------------------------------------------------------------------------------------------------------------------------------------
+\authorname{Kağan Gülsüm}
+%---------------------------------------------------------------------------------------------------------------------------------------
+\programnameEN{Computer Science and Engineering}
+% For official program names, refer to: https://www.sabanciuniv.edu/en/academic/faculties-and-programs/all-programs
+%---------------------------------------------------------------------------------------------------------------------------------------
+\programnameTR{Bilgisayar Bilimi ve Mühendisliği}
+%---------------------------------------------------------------------------------------------------------------------------------------
+\institute{Graduate School of Engineering and Natural Sciences}
+% Options:
+% Graduate School of Social Sciences
+% Graduate School of Engineering and Natural Sciences
+% Sabancı Graduate Business School
+%---------------------------------------------------------------------------------------------------------------------------------------
+\approvaldate{22-07-2026} % DD-MM-YYYY. Be careful with the date format.
+%---------------------------------------------------------------------------------------------------------------------------------------
+\advisor{Asst. Prof.}{Süha Orhun Mutluergil} % {Title}{Name Surname}. Be careful with the curly bracket structure.
+%---------------------------------------------------------------------------------------------------------------------------------------
+%\coadvisor{Asst. Prof.}{NAME SURNAME} % Optional, if you have a co-advisor.
+%---------------------------------------------------------------------------------------------------------------------------------------
+\jurymember{Prof.}{Erkay Savaş}
+%---------------------------------------------------------------------------------------------------------------------------------------
+\jurymember{Asst. Prof.}{Klaus Freiherr von Gleissenthal}
+%---------------------------------------------------------------------------------------------------------------------------------------
+%\jurymember{Prof.}{NAME SURNAME}
+%---------------------------------------------------------------------------------------------------------------------------------------
+%\jurymember{Prof.}{NAME SURNAME}
+
+%---------------------------------------------------------------------------------------------------------------------------------------
+% ABSTRACT/OZET
+%---------------------------------------------------------------------------------------------------------------------------------------
+% The abstracts should not exceed 250 words, and the number of keywords should be limited to five.
+%---------------------------------------------------------------------------------------------------------------------------------------
+\abstractkeywordsEN{keyword1, keyword2, keyword3, keyword4, keyword5}
+\abstractkeywordsTR{kelime1, kelime2, kelime3, kelime4, kelime5}
+%---------------------------------------------------------------------------------------------------------------------------------------
+\abstractEN{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec.}
+%---------------------------------------------------------------------------------------------------------------------------------------
+\abstractTR{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec.}
+%---------------------------------------------------------------------------------------------------------------------------------------
+% ACKNOWLEDGEMENTS/DEDICATION
+%---------------------------------------------------------------------------------------------------------------------------------------
+\acknowledgement{I would like to thank my advisor and family.}
+%---------------------------------------------------------------------------------------------------------------------------------------
+% The \dedication field may be left empty if desired.
+%---------------------------------------------------------------------------------------------------------------------------------------
+\dedication{Okan Buruk}
+%---------------------------------------------------------------------------------------------------------------------------------------
+% END OF FRONT MATTER
+%---------------------------------------------------------------------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------------------------------------------------
+\SUfrontmatter % Do not remove!
+\SUstartmain % Do not remove!
+%---------------------------------------------------------------------------------------------------------------------------------------
+% MAIN MATTER
+%---------------------------------------------------------------------------------------------------------------------------------------
+\import{"Chapters/"}{Introduction}
+\import{"Chapters/"}{Preliminaries}
+\import{"Chapters/"}{Related_Work}
+\import{"Chapters/"}{Couplings_and_Probing_Security}
+\import{"Chapters/"}{Design_of_XXX}
+\import{"Chapters/"}{Implementation_of_XXX}
+\import{"Chapters/"}{Evaluation}
+\import{"Chapters/"}{Future_Work}
+\import{"Chapters/"}{Conclusion}
+%---------------------------------------------------------------------------------------------------------------------------------------
+% BIBLIOGRAPHY
+%---------------------------------------------------------------------------------------------------------------------------------------
+\SUprintbibliography % Do not remove!
+%---------------------------------------------------------------------------------------------------------------------------------------
+% APPENDICES
+%---------------------------------------------------------------------------------------------------------------------------------------
+\SUstartappendix
+\import{"Chapters/"}{Appendix_Benchmark_Circuit_Definitions}
+\import{"Chapters/"}{Appendix_Additional_Experimental_Data}
+\SUafterappendix
+
+\end{document}
