@@ -1,104 +1,102 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% IMPORTANT: PLEASE READ THE README FILE BEFORE EDITING!
-% This template contains mandatory fields and validation rules that should be followed.
-% Failure to follow the instructions in README.md WILL cause errors.
-% For any questions/problems: samet.apaydin@sabanciuniv.edu
+% Sabanci University thesis draft.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass{sabanci-template} % Do not remove!
+\documentclass{sabanci-template}
 
-\usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{mathtools}
+
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{setspace}
 \usepackage{graphicx}
+\usepackage{textcase}
 
-\begin{document} % Do not remove!
+\hypersetup{draft=false}
+\DeclareUnicodeCharacter{0301}{}
+\DeclareUnicodeCharacter{00C7}{\c{C}}
+\DeclareUnicodeCharacter{00E7}{\c{c}}
+\DeclareUnicodeCharacter{011E}{\u{G}}
+\DeclareUnicodeCharacter{011F}{\u{g}}
+\DeclareUnicodeCharacter{0130}{\.{I}}
+\DeclareUnicodeCharacter{0131}{\i}
+\DeclareUnicodeCharacter{015E}{\c{S}}
+\DeclareUnicodeCharacter{015F}{\c{s}}
+
+\let\MakeUppercase\MakeTextUppercase
+
+\begin{document}
 %---------------------------------------------------------------------------------------------------------------------------------------
-% Students should complete the following fields:
+% Students should complete/check the following fields before submission.
 %---------------------------------------------------------------------------------------------------------------------------------------
 \degree{Master}
-% Use \degree{PhD} for doctoral dissertations.
-%---------------------------------------------------------------------------------------------------------------------------------------
 \thesistitle{On Formal Verification Techniques for Masked Circuits: Approaches and Theoretical Underpinnings}
-%---------------------------------------------------------------------------------------------------------------------------------------
-\tezbaslik{Maskelenmiş Devreler İçin Formal Doğrulama Teknikleri Üzerine: Yaklaşımlar ve Kuramsal Temeller}
-%---------------------------------------------------------------------------------------------------------------------------------------
+\tezbaslik{Maskelenmiş Devreler İçin Formal Doğrulama Teknikleri Üzerine: Yaklaşimlar ve Kuramsal Temeller}
 \authorname{Kağan Gülsüm}
-%---------------------------------------------------------------------------------------------------------------------------------------
 \programnameEN{Computer Science and Engineering}
-% For official program names, refer to: https://www.sabanciuniv.edu/en/academic/faculties-and-programs/all-programs
-%---------------------------------------------------------------------------------------------------------------------------------------
 \programnameTR{Bilgisayar Bilimi ve Mühendisliği}
-%---------------------------------------------------------------------------------------------------------------------------------------
 \institute{Graduate School of Engineering and Natural Sciences}
-% Options:
-% Graduate School of Social Sciences
-% Graduate School of Engineering and Natural Sciences
-% Sabancı Graduate Business School
-%---------------------------------------------------------------------------------------------------------------------------------------
-\approvaldate{22-07-2026} % DD-MM-YYYY. Be careful with the date format.
-%---------------------------------------------------------------------------------------------------------------------------------------
-\advisor{Asst. Prof.}{Süha Orhun Mutluergil} % {Title}{Name Surname}. Be careful with the curly bracket structure.
-%---------------------------------------------------------------------------------------------------------------------------------------
-%\coadvisor{Asst. Prof.}{NAME SURNAME} % Optional, if you have a co-advisor.
-%---------------------------------------------------------------------------------------------------------------------------------------
-\jurymember{Prof.}{Erkay Savaş}
-%---------------------------------------------------------------------------------------------------------------------------------------
-\jurymember{Asst. Prof.}{Klaus Freiherr von Gleissenthal}
-%---------------------------------------------------------------------------------------------------------------------------------------
-%\jurymember{Prof.}{NAME SURNAME}
-%---------------------------------------------------------------------------------------------------------------------------------------
-%\jurymember{Prof.}{NAME SURNAME}
-
+\approvaldate{22-07-2026}
+\advisor{Asst. Prof.}{SÜHA ORHUN MUTLUERGİL}
+\jurymember{Prof.}{ERKAY SAVAŞ}
+\jurymember{Asst. Prof.}{KLAUS FREIHERR VON GLEISSENTHAL}
 %---------------------------------------------------------------------------------------------------------------------------------------
 % ABSTRACT/OZET
 %---------------------------------------------------------------------------------------------------------------------------------------
-% The abstracts should not exceed 250 words, and the number of keywords should be limited to five.
-%---------------------------------------------------------------------------------------------------------------------------------------
-\abstractkeywordsEN{keyword1, keyword2, keyword3, keyword4, keyword5}
-\abstractkeywordsTR{kelime1, kelime2, kelime3, kelime4, kelime5}
-%---------------------------------------------------------------------------------------------------------------------------------------
-\abstractEN{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec.}
-%---------------------------------------------------------------------------------------------------------------------------------------
-\abstractTR{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec.}
+\abstractkeywordsEN{keyword1, keyword2, keyword3, keyword4}
+\abstractkeywordsTR{kelime1, kelime2, kelime3, kelime4}
+
+\abstractEN{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus.}
+
+\abstractTR{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus.}
+
 %---------------------------------------------------------------------------------------------------------------------------------------
 % ACKNOWLEDGEMENTS/DEDICATION
 %---------------------------------------------------------------------------------------------------------------------------------------
-\acknowledgement{I would like to thank my advisor and family.}
-%---------------------------------------------------------------------------------------------------------------------------------------
-% The \dedication field may be left empty if desired.
-%---------------------------------------------------------------------------------------------------------------------------------------
-\dedication{Okan Buruk}
-%---------------------------------------------------------------------------------------------------------------------------------------
-% END OF FRONT MATTER
-%---------------------------------------------------------------------------------------------------------------------------------------
-%---------------------------------------------------------------------------------------------------------------------------------------
-\SUfrontmatter % Do not remove!
-\SUstartmain % Do not remove!
+\acknowledgement{
+  I would like to thank my advisor and family.
+}
+
+\dedication{
+  Dedicated to Okan Buruk...
+}
+
+\SUfrontmatter
+\glsaddall
+\SUstartmain
+
 %---------------------------------------------------------------------------------------------------------------------------------------
 % MAIN MATTER
 %---------------------------------------------------------------------------------------------------------------------------------------
-\import{"Chapters/"}{Introduction}
-\import{"Chapters/"}{Preliminaries}
-\import{"Chapters/"}{Related_Work}
-\import{"Chapters/"}{Couplings_and_Probing_Security}
-\import{"Chapters/"}{Design_of_XXX}
-\import{"Chapters/"}{Implementation_of_XXX}
-\import{"Chapters/"}{Evaluation}
-\import{"Chapters/"}{Future_Work}
-\import{"Chapters/"}{Conclusion}
+\import{"Chapters/Chapter/"}{Introduction}
+\import{"Chapters/Chapter/"}{Preliminaries}
+\import{"Chapters/Chapter/"}{Related_Work}
+\import{"Chapters/Chapter/"}{Couplings_and_Probing_Security}
+\import{"Chapters/Chapter/"}{Design_of_XXX} 
+\import{"Chapters/Chapter/"}{Implementation_of_XXX} 
+\import{"Chapters/Chapter/"}{Evaluation} 
+\import{"Chapters/Chapter/"}{Future_Work} 
+\import{"Chapters/Chapter/"}{Conclusion} 
 %---------------------------------------------------------------------------------------------------------------------------------------
 % BIBLIOGRAPHY
 %---------------------------------------------------------------------------------------------------------------------------------------
-\SUprintbibliography % Do not remove!
+\SUprintbibliography
 %---------------------------------------------------------------------------------------------------------------------------------------
 % APPENDICES
 %---------------------------------------------------------------------------------------------------------------------------------------
+\makeatletter
+\renewcommand{\SU@appendixchapter}[1]{%
+  \stepcounter{SU@appCount}%
+  \refstepcounter{chapter}%
+  \clearpage
+  \begin{center}
+    \vspace{-4.25\baselineskip}%
+    {\bfseries APPENDIX\par}%
+  \end{center}%
+  \addcontentsline{toc}{chapter}{APPENDIX}%
+}
+\makeatother
 \SUstartappendix
-\import{"Chapters/"}{Appendix_Benchmark_Circuit_Definitions}
-\import{"Chapters/"}{Appendix_Additional_Experimental_Data}
+\import{"Chapters/Appendix/"}{Appendix}
 \SUafterappendix
 
 \end{document}
