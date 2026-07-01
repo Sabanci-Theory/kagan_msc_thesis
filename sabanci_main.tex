@@ -24,6 +24,27 @@
 
 \let\MakeUppercase\MakeTextUppercase
 
+% Fix 1: show page number on dedication (remove \thispagestyle{empty}) and
+% remove the trailing \clearpage so no blank page is inserted after it.
+% Fix 2: remove \SUstartmain's own \clearpage; the \clearpage that begins
+% \SUprintfrontlists (prepended to \mainmatter) provides the needed break.
+\makeatletter
+\renewcommand{\SUdedication}{%
+  \ifSU@hasdedication
+    \clearpage
+    \null\vfill
+    \begin{flushright}
+      \textit{\SU@dedication}%
+    \end{flushright}
+    \vfill\null
+  \fi
+}
+\renewcommand{\SUstartmain}{%
+  \mainmatter
+  \onehalfspacing
+}
+\makeatother
+
 \begin{document}
 %---------------------------------------------------------------------------------------------------------------------------------------
 % Students should complete/check the following fields before submission.
