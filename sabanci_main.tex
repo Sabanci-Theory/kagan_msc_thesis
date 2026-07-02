@@ -24,6 +24,14 @@
 
 \let\MakeUppercase\MakeTextUppercase
 
+% book class defaults to openright even in oneside mode; override so chapters
+% start on the very next page instead of always on an odd page.
+\makeatletter
+\@openrightfalse
+\makeatother
+
+\raggedbottom
+
 % Fix 1: show page number on dedication (remove \thispagestyle{empty}) and
 % remove the trailing \clearpage so no blank page is inserted after it.
 % Fix 2: remove \SUstartmain's own \clearpage; the \clearpage that begins
