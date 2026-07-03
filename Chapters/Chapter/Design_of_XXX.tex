@@ -40,7 +40,8 @@ sub-DAG below any $w_i$. Termination with a secret-free image certifies $\mathbf
 Theorem~\ref{thm:rewrite-soundness} in Section~\ref{sec:coupling-view} makes precise
 why this certificate is sound.
 
-The engine has three tiers of increasing generality and cost, summarized in
+The engine has three tiers of rewriting rules increasing in generality and cost,
+summarized in
 Algorithm~\ref{alg:rewrite-engine} and mirrored in the structure of this section.
 \textproc{SimpleRewrite} (Section~\ref{sec:simple-rule}) handles the common case,
 every random occurring at most once, with a cheap, purely reference-counted
@@ -150,6 +151,7 @@ bijection on the randomness assignment, the \gls{coupling} that Component III
   state. A random is discharged at most once, since its bookkeeping is erased the
   moment it fires, so the loop performs at most $|\mathcal{R}|$ rewrite steps.
 
+% refer to the soundness proof
   This tier is sound, since each step is a direct instance of
   Corollary~\ref{cor:single-occurrence-discharge}, but incomplete: it has nothing to
   offer a random occurring twice, such as a mask reused across two cross-terms of a

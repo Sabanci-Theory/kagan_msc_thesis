@@ -1,8 +1,8 @@
 %% Sabancı University Thesis/Dissertation Class File
 % S-  samet.apaydin@sabanciuniv.edu
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{sabanci-template}[23/06/2026 v1.7 Sabanci Thesis/Dissertation Class]
-\newcommand{\sabanciClassName}{23/06/2026 v1.7 Sabanci Thesis/Dissertation Class}
+\ProvidesClass{sabanci-template}[03/07/2026 v1.9 Sabanci Thesis/Dissertation Class]
+\newcommand{\sabanciClassName}{03/07/2026 v1.9 Sabanci Thesis/Dissertation Class}
 \newif\ifdevmode
 \devmodefalse
 %--------------------------------------------------------------------
@@ -829,6 +829,7 @@
 \newcommand{\SUabstractEN}{%
   \setcounter{page}{4}%
   \chapter*{\vspace{-4\baselineskip}\bfseries ABSTRACT}%
+  \addcontentsline{toc}{chapter}{ABSTRACT}
   \begin{center}
     \MakeUppercase{\printthesistitle}\\[3\baselineskip]
     \MakeUppercase{\printauthorname}\\[\baselineskip]
@@ -841,7 +842,6 @@
   \begin{checkedabstract}
     \SUprintabstractEN
   \end{checkedabstract}
-  \addcontentsline{toc}{chapter}{ABSTRACT}
   \clearpage\pagebreak
   \onehalfspacing
 }
@@ -850,6 +850,7 @@
 %--------------------------------------------------------------------
 \newcommand{\SUabstractTR}{%
   \chapter*{\vspace{-4\baselineskip}\bfseries ÖZET}%
+  \addcontentsline{toc}{chapter}{ÖZET}
   \begin{center}
   \MakeUppercase{\printtezbaslik} \\[3\baselineskip]
   \MakeUppercase{\printauthorname} \\[\baselineskip]
@@ -862,7 +863,6 @@
   \begin{checkedabstract}
     \SUprintabstractTR
   \end{checkedabstract}
-  \addcontentsline{toc}{chapter}{ÖZET}
   \clearpage\pagebreak
   \onehalfspacing
 }
@@ -901,7 +901,6 @@
 \newcommand{\SUdedication}{%
   \ifSU@hasdedication
     \clearpage
-    \thispagestyle{empty}%
     \null\vfill
     \begin{flushright}
       \textit{\SU@dedication}%

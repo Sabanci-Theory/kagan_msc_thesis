@@ -1,8 +1,8 @@
 # Sabancı University Thesis/Dissertation Template  
 ## 0. Version Information and Credit
 
-**Template Version:** v1.5
-**Date:** May 2026
+**Template Version:** v1.9
+**Date:** July 2026
 
 The updated Sabancı University Master’s Thesis and MA Dissertation templates were prepared and maintained by **Samet Apaydın**.
 
