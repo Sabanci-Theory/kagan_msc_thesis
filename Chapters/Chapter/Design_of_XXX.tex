@@ -1,24 +1,386 @@
 \setlength{\parindent}{0pt}
 % ------------------------------------------------------------
 \chapter{Design of XXX}
+\label{chap:design}
 % ------------------------------------------------------------
 \section{Pipeline Overview}
+\label{sec:pipeline-overview}
+filler
 \section{Expression Representation}
+\label{sec:expr-representation}
+filler
   \subsection{A Hash-Consed \NoCaseChange{$n$}-ary Circuit DAG}
+  \label{sec:hash-consed-dag}
+filler
   \subsection{Canonicalization: Flattening and Cancellation}
+  \label{sec:canonicalization}
+filler
   \subsection{Multiplicative Factoring}
+  \label{sec:factoring}
+filler
     \subsubsection{The Factoring Transformation}
+    \label{sec:factoring-transformation}
+filler
     \subsubsection{Enlarging the Class of Verifiable Circuits}
+filler
     \subsubsection{Cost Analysis and the Factoring--Speed Tension}
+    \label{sec:factoring-cost}
+filler
 \section{Component I: The Rewrite Engine}
-  \subsection{The Simple Rule: Reference-Counted Optimistic Sampling}
-  \subsection{First Fallback: General Substitution}
+\label{sec:rewrite-engine}
+
+Given a chosen probe $\mathbf{w} = (w_1, \dots, w_k)$, $k \le d$, represented as node
+IDs into the hash-consed circuit DAG of Section~\ref{sec:hash-consed-dag}, the rewrite
+engine decides whether $\mathbf{w}$ is secret-independent. It does so constructively:
+rather than reasoning about probability distributions directly, it searches for a
+finite sequence of applications of Lemma~\ref{lem:substitution}
+(Section~\ref{sec:randomness-substitution}) after which $\mathbf{w}$'s image is
+\emph{syntactically} free of secret leaves, i.e.\ no secret leaf is reachable in the
+sub-DAG below any $w_i$. Termination with a secret-free image certifies $\mathbf{w}$;
+Theorem~\ref{thm:rewrite-soundness} in Section~\ref{sec:coupling-view} makes precise
+why this certificate is sound.
+
+The engine has three tiers of increasing generality and cost, summarized in
+Algorithm~\ref{alg:rewrite-engine} and mirrored in the structure of this section.
+\textproc{SimpleRewrite} (Section~\ref{sec:simple-rule}) handles the common case,
+every random occurring at most once, with a cheap, purely reference-counted
+procedure that never builds a new DAG node. It is tried first on the unfactored
+probe and, on failure, once more after the multiplicative factoring of
+Section~\ref{sec:factoring} has had a chance to expose additional single-occurrence
+randoms. \textproc{GeneralRewrite} (Section~\ref{sec:general-substitution}) is the
+complete fallback for the remaining case, a random occurring more than once: it
+substitutes a random by its context wherever the random occurs, interleaving
+factoring lazily whenever both of its own find-rules stall. Section~\ref{sec:coupling-view}
+closes the section by reading the whole derivation as an explicit, replayable
+bijection on the randomness assignment, the \gls{coupling} that Component III
+(Section~\ref{sec:extension}) later replays against every other wire in the circuit.
+
+\begin{algorithm}
+\caption{Discharging a probe (Component I)}
+\label{alg:rewrite-engine}
+\begin{algorithmic}[1]
+\Function{CheckProbe}{$\mathbf{w}$}
+  \Require probe $\mathbf{w}$, node IDs into the circuit DAG $D$ (Section~\ref{sec:hash-consed-dag})
+  \Ensure \textsc{Secure}, or \textsc{Insecure}$(\mathbf{w})$
+  \State $(\mathit{ok}, T) \gets \Call{SimpleRewrite}{\mathbf{w}}$ \Comment{Tier 1: unfactored}
+  \If{$\mathit{ok}$} \Return \textsc{Secure} \EndIf
+  \State $(\mathit{ok}, T) \gets \Call{SimpleRewrite}{\mathrm{Factor}(\mathbf{w})}$ \Comment{Tier 2: factor (\S\ref{sec:factoring}), retry}
+  \If{$\mathit{ok}$} \Return \textsc{Secure} \EndIf
+  \State $(\mathit{ok}, T) \gets \Call{GeneralRewrite}{\mathbf{w}, \emptyset, \mathit{fuel}, \mathit{false}, \langle\rangle}$ \Comment{Tier 3: complete fallback}
+  \State \Return $\mathit{ok}$ ? \textsc{Secure} : \textsc{Insecure}($\mathbf{w}$)
+\EndFunction
+\Statex
+\Function{SimpleRewrite}{$\mathit{roots}$}
+  \State $\mathit{todo} \gets \{\, r \in \mathrm{vars}(\mathit{roots}) : r \text{ occurs once, additively}, r \notin \mathit{roots} \,\}$, shallowest first
+  \State $T \gets \langle\rangle$
+  \While{$\mathit{todo} \neq \langle\rangle$ \textbf{and not} \Call{SecretFree}{$\mathit{roots}$}}
+    \State $r \gets$ pop shallowest element of $\mathit{todo}$; \ $x \gets$ unique additive parent of $r$ \Comment{$x = e \oplus r$}
+    \State mark $x$ as a fresh random leaf; \ $T \gets T.\mathrm{push}(r, x)$ \Comment{$t = e \oplus r = x$, already in hand}
+    \State drop $r$; decrement occurrence counts of $x$'s other children
+    \State \emph{(a child newly matching the pattern above, and $\notin \mathit{roots}$, joins $\mathit{todo}$)}
+  \EndWhile
+  \State \Return $(\Call{SecretFree}{\mathit{roots}}, T)$ \Comment{same shears, now recorded --- \S\ref{sec:coupling-view}}
+\EndFunction
+\Statex
+\Function{GeneralRewrite}{$\mathit{tuple}, \mathit{used}, \mathit{fuel}, \mathit{factored}, T$}
+  \If{\Call{SecretFree}{$\mathit{tuple}$}} \Return $(\mathit{true}, T)$ \EndIf
+  \If{$\mathit{fuel} = 0$} \Return $(\mathit{false}, T)$ \EndIf
+  \State $r \gets \Call{FindSimple}{\mathit{tuple}}$ \Comment{occurs once, additively, not a root}
+  \If{$r = \bot$} \ $r \gets \Call{FindGeneral}{\mathit{tuple}, \mathit{used}}$ \Comment{occurs $\geq 2\times$; some additive parent free of $r$} \EndIf
+  \If{$r = \bot$}
+    \If{$\mathit{factored}$} \Return $(\mathit{false}, T)$ \EndIf
+    \State \Return $\Call{GeneralRewrite}{\mathrm{Factor}(\mathit{tuple}), \mathit{used}, \mathit{fuel}, \mathit{true}, T}$ \Comment{\S\ref{sec:factoring-cost}, lazy retry}
+  \EndIf
+  \State $x \gets$ chosen additive parent of $r$; \ $e \gets \bigoplus(\mathrm{children}(x) \setminus \{r\})$ \Comment{side cond.\ $r \notin \mathrm{vars}(e)$}
+  \State $t \gets e \oplus r$; \ $\mathit{tuple}' \gets \mathit{tuple}[r \mapsto t]$ \Comment{substitute everywhere --- Lemma~\ref{lem:substitution}}
+  \State \Return $\Call{GeneralRewrite}{\mathit{tuple}', \mathit{used} \cup \{r\}, \mathit{fuel}-1, \mathit{false}, T.\mathrm{push}(r,t)}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+  \subsection{The Simple Rewrite Rule}
+  \label{sec:simple-rule}
+
+  The cheapest tier discharges the pattern Corollary~\ref{cor:single-occurrence-discharge}
+  addresses directly: a random that occurs exactly once in the sub-DAG below the
+  probe, as a child of an XOR node. A single depth-first traversal from the probe
+  roots computes, for every node $n$ reachable from them, four pieces of bookkeeping:
+  $\mathrm{totalParCount}(n)$, the number of edges into $n$ from within the explored
+  region; $\mathrm{xorParCount}(n) \le \mathrm{totalParCount}(n)$, the number of those
+  edges whose source is an XOR node; $\mathrm{mulDepth}(n)$, the number of AND-levels
+  separating $n$ from the nearest root; and $\mathrm{parents}(n)$, the reverse
+  adjacency needed to walk back up from a random to its context. A random $r$ is a
+  \emph{simple-rule candidate} when $\mathrm{totalParCount}(r) =
+  \mathrm{xorParCount}(r) = 1$ and $r$ is not itself a probe root: this is
+  Corollary~\ref{cor:single-occurrence-discharge}'s hypothesis, checked without ever
+  constructing $e$. Write $x$ for $r$'s unique parent, so $x = e \oplus r$ for the
+  (unconstructed) context $e$.
+
+  A probe root is excluded from candidacy because its value is what the adversary
+  observes: it is fixed, not fresh, and relabeling it would claim independence for
+  something the tuple actually exposes. The tuple
+  $(r,\ s \oplus r,\ r \oplus r_3)$ makes the danger concrete. Its first entry is the
+  bare leaf $r$, and the first two entries XOR to the secret $s$, so this tuple
+  leaks $s$ and must be rejected. But once $r_3$ is discharged (it occurs once,
+  additively, in $r \oplus r_3$), $r$'s own reference count drops to one: its only
+  remaining parent is $s \oplus r$. Without the root guard, $r$ would now match the
+  candidate pattern and be cascaded away, relabeling the very value the adversary
+  observes and reporting a false \textsc{Secure}.
+
+  Discharging a candidate (\textproc{ApplyRewrite} in the implementation) does not
+  rebuild $x$ as $e \oplus r$; it marks $x$ itself as a fresh random leaf for every
+  purpose the bookkeeping cares about, drops $r$, and decrements the reference counts
+  of $x$'s other children, each of which loses the one incoming edge from $x$. This
+  is licensed by Lemma~\ref{lem:substitution} applied with this specific $r$ and $e$:
+  $x$, jointly with everything not depending on $r$, is distributed exactly as fresh,
+  independent randomness, so nothing is lost by never inspecting $e$'s content.
+  Because the DAG is hash-consed (Section~\ref{sec:hash-consed-dag}), $x$ may have
+  several parents; a single discharge blinds every one of them at once, since all
+  read the identical shared node.
+
+  Decrementing a child's count can itself drop it to a value matching the candidate
+  pattern, in which case it joins the work-list, ordered by increasing
+  $\mathrm{mulDepth}$ so that the shallowest, closest-to-a-root candidates fire
+  first, matching the increasing-depth discharge order used by \texttt{maskVerif}
+  \parencite{10.1007/978-3-030-29959-0_15}. This cascade is again guarded by root
+  membership. The loop succeeds once every probe root fails to be a bare secret leaf
+  and every secret leaf in the circuit has zero recorded incoming edges within the
+  current bookkeeping, a check answerable in $O(1)$ from the maintained counts, with
+  no fresh traversal. It fails once the work-list empties without reaching that
+  state. A random is discharged at most once, since its bookkeeping is erased the
+  moment it fires, so the loop performs at most $|\mathcal{R}|$ rewrite steps.
+
+  This tier is sound, since each step is a direct instance of
+  Corollary~\ref{cor:single-occurrence-discharge}, but incomplete: it has nothing to
+  offer a random occurring twice, such as a mask reused across two cross-terms of a
+  masked multiplication. Section~\ref{sec:general-substitution}'s fallback handles
+  that case, at the price of the incremental, allocation-free bookkeeping this tier
+  relies on.
+
+  \subsection{Fallback: General Substitution}
+  \label{sec:general-substitution}
+
+  \textproc{GeneralRewrite} handles randoms that occur more than once by performing
+  the substitution of Lemma~\ref{lem:substitution} literally, rather than only its
+  single-occurrence case (Corollary~\ref{cor:single-occurrence-discharge}). It picks
+  a random $r$ and an additive occurrence $x_1 = e \oplus r$ with
+  $r \notin \mathrm{vars}(e)$, then rewrites every root by substituting
+  $r \mapsto e \oplus r$ throughout. Re-canonicalization
+  (Section~\ref{sec:canonicalization}) collapses the chosen occurrence $x_1$ to the
+  bare leaf $r$ by $\mathbb{F}_2$-cancellation, exactly as in
+  Corollary~\ref{cor:single-occurrence-discharge}, while every other occurrence of
+  $r$ absorbs $e$ instead of vanishing, cancelling further if it happens to share
+  structure with $e$. The loop succeeds once no secret leaf remains reachable from
+  the rewritten roots.
+
+  Each round recomputes both find-rules on the tuple's current form: a fresh
+  depth-first traversal from the current roots, repeated every round rather than
+  maintained incrementally as in Section~\ref{sec:simple-rule}.
+  \textproc{FindSimple} looks first for the same single-occurrence, non-root pattern
+  as Section~\ref{sec:simple-rule}, since a general substitution can turn a
+  multi-occurrence random into a single-occurrence one; it prefers the shallowest
+  candidate. Failing that, \textproc{FindGeneral} looks for any random, not yet used
+  by a previous general step, occurring at least twice with some additive parent
+  $x_1$ whose other children do not themselves depend on it, the side condition
+  $r \notin \mathrm{vars}(e)$ that Lemma~\ref{lem:substitution} requires. It prefers
+  the deepest candidate, the opposite bias from \textproc{FindSimple}; the
+  implementation records no rationale for this choice beyond the ordering itself. A
+  context $e$ is always read off an XOR node's other children: anything else would
+  mean $e$ contains $r$, making $r \mapsto e \oplus r$ fail to be a bijection, so the
+  implementation fails loudly there instead of silently admitting an unsound
+  relabeling. The same traversal answers whether the tuple is secret-free, since a
+  secret survives exactly when it is itself a root or has a recorded parent in the
+  explored sub-DAG, so no second traversal is needed for that check.
+
+  When both find-rules stall on the tuple's current form, the engine factors
+  (Section~\ref{sec:factoring}) once and retries, rather than declaring failure
+  immediately. Factoring can move a random from a purely multiplicative position,
+  where neither find-rule can see it, into an additive one, but on its own it
+  eliminates no secret, so it must be interleaved with substitution rather than run
+  once up front or once at the end. Factoring is symmetrically not tried before the
+  simple rule either: Algorithm~\ref{alg:rewrite-engine} always tries
+  \textproc{SimpleRewrite} unfactored first, because factoring can destroy a
+  single-occurrence opportunity the unfactored form exposes, so trying the cheap,
+  unfactored tier first is not just faster on the common case but strictly more
+  complete.
+
+  \textproc{FindGeneral} is needed precisely when a random occurs additively in two
+  places that do not telescope into one another under the simple rule. Suppose $r$
+  occurs as an operand of $x_1 = e_1 \oplus r$ in one root and of $x_2 = e_2 \oplus r$
+  in another, with $r \notin \mathrm{vars}(e_1) \cup \mathrm{vars}(e_2)$.
+  Substituting through $x_1$, i.e.\ $r \mapsto e_1 \oplus r$, turns $x_1$ into
+  $e_1 \oplus (e_1 \oplus r) = r$ by cancellation, as in
+  Corollary~\ref{cor:single-occurrence-discharge}, while the same substitution turns
+  $x_2$ into $e_2 \oplus e_1 \oplus r$. If $e_1 \oplus e_2$ is itself secret-free,
+  both roots are secret-free after this one step; otherwise the loop continues,
+  substituting further or factoring to expose a new opportunity. This is the shape of
+  the case a masked multiplication typically produces, where a single random masks
+  two different cross-terms: neither term's random is disposable on its own, but the
+  substitution above can still cancel the secret-dependent part they share. Whether a
+  given instance is discharged this way, and in how many rounds, depends entirely on
+  how much of $e_1 \oplus e_2$ the rest of the derivation can still cancel; the loop
+  offers no guarantee beyond trying. Even granting unlimited fuel, it only composes
+  single-coordinate shears $\widehat{\sigma}$, so it can only certify
+  secret-independence witnessed by a chain of substitutions, possibly interleaved
+  with factoring. Completeness is proved only in the linear/affine case
+  \textcolor{orange}{(nerede proof?)}; whether a genuinely irreducible counterexample
+  exists beyond it is not settled by this thesis.
+
+  Termination is only argued informally, not proved. Each general substitution
+  retires its random into $\mathit{used}$ and is never repeated for it, bounding the
+  number of general steps by $|\mathcal{R}|$; between general steps, simple
+  substitutions strictly reduce the candidate pool; factoring is retried at most once
+  per stall before the engine gives up on the current form. Interleaving factoring
+  with two mutually triggering find-rules resists a clean potential-function
+  argument, so a generous fuel counter backstops the loop instead. Exhausting fuel is
+  treated as failure, which is sound (Theorem~\ref{thm:rewrite-soundness} is never
+  invoked on a fuel-out) but not necessarily tight: a fuel-out reports the probe as
+  though it were genuinely insecure, without exhibiting an actual distinguishing
+  observation.
+
   \subsection{Relation to the Coupling-Construction View}
-  \subsection{Last Fallback: Counting}
+  \label{sec:coupling-view}
+
+  A discharge does more than answer \textsc{Secure}/\textsc{Insecure}. Read the
+  right way, it hands back the object Chapter~\ref{chap:couplings} asks for: a
+  coupling for the probe. We state that object declaratively first, then show how
+  the engine produces one.
+
+  Let the secrets range now, rather than staying fixed as in
+  Section~\ref{sec:randomness-substitution}: write
+  $\mathbf{w}(\rho; \mathbf{a})$ for the value of the probe under randomness
+  assignment $\rho \in \{0,1\}^{\mathcal{R}}$ and secret assignment
+  $\mathbf{a} \in \{0,1\}^{\mathcal{S}}$, the public inputs held fixed.
+
+  \begin{definition}[Coupling of a probe]
+  \label{def:probe-coupling}
+  A \emph{coupling} of a probe $\mathbf{w}$ is a family
+  $\{\,\Phi_{\mathbf{a},\mathbf{b}}\,\}_{\mathbf{a},\mathbf{b} \in \{0,1\}^{\mathcal{S}}}$
+  of measure-preserving bijections of $\{0,1\}^{\mathcal{R}}$, one per ordered
+  pair of secret assignments, satisfying
+  \[
+    \mathbf{w}(\rho; \mathbf{a}) \;=\; \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho);\, \mathbf{b}\big)
+    \qquad \text{for every } \rho \in \{0,1\}^{\mathcal{R}} .
+  \]
+  \end{definition}
+
+  Definition~\ref{def:probe-coupling} says precisely where to send the randomness
+  so that a run under $\mathbf{a}$ is reproduced, observation for observation, by
+  a run under $\mathbf{b}$: each $\Phi_{\mathbf{a},\mathbf{b}}$ dictates the
+  relabelling of the random tape that absorbs the change of secret. Since it is
+  measure-preserving, pushing the uniform tape through it turns this pointwise
+  identity into an equality of laws, so the distribution of
+  $\mathbf{w}(\cdot;\mathbf{a})$ matches that of $\mathbf{w}(\cdot;\mathbf{b})$. A
+  coupling existing for \emph{every} pair $(\mathbf{a},\mathbf{b})$ is thus the
+  same statement as $\mathbf{w}$ being secret-independent --- which is what makes
+  it the right certificate. The family carries the structure one expects of such
+  a certificate: one may take $\Phi_{\mathbf{a},\mathbf{a}} = \mathrm{id}$,
+  $\Phi_{\mathbf{b},\mathbf{a}} = \Phi_{\mathbf{a},\mathbf{b}}^{-1}$, and
+  $\Phi_{\mathbf{b},\mathbf{c}} \circ \Phi_{\mathbf{a},\mathbf{b}} =
+  \Phi_{\mathbf{a},\mathbf{c}}$, so a single anchor
+  $\Phi_{\mathbf{a}_0,\,\cdot}$ already generates all of it. It is these
+  properties we care about, not any one procedure that realises them.
+
+  What the engine records is one such procedure. Discharging a probe amounts to
+  finding a \emph{derivation}: a finite sequence of rewrites
+  \[
+    \sigma_1 = (r_1 \mapsto e_1 \oplus r_1), \ \dots, \ \sigma_K = (r_K \mapsto e_K \oplus r_K),
+  \]
+  each valid --- $r_i \notin \mathrm{vars}(e_i)$ --- against the tuple's state
+  just before step $i$, after which no secret leaf remains reachable. A rewrite
+  is a rewrite: whatever rule proposed it, and whether the random it retires
+  occurred once or many times, each $\sigma_i$ is a substitution in the sense of
+  Definition~\ref{def:substitution}, hence a single measure-preserving shear
+  $\widehat{\sigma_i}$ (Lemma~\ref{lem:substitution}). The coupling is assembled
+  from these shears and from nothing else, so the construction below never needs
+  to know how any individual rewrite was found.
+
+  \begin{theorem}[Soundness of discharge]
+  \label{thm:rewrite-soundness}
+  If \textup{\textproc{CheckProbe}}$(\mathbf{w})$
+  (Algorithm~\ref{alg:rewrite-engine}) returns \textup{\textsc{Secure}}, then the
+  joint distribution of $\mathbf{w}(\rho; \mathbf{a})$, for $\rho$ sampled
+  uniformly at random, does not depend on the secret assignment $\mathbf{a}$.
+  Moreover the recorded substitutions realise a coupling of $\mathbf{w}$ in the
+  sense of Definition~\ref{def:probe-coupling}.
+  \end{theorem}
+
+  \begin{proof}[Proof sketch]
+  Fix a secret assignment $\mathbf{a}$. Each recorded step contributes the tape
+  shear $\widehat{\sigma_i}$, whose defining context $e_i$ may itself read the
+  secrets, so write $\widehat{\sigma_i}^{\,\mathbf{a}}$ for its action under
+  $\mathbf{a}$ and set
+  \[
+    \varphi_{\mathbf{a}} \;=\; \widehat{\sigma_1}^{\,\mathbf{a}} \circ
+    \widehat{\sigma_2}^{\,\mathbf{a}} \circ \cdots \circ \widehat{\sigma_K}^{\,\mathbf{a}},
+  \]
+  a composition of measure-preserving bijections, hence itself one. Writing
+  $\mathbf{w}_K = \mathbf{w}\sigma_1 \cdots \sigma_K$ for the final tuple and
+  chaining Lemma~\ref{lem:substitution} through the $K$ steps gives
+  $\mathbf{w}\big(\varphi_{\mathbf{a}}(\rho); \mathbf{a}\big) = \mathbf{w}_K(\rho)$
+  for every $\rho$. A \textsc{Secure} verdict means $\mathbf{w}_K$ is
+  syntactically secret-free --- no secret leaf is reachable from it --- so
+  $\mathbf{w}_K(\rho)$ does not depend on $\mathbf{a}$. The right-hand side is
+  therefore common to all secret assignments, and for any two, $\mathbf{a}$ and
+  $\mathbf{b}$,
+  \[
+    \mathbf{w}\big(\varphi_{\mathbf{a}}(\rho); \mathbf{a}\big) \;=\; \mathbf{w}_K(\rho)
+    \;=\; \mathbf{w}\big(\varphi_{\mathbf{b}}(\rho); \mathbf{b}\big) .
+  \]
+  Substituting $\rho \mapsto \varphi_{\mathbf{a}}^{-1}(\rho)$ and setting
+  $\Phi_{\mathbf{a},\mathbf{b}} = \varphi_{\mathbf{b}} \circ
+  \varphi_{\mathbf{a}}^{-1}$ gives
+  $\mathbf{w}(\rho; \mathbf{a}) = \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho); \mathbf{b}\big)$
+  for all $\rho$; the family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$ is the promised
+  coupling, and measure-preservation of each member yields the distributional
+  claim. The chaining uses only that each $\sigma_i$ is a substitution
+  (Definition~\ref{def:substitution}); a single-occurrence rewrite, where $e_i$
+  is read off one $\oplus$-parent as in
+  Corollary~\ref{cor:single-occurrence-discharge}, is folded in exactly like any
+  other, so the argument is indifferent to how the derivation was produced.
+  \end{proof}
+
+  The composite $\varphi_{\mathbf{a}}$ is displayed above as a product of shears
+  only for exhibition; it is never used. Component III (Section~\ref{sec:coupling-extension})
+  uses a single member of the family as a \emph{blinding certificate}: it takes any
+  other wire $u$ in the circuit and admits it into the certified \emph{safe set}
+  when $u \circ \varphi_{\mathbf{a}}$ is secret-free --- when the same relabelling
+  that blinds the probe blinds $u$ too.
+  Evaluating $\varphi_{\mathbf{a}}$ on a sampled tape is a back-substitution
+  through the recorded steps in reverse order $i = K, \dots, 1$, since the net
+  image of $r_i$ is $t_i = e_i \oplus r_i$ evaluated against the assignment
+  already updated by every later step: the derivation performs forward
+  elimination, and reading the net map off is back-substitution through the same
+  steps in reverse.
+
+  The recorded target of a rewrite costs nothing to keep. The substitution
+  $\sigma_i = (r_i \mapsto e_i \oplus r_i)$ sends $r_i$ to $t_i = e_i \oplus r_i$,
+  and $t_i$ is exactly the $\oplus$-parent node the engine already held when it
+  chose the rewrite --- there is no separate context $e_i$ to reconstruct. So
+  every rewrite the engine makes, of whatever origin, can be appended to the
+  derivation $\sigma_1, \dots, \sigma_K$ as it happens, and the coupling is read
+  off that one list. Component III replays these shears directly against every
+  other wire in the circuit; no probe and no rewrite is special-cased, and each
+  step that helped certify the probe is a step that helps blind its neighbours.
+
 \section{Component II: Traversing the Subset Space}
+\label{sec:subset-space}
+filler
   \subsection{The Space-Splitting Worklist Representation}
+  \label{sec:space-splitting}
+filler
   \subsection{Large-Set Pruning and Closure-Based Splitting}
+  \label{sec:large-set-pruning}
+filler
   \subsection{Completeness via Vandermonde's Identity}
+  \label{sec:vandermonde}
+filler
 \section{Component III: Extending Probe Sets}
+\label{sec:extension}
+filler
   \subsection{Closures: Structural Deduction of Free Wires}
+  \label{sec:closures}
+filler
   \subsection{Coupling-Driven Extension}
+  \label{sec:coupling-extension}
+filler
