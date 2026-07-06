@@ -5,19 +5,19 @@
 % ------------------------------------------------------------
 \section{Notation and Mathematical Background}
 \label{sec:notation}
-filler
+\todo[inline]{Fix general notation used throughout the thesis (sets, tuples, functions, etc.).}
   \oldsubsection{\texorpdfstring%
     {The Field $\mathbb{F}_2$ and Multilinear Boolean Polynomials}%
     {The Field F2 and Multilinear Boolean Polynomials}}
   \label{sec:field-f2}
-filler
+  \todo[inline]{Recall the field $\mathbb{F}_2$ and the representation of Boolean functions as multilinear polynomials over it.}
   \subsection{Probability Distributions and Statistical Independence}
   \label{sec:prob-independence}
-filler
+  \todo[inline]{Recall the definitions of probability distributions and statistical independence used later to state probing security.}
   \subsection{Boolean Circuits and Gates}
   \label{sec:bool-circuits}
 
-We start, as one should, with the object the rest of the thesis is built on.
+We now introduce the object the rest of the thesis is built on.
 The definition is the standard digraph formulation of a circuit, specialised to
 arithmetic over the two-element field.
 
@@ -44,7 +44,7 @@ interchangeably of the gate and the wire carrying its output.
 Over $\mathbb{F}_2$ there is no difference between the Boolean and the arithmetic
 reading of such a circuit: exclusive-or is addition, logical-and is
 multiplication, and the two together already express every function
-$\mathbb{F}_2^{\,n} \to \mathbb{F}_2$. So we fix
+$\mathbb{F}_2^{\,n} \to \mathbb{F}_2$, i.e. they are universal. So we fix
 \[
   S = \{\,\oplus,\ \odot\,\},
 \]
@@ -88,25 +88,25 @@ this same object as a hash-consed data structure suited to computation; nothing
 here depends on that choice of representation.
 \section{Secret Sharing and Masking}
 \label{sec:secret-sharing}
-filler
+\todo[inline]{Introduce secret sharing and masking as a side-channel countermeasure.}
   \subsection{Boolean Masking}
   \label{sec:boolean-masking}
-filler
+  \todo[inline]{Define Boolean masking (XOR-sharing) of a secret and how masked circuits compute on shares.}
 \section{The ISW Probing Model}
 \label{sec:isw-model}
-filler
+\todo[inline]{Introduce the Ishai-Sahai-Wagner (ISW) probing adversary model.}
   \subsection{\NoCaseChange{$t$}-Threshold Probing and Observation Sets}
   \label{sec:t-threshold}
-filler
+  \todo[inline]{Define $t$-threshold probing and observation sets of wires an adversary may query.}
   \subsection{\NoCaseChange{$d$}-Probing Security}
   \label{sec:d-probing}
-filler
+  \todo[inline]{Define $d$-probing security formally, in terms of the joint distribution of any $d$-wire probe.}
   \subsection{Probabilistic Non-Interference}
   \label{sec:pni}
-filler
+  \todo[inline]{Define probabilistic non-interference (PNI) and relate it to $d$-probing security.}
   \subsection{Threshold and Strong Non-Interference}
   \label{sec:sni}
-filler
+  \todo[inline]{Define threshold (TNI) and strong non-interference (SNI) and relate them to composability of masked gadgets.}
 \section{Randomness Substitution}
 \label{sec:randomness-substitution}
 
@@ -206,21 +206,17 @@ occurs nowhere else by hypothesis, no other part of $\mathbf{w}$ is touched.
 
 \begin{remark}
 Rewriting a probe by a substitution --- whether in the general form of
-Lemma~\ref{lem:substitution} or the single-occurrence special case of
+Lemma~\ref{lem:substitution} or the single-occurrence case of
 Corollary~\ref{cor:single-occurrence-discharge} --- leaves its distribution
-untouched, hence leaves untouched whether it depends on the secrets. That is the
-whole lever: to decide security of a probe it is enough to rewrite it, one
-substitution at a time, into a form with no secret in sight. The
+untouched. That is the key observation that derives the procedure
+to decide the security of a probe, by one
+substitution at a time, taking it to a form with no secret in sight. The
 single-occurrence case is the one the \texttt{maskVerif} tool
-\parencite{10.1007/978-3-030-29959-0_15} calls \emph{optimistic sampling}, and
-the name is apt --- Corollary~\ref{cor:single-occurrence-discharge} never
-inspects the content of $e$, firing whether or not $e$ depends on the secrets,
-and checking only the syntactic pattern that $r$ occurs once, additively. A
+\parencite{10.1007/978-3-030-29959-0_15} calls \emph{optimistic sampling}. A
 derivation is nothing more than such substitutions chained together; how that
-chain is searched for, and what the composite of its $\widehat{\sigma}$
-witnesses, is taken up in the later chapters.
+chain is searched for is taken up in the later chapters.
 \end{remark}
 
 \section{Computational Hardness Preview}
 \label{sec:hardness-preview}
-filler
+\todo[inline]{Preview the \#P-completeness result of Chapter~\ref{chap:couplings}, motivating why the thesis pursues a constructive rewrite-based checker rather than exact counting.}

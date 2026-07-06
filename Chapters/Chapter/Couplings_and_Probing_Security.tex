@@ -4,15 +4,26 @@
 \label{chap:couplings}
 % ------------------------------------------------------------
 \section{The Counting Problem is \NoCaseChange{\#P}-Complete} % this is at a weird place, but I want to mention it
+\todo[inline]{Introduce the counting problem behind secret-independence checking and state the \#P-completeness result.}
   \subsection{From Independence to Distribution Counting}
+  \todo[inline]{Show how deciding secret-independence of a probe reduces to a distribution-counting problem.}
   \subsection{\NoCaseChange{\#P}-Completeness and Its Consequences for Verification}
+  \todo[inline]{Prove \#P-completeness of the counting problem and discuss what this implies for exact verification (motivating the constructive rewrite-based approach instead).}
 \section{Couplings of Probabilistic Programs}
+\todo[inline]{Introduce couplings as a proof technique for distributional equality between probabilistic programs.}
   \subsection{Coupling Two Runs Under Different Secrets}
+  \todo[inline]{Define a coupling between the run of a probe under one secret assignment and its run under another.}
   \subsection{Coupling Functions: Randoms to Randoms} % measure-preserving bijections! on randomness
+  \todo[inline]{Formalize coupling functions as measure-preserving bijections on the randomness domain.}
 \section{Probing Security via Couplings}
+\todo[inline]{Relate $d$-probing security to the existence of a coupling for every probe of size $d$.}
   \subsection{\NoCaseChange{$d$}-Probing Security Implies a (Family of) Coupling Functions}
-  \subsection{Identity-on-Leakage Couplings and Secret-Indistinguishability}
-\section{Optimistic Sampling as Coupling Construction}
-  \subsection{Rewrites as Bijections on the Random Space}
-  \subsection{The Derivation as an Explicit Coupling Witness}
+  \todo[inline]{Prove that $d$-probing security is equivalent to the existence of a family of coupling functions, one per pair of secret assignments.}
+  \subsection{Secret-Indistinguishability}
+  \todo[inline]{Connect the coupling-existence characterization back to the standard secret-indistinguishability definition of probing security.}
+\section{Substitutions as a Coupling Construction}
+\todo[inline]{Explain how the randomness-substitution rewrites of Section~\ref{sec:randomness-substitution} construct an explicit coupling.}
+  \subsection{The Derivation of an Explicit Coupling Witness}
+  \todo[inline]{Show how a derivation (sequence of substitutions) yields an explicit coupling witness for a probe.}
   \subsection{Why a Successful Rewrite Yields a Valid Coupling}
+  \todo[inline]{Prove that a successful rewrite derivation, read as a composition of shears, satisfies the coupling definition.}

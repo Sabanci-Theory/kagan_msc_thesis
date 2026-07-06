@@ -1,4 +1,34 @@
 \setlength{\parindent}{0pt}
 % ------------------------------------------------------------
-\chapter{Implementation of XXX}
+\chapter{Implementation of \toolname}
+\label{chap:implementation}
 % ------------------------------------------------------------
+\section{Expression Representation}
+\label{sec:expr-representation}
+\todo[inline]{Introduce the concrete data structure used to represent circuit expressions internally.}
+  \subsection{A Hash-Consed \NoCaseChange{$n$}-ary Circuit DAG}
+  \label{sec:hash-consed-dag}
+  \todo[inline]{Describe the hash-consed $n$-ary DAG representation of circuits and why hash-consing is used (sharing, fast equality).}
+  \subsection{Canonicalization: Flattening and Cancellation}
+  \label{sec:canonicalization}
+  \todo[inline]{Describe the canonicalization pass: flattening nested XORs and cancelling repeated operands in $\mathbb{F}_2$.}
+  \subsection{Multiplicative Factoring}
+  \label{sec:factoring}
+  \todo[inline]{Introduce multiplicative factoring as a transformation that exposes additional single-occurrence randoms.}
+    \subsubsection{The Factoring Transformation}
+    \label{sec:factoring-transformation}
+    \todo[inline]{Give the precise factoring transformation and an example of it exposing a hidden single-occurrence random.}
+    \subsubsection{Enlarging the Class of Verifiable Circuits}
+    \todo[inline]{Show how factoring enlarges the class of circuits the rewrite engine can certify.}
+    \subsubsection{Cost Analysis and the Factoring--Speed Tension}
+    \label{sec:factoring-cost}
+    \todo[inline]{Analyze the computational cost of factoring and the resulting tension with verification speed, motivating the lazy interleaving used in Section~\ref{sec:general-substitution}.}
+\section{Realizing the Rewrite Engine}
+\label{sec:rewrite-engine-impl}
+\todo[inline]{Describe the concrete implementation of Algorithm~\ref{alg:rewrite-engine} (Section~\ref{sec:rewrite-engine}).}
+  \subsection{Reference-Counted Single-Occurrence Discharge}
+  \label{sec:refcount-impl}
+  \todo[inline]{Describe the reference-counting mechanism used to find single-occurrence randoms in \textproc{SimpleRewrite} without recomputation.}
+  \subsection{Recomputing the Find-Rules per Round}
+  \label{sec:findrule-impl}
+  \todo[inline]{Describe the implementation of \textproc{FindSimple}/\textproc{FindGeneral} and how they are (re)computed each round.}
