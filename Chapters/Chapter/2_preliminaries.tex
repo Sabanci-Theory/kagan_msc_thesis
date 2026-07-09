@@ -121,37 +121,37 @@ that the joint distribution of a probe of size at most $d$, taken over the
 uniformly distributed $\rho$, not move as the secrets vary.
 
 The whole argument rests on one line of $\mathbb{F}_2$ arithmetic: for any fixed
-bit $c$, the translation $b \mapsto c \oplus b$ is a \textbf{bijection} of $\{0,1\}$
+bit $c$, the translation/shear $b \mapsto c \oplus b$ is a \textbf{bijection} of $\{0,1\}$
 that preserves the uniform distribution (i.e. it is its own inverse and merely swaps
 the two outcomes). Everything below is this fact, applied to a single coordinate
-of $\rho$ with every other coordinate frozen. The object that carries it is a
-substitution.
+of $\rho$ with every other coordinate fixed.
 
 \begin{definition}[Randomness substitution]
 \label{def:substitution}
 Let $r \in \mathcal{R}$ and let $e$ be a wire with $r \notin \mathrm{vars}(e)$.
 The \emph{substitution} $\sigma = (r \mapsto e \oplus r)$ acts on a wire $w$ by
 replacing every occurrence of the input $r$ with the wire $e \oplus r$; we write
-the resulting wire $w\sigma$. The same $\sigma$ acts on randomness assignments,
+the resulting wire as $w\sigma$. The same $\sigma$ acts on randomness assignments,
 through the map $\widehat{\sigma} : \{0,1\}^{\mathcal{R}} \to
-\{0,1\}^{\mathcal{R}}$ given by
+\{0,1\}^{\mathcal{R}}$ whose image $\rho' = \widehat{\sigma}(\rho)$ shifts the
+$r$-coordinate by $e(\rho)$ and leaves every other coordinate untouched:
 \[
-  \widehat{\sigma}(\rho)(r) = e(\rho) \oplus \rho(r), \qquad
-  \widehat{\sigma}(\rho)(r') = \rho(r') \quad \text{for } r' \neq r .
+  \rho'(r) = e(\rho) \oplus \rho(r), \qquad
+  \rho'(r') = \rho(r') \quad \text{for } r' \neq r .
 \]
 \end{definition}
 
 Geometrically, $\widehat{\sigma}$ is a \emph{shear} of the cube
 $\{0,1\}^{\mathcal{R}}$: it fixes every coordinate but $r$ and offsets that one
-by $e(\rho)$, a quantity that reads only the frozen coordinates. Restricted to a
-fibre --- a pair of points differing solely in the $r$-coordinate --- it is
+by $e(\rho)$. Restricted to a
+fibre it is
 exactly the translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$ of the one-line
-fact above, so what measure it preserves it preserves by translation invariance,
-fibre by fibre. We call any such map --- one coordinate translated by a context
-depending on the others, everything else left alone --- a \emph{shear}, and use
+fact above, so what measure it preserves it preserves by translation invariance.
+We call any such map, one coordinate translated by a context
+depending on the others, and everything else left intact, a \emph{shear}, and use
 the word throughout.
 
-Pairing the two actions under one name is the point of the lemma below: the
+We pair the two actions under one name with the lemma below. The
 syntactic rewrite $w \mapsto w\sigma$ and the reparametrisation
 $\rho \mapsto \widehat{\sigma}(\rho)$ are one operation seen from two sides, and
 $\widehat{\sigma}$ does not disturb the distribution.
@@ -170,18 +170,17 @@ $\{0,1\}^{\mathcal{R}}$, and for every wire $w$,
 
 \begin{proof}
 Fix every coordinate of $\rho$ other than $r$. Since $r \notin \mathrm{vars}(e)$,
-the value $e(\rho)$ depends only on these frozen coordinates, so it is constant
+the value $e(\rho)$ depends only on these fixed coordinates, so it is constant
 as $\rho(r)$ ranges over $\{0,1\}$. On this fibre $\widehat{\sigma}$ acts by the
-translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$, which is measure-preserving
-and self-inverse by the observation above, while every other coordinate is left
-fixed. Hence $\widehat{\sigma}$ is an involution of $\{0,1\}^{\mathcal{R}}$
+translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$, which is measure-preserving.
+Hence $\widehat{\sigma}$ is a measure-preserving involution of $\{0,1\}^{\mathcal{R}}$
 preserving the uniform measure coordinatewise, and so preserving the product
 measure.
 
-The identity is a structural induction on $w$. For $w = r$ both sides equal
+To prove the stated identity, do a structural induction on $w$. For $w = r$ both sides equal
 $e(\rho) \oplus \rho(r)$. For an input $w \neq r$ both sides equal $w(\rho)$,
-since $\widehat{\sigma}$ fixes every coordinate but $r$. For a gate
-$w_i = w_j \oplus w_k$ or $w_i = w_j \odot w_k$, apply the hypothesis to $w_j$
+since $\widehat{\sigma}$ fixes every coordinate but $r$, they are also equal. For a gate
+$w_i = w_j \oplus w_k$ or $w_i = w_j \odot w_k$, just apply the hypothesis to $w_j$
 and $w_k$ and use that $\oplus$ and $\odot$ are computed pointwise from their
 operands' values.
 \end{proof}
