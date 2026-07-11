@@ -1,23 +1,150 @@
 \setlength{\parindent}{0pt}
 % ------------------------------------------------------------
 \chapter{Introduction}
+\label{chap:intro}
 % ------------------------------------------------------------
 \section{Side-Channel Attacks and the Masking Countermeasure}
-\todo[inline]{Introduce side-channel attacks and masking as a countermeasure.}
+\label{sec:intro-masking}
+
+A cryptographic scheme can be secure on paper and insecure on the bench. When an algorithm
+runs on a real device its power draw, its timing, and its electromagnetic
+emanations all vary with the data it handles, and an adversary who measures those
+physical quantities can recover a key the mathematics was supposed to protect.
+This is called a \emph{side-channel attack}, and differential power analysis
+\parencite{kocher1999differential} is one type of such an attack. By correlating many power
+traces against a guess of an intermediate value, it extracts secret keys from
+implementations whose black-box behaviour is beyond reproach. The insecurity lies not in
+the cipher but in the way the hardware computes it.
+
+\emph{Masking} is the standard algorithmic countermeasure
+\parencite{chari1999towards} against differential power analysis. In general it
+splits each secret value into $n$ shares so that any $n-1$ of them are independent
+of the secret, and carries the computation out on the shares rather than on the
+secret itself. The shares are combined by an operation fixed in advance, and the
+choice of operation depends on the masking scheme. Arithmetic masking adds the shares in a ring
+and multiplicative masking multiplies them, but the form we adopt is \emph{Boolean
+masking}, where the operation is exclusive-or over $\mathbb{F}_2$. In a masked
+circuit, a secret $x$ is then written as $x = x_1 \oplus \dots \oplus x_n$ with the
+first $n-1$ shares drawn uniformly at random, so that any $n-1$ of them together
+reveal nothing about $x$. The computation runs on the shares, and because any
+$n-1$ of them are independent of the secret, physical leakage that reflects only
+some of the shares tells an adversary nothing on its own. To learn anything, the adversary
+must combine leakage from several shares at once, and each extra share raises the
+measurement cost sharply. Realising this
+masking across a whole cipher is delicate, since the non-linear operations of the (unmasked)
+algorithm force the shares of different variables to interact in the masked circuit, and it is precisely
+those interactions that a masking scheme must handle with care \parencite{10.1007/978-3-540-45146-4_27, rivain2010provably}.
 
 \section{Verifying Masked Implementations}
-\todo[inline]{Motivate the need for automated verification of masked implementations.}
+\label{sec:intro-verification}
+
+% Masking is easy to get subtly wrong. Splitting a secret into shares helps only as
+% long as the shares are never brought back together somewhere an attacker can
+% reach, and a real implementation gives them many chances to. A single wire may
+% recombine two shares of the same secret, or a random mask meant to hide one value
+% may cancel against a copy of itself elsewhere, and either slip reopens the very
+% leak the masking was meant to close. There is a further subtlety. A masking must
+% hold up against an attacker who combines the leakage of several intermediate
+% values at once, not just one, so its correctness cannot be judged value by value;
+% it depends on how the values leak jointly. The number of such combinations grows
+% quickly with the size of the circuit and the number of shares, which puts checking
+% by hand out of reach for all but the smallest implementations.
+
+% What one wants, then, is a tool that takes a masked circuit and decides,
+% mechanically and for all of those combinations at once, whether any of them leaks.
+% This is the problem of \emph{formally verifying} a masked implementation, and a
+% line of work has grown around it \parencite{barthe2015verified,
+% 10.1007/978-3-030-29959-0_15}. The condition to establish is one about
+% distributions, that the values on every small set of wires are distributed the
+% same way whatever the secret is, so that nothing about the secret can be recovered
+% from them. A verifier must certify this for all such sets together, and two
+% difficulties sit underneath. Even one set is already a statement about a
+% distribution over all the internal random choices, and there are combinatorially
+% many sets to settle. The tools that scale do not compute those distributions
+% head-on. They rewrite each set of values into a form in which the secrets have
+% visibly cancelled, and they organise the search so that a single such certificate
+% settles many sets at once. This thesis builds a verifier in that constructive
+% spirit.
 
 \section{Scope and Threat Model}
-% ISW probing, software/value-based, with glitches out of scope
-% factoring, closures (+ their assessment)
-% Vandermonde space traversal, coupling view of rewriting
-% profiling (with redundancies)
-\todo[inline]{State the scope and threat model: ISW probing, software/value-based leakage, glitches out of scope.}
+\label{sec:intro-scope}
+
+We work in the \emph{probing model} of Ishai, Sahai, and Wagner
+\parencite{10.1007/978-3-540-45146-4_27}. The circuit is arithmetic over
+$\mathbb{F}_2$, built from two-input XOR and AND gates, and its inputs are
+partitioned into secret, random, and public wires. An adversary of order $d$
+chooses any $d$ wires and learns their joint values over the draw of the internal
+randomness, and the circuit is \emph{$d$-probing secure} when no such choice tells
+the secrets apart (Chapter~\ref{chap:preliminaries}). The leakage is
+\emph{value-based}: a probed wire leaks the logical value it carries and nothing
+more. Physical effects that make a wire leak about more than its final value, such
+as glitches and transitions in hardware \parencite{10.1007/978-3-030-29959-0_15},
+are outside our model, as is any question of composing separately verified gadgets
+into a larger one. The object of study is the exact probing security of a single
+circuit, decided over its wire values.
+
+Within that model our aim is exact verification rather than a sound
+approximation. When the tool reports a circuit secure, every one of its
+$\sum_{i \le d} \binom{|\mathcal{W}|}{i}$ observation sets has been accounted for,
+and when it reports a circuit insecure it returns a specific leaking observation
+as a witness, up to the one incompleteness we flag in
+Chapter~\ref{chap:design}. The decision problem underlying a single observation is
+hard in general, in a sense Chapter~\ref{chap:couplings} makes precise, which is
+what forces the constructive route the tool takes rather than a direct count.
 
 \section{Contributions}
-\todo[inline]{List the thesis's contributions: the rewrite engine, factoring, closures, Vandermonde-based subset-space traversal, the coupling view of rewriting, and the profiling/redundancy analysis.}
+\label{sec:intro-contributions}
+
+This thesis presents \toolname, a verifier of $d$-probing security for masked
+arithmetic circuits over $\mathbb{F}_2$, implemented in Lean~4. Its design is
+organised around three components, and the contributions follow that division.
+
+\textbf{A constructive oracle for one observation.} We give a rewrite engine that
+decides secret-independence of a single probe by substituting away its randoms one
+at a time, driving the observation toward a secret-free form
+(Chapter~\ref{chap:design}). The engine is layered, a cheap single-occurrence rule
+first and a complete substitution loop behind it, and we prove its verdicts sound.
+To reach randoms that ordinary rewriting cannot, we add a \emph{multiplicative
+factoring} transformation that reshapes products to expose masks buried inside
+them, and we show it strictly enlarges the class of circuits the engine can
+certify.
+
+\textbf{An exhaustive traversal of the observation space.} We give a driver that
+certifies every $d$-subset of the wires without enumerating them one by one,
+splitting the space recursively in the manner of \texttt{maskVerif}
+\parencite{10.1007/978-3-030-29959-0_15} and proving the split exhaustive through
+a set-level reading of Vandermonde's identity (Chapter~\ref{chap:design}). One
+discharge of a large union can prune a whole branch at once.
+
+\textbf{A coupling view of rewriting, and probe-set extension.} We read a
+successful discharge not merely as a yes-or-no verdict but as a
+measure-preserving \emph{coupling} of the randomness, in the tradition of coupling
+proofs for probabilistic programs \parencite{barthe2017coupling}, developed for
+probing security in Chapter~\ref{chap:couplings}. That reading lets one
+certificate blind many wires at once. We use it to grow a certified probe into a
+whole \emph{safe set} of wires, so a single discharge settles many observations,
+and we compare three mechanisms for the growth, adopting the coupling-based one and
+proving the other two sit inside it (Chapter~\ref{chap:design}).
+
+\textbf{Implementation and evaluation.} We describe the data structures that make
+the engine efficient, a hash-consed circuit representation and a bit-sliced,
+staged test for the extension (Chapter~\ref{chap:implementation}), and we evaluate
+\toolname\ on a suite of masked gadgets, reporting its verification outcomes and
+analysing where the search does redundant work (Chapter~\ref{chap:evaluation}).
+Along the way the tool rediscovers a genuine flaw in a four-share gadget, which we
+use as a case study.
 
 \section{Thesis Outline}
-\todo[inline]{Outline the structure of the remaining chapters.}
+\label{sec:intro-outline}
 
+Chapter~\ref{chap:preliminaries} fixes notation and defines arithmetic circuits,
+the probing model, and $d$-probing security, and studies the randomness
+substitution technique we use througout. Chapter~\ref{chap:related} surveys the
+verification literature we build on and depart from. Chapter~\ref{chap:couplings}
+develops the coupling view of probing security and situates the underlying
+decision problem in the complexity hierarchy. Chapter~\ref{chap:design} is the
+core of the thesis, presenting our algorithm with its three components together with their algorithms and
+correctness proofs, while Chapter~\ref{chap:implementation} gives the concrete data
+structures and implementation details behind them. Chapter~\ref{chap:evaluation} reports the experiments.
+Chapter~\ref{chap:futurework} outlines the directions our approach does not treat, and
+Chapter~\ref{chap:conclusion} concludes the thesis.
