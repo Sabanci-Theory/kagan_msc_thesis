@@ -5,15 +5,58 @@
 % ------------------------------------------------------------
 \section{Notation and Mathematical Background}
 \label{sec:notation}
-\todo[inline]{Fix general notation used throughout the thesis (sets, tuples, functions, etc.).}
+
+This chapter collects the background the rest of the thesis builds on and fixes
+the notation for it. We write $[n] = \{1, \dots, n\}$ and use $\{0,1\}$ or $\mathbb{F}_2$ for the set of
+bits. Tuples are set in boldface, $\mathbf{x} = (x_1, \dots, x_n)$, with $|\mathbf{x}|$
+denoting their length. For a finite set $X$ we write $\mathcal{P}(X)$ for its power set and
+$\binom{X}{k}$ for the family of its $k$-element subsets. Functions are total
+unless we say otherwise, and we identify a function $\{0,1\}^n \to \{0,1\}$ with the
+Boolean function it computes. Notation that is used only locally is introduced
+where it appears.
   \oldsubsection{\texorpdfstring%
     {The Field $\mathbb{F}_2$ and Multilinear Boolean Polynomials}%
     {The Field F2 and Multilinear Boolean Polynomials}}
   \label{sec:field-f2}
-  \todo[inline]{Recall the field $\mathbb{F}_2$ and the representation of Boolean functions as multilinear polynomials over it.}
+
+  The field $\mathbb{F}_2$ has carrier $\{0,1\}$ with addition $\oplus$, the
+  exclusive-or, and multiplication $\odot$, the logical-and. Addition is its own
+  inverse, so $x \oplus x = 0$, and multiplication is idempotent, $x \odot x = x$.
+
+  Every function $f : \mathbb{F}_2^{\,n} \to \mathbb{F}_2$ is a polynomial over
+  $\mathbb{F}_2$, and idempotence lets us take that polynomial to have no variable
+  raised above the first power. So $f$ has a unique \emph{multilinear}
+  representation,
+  \[
+    f(x_1, \dots, x_n) \;=\; \bigoplus_{S \subseteq [n]} c_S \bigodot_{i \in S} x_i,
+    \qquad c_S \in \mathbb{F}_2,
+  \]
+  its \emph{algebraic normal form} (ANF). Uniqueness is what turns the ANF into a
+  decision procedure for the questions we put to it. In particular, note that, $f$ depends on a
+  variable $x_i$ (meaning that flipping $x_i$ can change the output) if and only if
+  some monomial of the ANF contains $x_i$.
+
   \subsection{Probability Distributions and Statistical Independence}
   \label{sec:prob-independence}
-  \todo[inline]{Recall the definitions of probability distributions and statistical independence used later to state probing security.}
+
+  Probing security is a statement about distributions, so we fix the little we
+  need. A \emph{distribution} on a finite set $X$ is a function $\mu : X \to [0,1]$
+  with $\sum_{x \in X} \mu(x) = 1$, and the \emph{uniform} distribution assigns
+  $\mu(x) = 1/|X|$ to every $x$. A random variable $Z$ into a finite set induces
+  the distribution $x \mapsto \Pr[Z = x]$, its \emph{law}, and two random variables
+  are \emph{identically distributed} when their laws agree on every value.
+
+  The security notion we are after is the independence of a family of laws from a
+  parameter. Suppose a random variable $Z$ depends on a parameter $s$, so that each
+  value of $s$ gives a law $\mu_s$. We say $Z$ is \emph{independent of} $s$ when
+  $\mu_s$ is one and the same distribution for every value of $s$. For probing
+  security the parameter is the secret assignment and the law is that of a probe,
+  as Section~\ref{sec:d-probing} makes precise.
+  One way to prove that two laws are equal is through a measure-preserving
+  bijection: if $\pi$ carries the uniform distribution on $X$ to itself, then for
+  any function $g$ the variables $g(Z)$ and $g(\pi(Z))$ are identically distributed
+  when $Z$ is uniform.
+
   \subsection{Boolean Circuits and Gates}
   \label{sec:bool-circuits}
 
@@ -79,46 +122,182 @@ branching and no recomputation of a gate under a different name. We pass freely
 between the digraph of Definition~\ref{def:circuit} and this sequential reading,
 whichever is clearer at the moment. Second, the restriction to $2$-ary gates is
 a modelling choice, not a loss of generality: an $n$-ary sum or product is
-always expressible as a chain of $2$-ary gates. Forcing this decomposition up
-front matters for Section~\ref{sec:d-probing}, where every gate output is a wire
-an adversary may separately observe --- collapsing several operations into one
-hidden, unobservable step would understate what a probing adversary can see.
-Chapter~\ref{chap:design} (Section~\ref{sec:hash-consed-dag}) later represents
-this same object as a hash-consed data structure suited to computation; nothing
-here depends on that choice of representation.
+always expressible as a chain of $2$-ary gates.
+
 \section{Secret Sharing and Masking}
 \label{sec:secret-sharing}
-\todo[inline]{Introduce secret sharing and masking as a side-channel countermeasure.}
+
+Physical implementations of cryptographic hardware can leak information. Power draw, electromagnetic
+emanation, and timing all correlate with the values a device computes on, and an
+attacker who measures them can recover a key that is out of cryptographic reach
+\parencite{kocher1999differential}. \emph{Masking} is the standard algorithmic
+countermeasure \parencite{chari1999towards}. Instead of computing on a secret
+directly, one splits it into several \emph{shares} whose joint distribution hides
+it, then rewrites the computation to run on the shares throughout and reconstruct
+only at the very end. The promise is that an attacker who sees few enough
+intermediate values learns nothing, because too few shares carry no information
+about the secret.
+
   \subsection{Boolean Masking}
   \label{sec:boolean-masking}
-  \todo[inline]{Define Boolean masking (XOR-sharing) of a secret and how masked circuits compute on shares.}
+
+  We use \emph{Boolean} masking, where shares combine by exclusive-or. An
+  \emph{$n$-sharing} of a bit $x \in \mathbb{F}_2$ is a tuple
+  $(x_0, \dots, x_{n-1})$ with $x_0 \oplus \cdots \oplus x_{n-1} = x$. To draw one,
+  sample $x_1, \dots, x_{n-1}$ uniformly and independently and set
+  $x_0 = x \oplus x_1 \oplus \cdots \oplus x_{n-1}$. The construction is built so
+  that any $n-1$ of the shares are then uniform and independent, hence reveal
+  nothing about $x$; only the full set of $n$ shares determines it. This is the
+  same statement, for one bit, that Section~\ref{sec:prob-independence} calls
+  independence of the secret.
+
+  A masked circuit carries every value in shared form and replaces each operation
+  by a \emph{gadget}, a sub-circuit computing a sharing of the result from sharings
+  of its inputs. Linear operations are trivial, since $\oplus$ acts share by share.
+  Multiplication is where the difficulty and the fresh randomness live, as a gadget
+  for it must combine shares of both inputs without ever forming a value that
+  depends on a secret. The masked \textsc{and} of Ishai, Sahai and Wagner
+  \parencite{10.1007/978-3-540-45146-4_27} is the archetype, and the circuits we
+  verify are built from gadgets of this kind.
+
 \section{The ISW Probing Model}
 \label{sec:isw-model}
-\todo[inline]{Introduce the Ishai-Sahai-Wagner (ISW) probing adversary model.}
-  \subsection{\NoCaseChange{$t$}-Threshold Probing and Observation Sets}
+
+For the security notion to be precise we need to state an adversary. Ishai, Sahai and Wagner
+\parencite{10.1007/978-3-540-45146-4_27} gave the model the thesis works in: the
+probing model. An adversary places a bounded number of probes on the wires
+of a circuit and reads the values they carry, and the circuit is secure when no
+choice of probes tells the adversary anything about the secrets. The model
+abstracts a physical side-channel attacker into a clean combinatorial game, and it
+is the setting in which masking admits proofs.
+
+The connections between the physical side-channel attack and the probing model, however,
+are not exposited in this thesis.
+
+
+  \subsection{Threshold Probing and Observation Sets}
   \label{sec:t-threshold}
-  \todo[inline]{Define $t$-threshold probing and observation sets of wires an adversary may query.}
+
+  Fix a circuit with secret inputs $\mathcal{S}$, random inputs $\mathcal{R}$, and
+  public inputs $\mathcal{P}$ as in Section~\ref{sec:bool-circuits}. A
+  \emph{threshold} adversary of order $d$ chooses an \emph{observation set} of at
+  most $d$ wires and learns their joint values. The public inputs are known and the secrets
+  are held fixed, so the only randomness in play is the internal randomness
+  $\mathcal{R}$, sampled uniformly. An observation set therefore carries a joint
+  distribution over the draw of $\rho \in \{0,1\}^{\mathcal{R}}$. We call such a set
+  a \emph{probe}, and we read each of its wires as a function of $\rho$.
+
   \subsection{\NoCaseChange{$d$}-Probing Security}
   \label{sec:d-probing}
-  \todo[inline]{Define $d$-probing security formally, in terms of the joint distribution of any $d$-wire probe.}
+
+  \begin{definition}[$d$-probing security]
+  \label{def:d-probing}
+  A circuit is \emph{$d$-probing secure} if for every observation set of at most
+  $d$ wires the joint distribution of that set, taken over uniform
+  $\rho \in \{0,1\}^{\mathcal{R}}$, is independent of the secret inputs in the sense
+  of Section~\ref{sec:prob-independence}. Equivalently, the law of the set is one
+  and the same for every assignment to $\mathcal{S}$.
+  \end{definition}
+
+  The order $d$ counts the probes the adversary is granted, and an $n$-share
+  masking is usually meant to withstand $d = n-1$ of them. The definition
+  quantifies over sets of wires read from a single run of the circuit, rather than single indivdual wires,
+  since a masking leaks only jointly. And it is a worst-case statement over all
+  $\sum_{i \le d} \binom{|\mathcal{W}|}{i}$ observation sets of the circuit's wires
+  $\mathcal{W}$. Verifying this definition for the circuits we defined is the task
+  of the whole thesis.
+
   \subsection{Probabilistic Non-Interference}
   \label{sec:pni}
-  \todo[inline]{Define probabilistic non-interference (PNI) and relate it to $d$-probing security.}
-  \subsection{Threshold and Strong Non-Interference}
-  \label{sec:sni}
-  \todo[inline]{Define threshold (TNI) and strong non-interference (SNI) and relate them to composability of masked gadgets.}
+
+  The distributional condition of Definition~\ref{def:d-probing} has an equivalent
+  phrasing the verification literature prefers, \emph{probabilistic
+  non-interference} \parencite{barthe2015verified}. It helps to study it and understand 
+  in different views, so below we give three perspectives that realize the same notion. Fix a
+  probe $O$ with $|O| \le d$. Under a secret assignment $\mathbf{a} \in
+  \{0,1\}^{\mathcal{S}}$ and uniform randomness $\rho$, the probe takes the joint
+  value $O(\rho; \mathbf{a}) = \big(w(\rho; \mathbf{a})\big)_{w \in O}$ and we
+  write $\mathcal{L}_{\mathbf{a}}(O)$ for its law --- the distribution of that value
+  over the draw of $\rho$.
+
+  The first reading is an equality of laws. Definition~\ref{def:d-probing} says of
+  a $d$-probing secure circuit that
+  \[
+    \mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)
+    \qquad \text{for all } \mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}}
+    \text{ and every } O \text{ with } |O| \le d ,
+  \]
+  so the law of a probe is one and the same whatever the secrets are, hence we cannot
+  deduce information about the secrets by looking at the values on the probe.
+
+  The second reading is \emph{simulability}, and it is the one that names
+  non-interference. A probe $O$ is non-interfering when some randomised algorithm
+  $\mathsf{Sim}(O)$, given the probe and the public inputs but never the secrets,
+  has output law equal to $\mathcal{L}_{\mathbf{a}}(O)$ for every $\mathbf{a}$. Such
+  a probe shows the adversary nothing it could not have produced on its own without
+  the secret, which is the guarantee masking is meant to provide. Simulability and
+  equality of laws are the same property. If the laws agree, their common value is a
+  distribution the simulator samples outright, and conversely a single simulator
+  that matches every $\mathbf{a}$ forces all the $\mathcal{L}_{\mathbf{a}}(O)$ to
+  coincide with its output, hence with one another.
+
+  The third reading is a game, and it is the sharpest picture of what security
+  denies the adversary. The adversary names a probe $O$ of size at most $d$ together
+  with two secret assignments $\mathbf{a}_0$ and $\mathbf{a}_1$. A challenger draws
+  a hidden bit $c \in \{0,1\}$ and fresh randomness $\rho$, runs the circuit under
+  $\mathbf{a}_c$, and hands back the transcript $O(\rho; \mathbf{a}_c)$. The
+  adversary guesses $c$, and its advantage $\big|\Pr[\text{guess} = c] -
+  \tfrac{1}{2}\big|$ is at most the statistical distance
+  \[
+    \tfrac{1}{2} \sum_{o} \big| \mathcal{L}_{\mathbf{a}_0}(O)(o)
+      - \mathcal{L}_{\mathbf{a}_1}(O)(o) \big|
+  \]
+  between the two laws, with equality for the optimal guess. The circuit is
+  $d$-probing secure exactly when this distance is zero for every $O$,
+  $\mathbf{a}_0$, and $\mathbf{a}_1$, so that the two secret worlds are perfectly
+  indistinguishable through any $d$ wires. We call this
+  \emph{secret-indistinguishability}.
+
+  The three are one condition seen from three sides, equal laws, a secret-free
+  simulator, and a game no adversary wins. Non-interference is the form the
+  verification literature builds on, because it turns a question about distributions
+  into one about expressions.
+  % To show that a probe is non-interfering, it is enough to
+  % rewrite its wires into a form in which the secrets have cancelled, which is the
+  % program logic Barthe et al.\ introduce and the engine of
+  % Chapter~\ref{chap:design} mechanises.
+
+  % I figured, because we do not treat composability in the thesis. We don't really
+  % need to introduce it in the preliminaries chapter.
+  % \subsection{Threshold and Strong Non-Interference}
+  % \label{sec:sni}
+
+  % Probing security, unfourtanetly, does not compose. A secure gadget can
+  % leak, once its output feeds another, because probes in the second gadget might see
+  % combinations the first one never accounted for. Barthe et al.
+  % \parencite{barthe2016strong} isolate two stronger notions that do compose. A
+  % gadget is \emph{non-interfering} (NI) when any $d$ probes on it can be simulated
+  % from at most $d$ shares of each input, and \emph{strongly non-interfering} (SNI)
+  % when the same holds under a sharper budget that counts only the probes on
+  % internal wires, not those on the outputs. SNI is what lets one assemble a large
+  % masked circuit from small verified gadgets while preserving the order. These
+  % notions organise much of the field, though the thesis stays with plain probing
+  % security and does not pursue composition, so we recall them mainly to place our
+  % object among its neighbours.
+
 \section{Randomness Substitution}
 \label{sec:randomness-substitution}
 
 This section isolates, as a single reusable fact, the probabilistic argument
 our checker automates. Fix a circuit as in Section~\ref{sec:bool-circuits},
-with random inputs $\mathcal{R}$, and let a \emph{randomness assignment} be a
-function $\rho : \mathcal{R} \to \{0,1\}$. The secrets and public inputs are
-held fixed throughout, so every wire $w$ denotes a function $w(\rho)$ of $\rho$
-alone. A \emph{probe} is a tuple of wires --- the values an adversary observes
---- and Section~\ref{sec:d-probing} phrases $d$-probing security as the demand
-that the joint distribution of a probe of size at most $d$, taken over the
-uniformly distributed $\rho$, not move as the secrets vary.
+with random inputs $\mathcal{R}$, and let a \emph{randomness assignment}, or
+\emph{tape}, be a function $\rho : \mathcal{R} \to \{0,1\}$. The secrets and public
+inputs are held fixed throughout, so every wire $w$ denotes a function $w(\rho)$ of
+$\rho$ alone. A \emph{probe} is an observation set of Section~\ref{sec:d-probing},
+which we list as a tuple $\mathbf{w}$ of wires; its order does not affect the joint
+distribution. That section phrases $d$-probing security as the demand that the
+joint distribution of a probe of size at most $d$, taken over the uniformly
+distributed $\rho$, not move as the secrets vary.
 
 The whole argument rests on one line of $\mathbb{F}_2$ arithmetic: for any fixed
 bit $c$, the translation/shear $b \mapsto c \oplus b$ is a \textbf{bijection} of $\{0,1\}$
@@ -218,4 +397,30 @@ chain is searched for is taken up in the later chapters.
 
 \section{Computational Hardness Preview}
 \label{sec:hardness-preview}
-\todo[inline]{Preview the \#P-completeness result of Chapter~\ref{chap:couplings}, motivating why the thesis pursues a constructive rewrite-based checker rather than exact counting.}
+
+Definition~\ref{def:d-probing} asks, for each observation set, whether a
+distribution stays fixed as the secrets vary, and read literally this is a
+counting question, beacuse the measures we work with are defined on discrete spaces endowed with the counting measure.
+The law of a probe assigns to each possible observation the
+number of randomness assignments $\rho$ that produce it, divided by
+$2^{|\mathcal{R}|}$, and independence of the secrets asks that these counts agree
+across secret settings. Chapter~\ref{chap:couplings} makes the difficulty precise,
+showing that the associated counting problem is \#P-complete, \#P being the class
+Valiant introduced for counting the accepting computations of a nondeterministic
+machine \parencite{valiant1979complexity}.
+
+The verification question of $d$-probing security, however, is a \emph{decision} problem rather than
+a counting one, so it cannot be a member of \#P. Deciding whether one probe is
+independent of the secrets compares two counts and asks whether they are equal, and
+the class of decision problems of this shape, i.e. whether a nondeterministic machine
+has exactly a prescribed number of accepting paths, is $\mathrm{C}_{=}\mathrm{P}$,
+the exact-counting counterpart of \#P studied by Wagner
+\parencite{wagner1986complexity}. Its canonical complete problem, deciding whether
+a Boolean formula has exactly a given number of satisfying assignments, is the
+equality-of-counts question in its essence, and probing security is that same
+question, but posed in the language of masked circuits. Locating the problem in
+$\mathrm{C}_{=}\mathrm{P}$ says plainly that an exact decision procedure is not
+expected to be efficient at all, and it is the reason this thesis does not count.
+It certifies security constructively instead, through the rewriting of
+Section~\ref{sec:randomness-substitution}, giving a checker that is sound but
+necessarily incomplete.

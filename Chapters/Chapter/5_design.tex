@@ -207,7 +207,8 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   single-coordinate shears $\widehat{\sigma}$, so it can only certify
   secret-independence witnessed by a chain of substitutions, possibly interleaved
   with factoring. Also, it should be noted that the completeness of this approach
-  is proved only in the linear/affine case \textcolor{orange}{(nerede proof?)}.
+  is proved only in the linear/affine case.
+  % TODO: the proof for the linear/affine case is not given.
 
   Termination is only argued informally, not proved. Each general substitution
   retires its random into $\mathit{used}$ and is never repeated for it, bounding the
@@ -784,9 +785,10 @@ mechanisms from the weakest to the strongest and adopt the last.
     \;=\; (u \circ \varphi)(\rho;\, \mathbf{a})
     \;=\; \overline{u}(\rho) .
   \]
-  The left-hand side is $u$ evaluated at the relabelled randomness space under the secrets
-  $\mathbf{a}$, so it is a bit value; the first equality is the
-  substitution lemma, the second one comes from the admission condition. Both copies of
+  The left-hand side is $u$ evaluated at the relabelled randomness assignment
+  $\varphi_{\mathbf{a}}(\rho)$ under the secrets $\mathbf{a}$, so it is a bit value;
+  the first equality is the substitution lemma, the second one comes from the
+  admission condition. Both copies of
   $\mathbf{a}$, the one inside $\varphi_{\mathbf{a}}$ and the one feeding $u$ its
   secret inputs, cancel, and the value depends on $\rho$ alone.
 
