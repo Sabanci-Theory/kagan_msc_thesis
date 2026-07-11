@@ -1,10 +1,115 @@
-\newglossaryentry{coupling}{
-  name={\ensuremath{\pmb{\Phi}}},
-  text={\ensuremath{\Phi}},
-  description={Coupling function: a family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$ of
-    measure-preserving bijections of the random space, one per ordered pair of
-    secret assignments},
-  sort={coupling},
+\newglossaryentry{fieldtwo}{
+  name={\ensuremath{\mathbb{F}_2}},
+  text={\ensuremath{\mathbb{F}_2}},
+  description={The two-element field $\{0,1\}$, with addition $\oplus$ and
+    multiplication $\odot$},
+  sort={010},
+  type=symbols
+}
+
+\newglossaryentry{oplus}{
+  name={\ensuremath{\oplus}},
+  text={\ensuremath{\oplus}},
+  description={Addition in $\mathbb{F}_2$ (exclusive-or)},
+  sort={020},
+  type=symbols
+}
+
+\newglossaryentry{odot}{
+  name={\ensuremath{\odot}},
+  text={\ensuremath{\odot}},
+  description={Multiplication in $\mathbb{F}_2$ (logical-and)},
+  sort={030},
+  type=symbols
+}
+
+\newglossaryentry{secrets}{
+  name={\ensuremath{\mathcal{S}}},
+  text={\ensuremath{\mathcal{S}}},
+  description={Set of secret input wires of a circuit},
+  sort={040},
+  type=symbols
+}
+
+\newglossaryentry{randoms}{
+  name={\ensuremath{\mathcal{R}}},
+  text={\ensuremath{\mathcal{R}}},
+  description={Set of random (masking) input wires of a circuit},
+  sort={050},
+  type=symbols
+}
+
+\newglossaryentry{publics}{
+  name={\ensuremath{\mathcal{P}}},
+  text={\ensuremath{\mathcal{P}}},
+  description={Set of public input wires of a circuit},
+  sort={060},
+  type=symbols
+}
+
+\newglossaryentry{wires}{
+  name={\ensuremath{\mathcal{W}}},
+  text={\ensuremath{\mathcal{W}}},
+  description={Set of all wires of a circuit},
+  sort={070},
+  type=symbols
+}
+
+\newglossaryentry{vars}{
+  name={\ensuremath{\mathrm{vars}(w)}},
+  text={\ensuremath{\mathrm{vars}(w)}},
+  description={The random inputs a wire $w$ depends on, $\mathrm{vars}(w) \subseteq \mathcal{R}$},
+  sort={080},
+  type=symbols
+}
+
+\newglossaryentry{tape}{
+  name={\ensuremath{\rho}},
+  text={\ensuremath{\rho}},
+  description={A randomness assignment, or tape, $\rho : \mathcal{R} \to \{0,1\}$;
+    the randoms are sampled uniformly from the randomness space $\{0,1\}^{\mathcal{R}}$},
+  sort={090},
+  type=symbols
+}
+
+\newglossaryentry{secretassign}{
+  name={\ensuremath{\mathbf{a}, \mathbf{b}}},
+  text={\ensuremath{\mathbf{a}}},
+  description={Secret assignments, $\mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}}$},
+  sort={100},
+  type=symbols
+}
+
+\newglossaryentry{probe}{
+  name={\ensuremath{\mathbf{w}}},
+  text={\ensuremath{\mathbf{w}}},
+  description={A probe: an observation set of at most $d$ wires, listed as a tuple $\mathbf{w} = (w_1, \dots, w_k)$},
+  sort={110},
+  type=symbols
+}
+
+\newglossaryentry{observationset}{
+  name={\ensuremath{O}},
+  text={\ensuremath{O}},
+  description={An observation set (a probe viewed as an unordered set of wires)},
+  sort={120},
+  type=symbols
+}
+
+\newglossaryentry{law}{
+  name={\ensuremath{\mathcal{L}_{\mathbf{a}}(O)}},
+  text={\ensuremath{\mathcal{L}_{\mathbf{a}}(O)}},
+  description={The law (distribution) of a probe $O$ under secret assignment
+    $\mathbf{a}$, taken over uniform $\rho$},
+  sort={130},
+  type=symbols
+}
+
+\newglossaryentry{probingorder}{
+  name={\ensuremath{d}},
+  text={\ensuremath{d}},
+  description={Probing order (maximum number of wires an adversary may observe)},
+  sort={140},
   type=symbols
 }
 
@@ -13,14 +118,34 @@
   text={\ensuremath{\sigma}},
   description={Randomness substitution $r \mapsto e \oplus r$; its induced
     measure-preserving map on the random space is written $\widehat{\sigma}$},
-  sort={sigma},
+  sort={150},
   type=symbols
 }
 
-\newglossaryentry{probingorder}{
-  name={\ensuremath{d}},
-  text={\ensuremath{d}},
-  description={Probing order (maximum number of wires an adversary may observe)},
-  sort={d},
+\newglossaryentry{secretmap}{
+  name={\ensuremath{\varphi_{\mathbf{a}}}},
+  text={\ensuremath{\varphi_{\mathbf{a}}}},
+  description={The composite tape map a discharge builds under a single secret
+    assignment $\mathbf{a}$; the coupling is $\Phi_{\mathbf{a},\mathbf{b}} =
+    \varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$},
+  sort={160},
+  type=symbols
+}
+
+\newglossaryentry{coupling}{
+  name={\ensuremath{\pmb{\Phi}}},
+  text={\ensuremath{\Phi}},
+  description={Coupling functions; a family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$ of
+    measure-preserving bijections of the random space, one per ordered pair of
+    secret assignments},
+  sort={170},
+  type=symbols
+}
+
+\newglossaryentry{sharpp}{
+  name={\ensuremath{\#\mathrm{P}}},
+  text={\ensuremath{\#\mathrm{P}}},
+  description={The counting complexity class},
+  sort={180},
   type=symbols
 }
