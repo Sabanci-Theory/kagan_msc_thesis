@@ -114,7 +114,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \If{$r = \bot$} \ $r \gets \Call{FindGeneral}{\mathbf{w}, \mathit{used}}$ \Comment{multi-occurrence, at least one additive instance} \EndIf
   \If{$r = \bot$}
     \If{$\mathit{factored}$} \Return $(\mathit{false}, T)$ \EndIf
-    \State \Return $\Call{GeneralRewrite}{\mathrm{Factor}(\mathbf{w}), \mathit{used}, \mathit{fuel}, \mathit{true}, T}$ \Comment{lazy factoring (\S\ref{sec:factoring-cost})}
+    \State \Return $\Call{GeneralRewrite}{\mathrm{Factor}(\mathbf{w}), \mathit{used}, \mathit{fuel}, \mathit{true}, T}$ \Comment{lazy factoring}
   \EndIf
   \State $x \gets$ chosen additive parent of $r$; \ $e \gets \bigoplus(\mathrm{children}(x) \setminus \{r\})$ \Comment{$r \notin \mathrm{vars}(e)$}
   \State $t \gets e \oplus r$; \ $\mathbf{w}' \gets \mathbf{w}[r \mapsto t]$ \Comment{Lemma~\ref{lem:substitution}}
