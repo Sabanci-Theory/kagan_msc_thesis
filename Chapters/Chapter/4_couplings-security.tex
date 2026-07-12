@@ -3,14 +3,191 @@
 \chapter{Couplings and Probing Security}
 \label{chap:couplings}
 % ------------------------------------------------------------
-\section{The Counting Problem is \NoCaseChange{\#P}-Complete} % this is at a weird place, but I want to mention it
-\todo[inline]{Introduce the counting problem behind secret-independence checking and state the \#P-completeness result.}
-  
+\section{The Complexity of Deciding Secret-Independence}
+\label{sec:hardness}
+
+Definition~\ref{def:d-probing} phrases security as the condition that the law of a
+probe stay fixed as the secrets vary, and Section~\ref{sec:hardness-preview}
+already mentioned that this demand is actually a counting question. In this section we make
+this claim precise. Underneath a single probe sit two problems, computing its law
+and deciding whether varying the secret move it, and we determine each one's hardness. Computing the law
+is a $\#\mathrm{P}$-complete count, and the decision problem is a
+$\mathrm{C}_{=}\mathrm{P}$-complete comparison of such counts. This means
+that verifying even one probe by counting is complete for classes that
+sit above the entire polynomial hierarchy, which is the reason the thesis certifies
+security constructively without explicit counting.
+
+Throughout, fix a circuit over $\mathbb{F}_2$ with secret inputs $\mathcal{S}$,
+random inputs $\mathcal{R}$, and public inputs $\mathcal{P}$, as usual, together with a probe
+$O = \{w_1, \dots, w_k\}$ of size $k \le d$. Under a secret assignment
+$\mathbf{a} \in \{0,1\}^{\mathcal{S}}$ and a tape
+$\rho \in \{0,1\}^{\mathcal{R}}$, the probe takes the joint value
+$O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
+
   \subsection{From Independence to Distribution Counting}
-  \todo[inline]{Show how deciding secret-independence of a probe reduces to a distribution-counting problem.}
-  
-  \subsection{\NoCaseChange{\#P}-Completeness and Its Consequences for Verification}
-  \todo[inline]{Prove \#P-completeness of the counting problem and discuss what this implies for exact verification (motivating the constructive rewrite-based approach instead).}
+  \label{sec:indep-to-counting}
+
+  The law of a probe is assembled from integer counts. For an observation
+  $o \in \{0,1\}^{k}$ write
+  \[
+    N_{\mathbf{a}}(o) \;=\; \big|\{\, \rho \in \{0,1\}^{\mathcal{R}} : O(\rho; \mathbf{a}) = o \,\}\big| ,
+  \]
+  the number of tapes on which the probe reads $o$ under the secret $\mathbf{a}$.
+  Since $\rho$ is uniform, the law is
+  $\mathcal{L}_{\mathbf{a}}(O)(o) = N_{\mathbf{a}}(o) / 2^{|\mathcal{R}|}$, so the
+  law is nothing but a histogram of these counts. Two laws coincide
+  exactly when their counts do,
+  \[
+    \mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)
+    \quad\Longleftrightarrow\quad
+    N_{\mathbf{a}}(o) = N_{\mathbf{b}}(o) \ \text{ for every } o \in \{0,1\}^{k} .
+  \]
+  Secret-independence (Definition~\ref{def:d-probing}) is this equality quantified
+  over all pairs of secrets. So what looks like a statement about distributions is
+  actually a statement about integers, that certain counts of satisfying tapes agree.
+  This splits into two questions of different character. One asks for the count itself;
+  the other asks only whether two counts are equal, a decision. We treat them in turn.
+
+  \begin{definition}[The counting and distinguishing problems]
+  \label{def:count-distinguish}
+  \textsc{Count} takes a circuit, a probe $O$, a secret $\mathbf{a}$, and an
+  observation $o$, and returns the integer $N_{\mathbf{a}}(o)$.
+  \textsc{Distinguish} takes a circuit, a probe $O$, and two secret assignments
+  $\mathbf{a}, \mathbf{b}$, and accepts exactly when
+  $\mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)$.
+  \end{definition}
+
+  \subsection{Counting the Law is \NoCaseChange{\#P}-Complete}
+  \label{sec:sharpp}
+
+  Recall that $\#\mathrm{P}$ is Valiant's class of functions counting the accepting
+  computations of a nondeterministic polynomial-time machine, equivalently it is the
+  enumeration of the satisfying assignments of a polynomial-size Boolean predicate
+  \parencite{valiant1979complexity}.
+
+  \begin{proposition}[Counting the law]
+  \label{prop:count-sharpp}
+  \textsc{Count} is $\#\mathrm{P}$-complete.
+  \end{proposition}
+
+  \begin{proof}
+  \emph{Membership.} Fix $\mathbf{a}$, the publics, and $o$. The predicate
+  $\rho \mapsto [\, O(\rho; \mathbf{a}) = o \,]$ evaluates the circuit on the tape
+  $\rho$ and compares $k$ output bits against $o$, all in time polynomial in the
+  circuit size. Hence $N_{\mathbf{a}}(o)$ counts the tapes satisfying a
+  polynomial-time predicate, so it is a $\#\mathrm{P}$ function.
+
+  \emph{Hardness.} We reduce from $\#\textsc{SAT}$, the count of satisfying
+  assignments of a Boolean formula, which is $\#\mathrm{P}$-complete
+  \parencite{valiant1979complexity}. Given $\varphi(x_1, \dots, x_m)$, build the
+  circuit that reads $x_1, \dots, x_m$ as random inputs, has no secrets, and
+  computes $\varphi$ on a single wire $w$, realising the connectives of $\varphi$
+  through $\oplus$ and $\odot$, which is possible because the two are universal over
+  $\mathbb{F}_2$ (Section~\ref{sec:bool-circuits}). The probe $\{w\}$ then has
+  $N(1) = |\{ x : \varphi(x) = 1 \}| = \#\varphi$, so any procedure for
+  \textsc{Count} computes $\#\varphi$. The reduction is polynomial, hence
+  \textsc{Count} is $\#\mathrm{P}$-hard.
+  \end{proof}
+
+  Notice that the hardness result uses no secret at all, so computing a probe's law is already
+  intractable on the plainest circuits. That count is the object every exact method
+  must, explicity or implicitly, realize.
+
+  % The class wraps every \subsection title in titlecaps' \titlecap, which loops on
+  % a math subscript; \oldsubsection bypasses that wrapper for this one heading.
+  \oldsubsection{Deciding Independence is \texorpdfstring{\ensuremath{\mathrm{C}_{=}\mathrm{P}}}{C=P}-Complete}
+  \label{sec:ceqp}
+
+  \textsc{Distinguish} never asks for a count outright. It asks only whether two
+  counts are equal, and that equality has a class of its own. Following Wagner,
+  $\mathrm{C}_{=}\mathrm{P}$ is the class of languages of the form ``does a
+  nondeterministic polynomial-time machine have exactly a given number of
+  accepting paths'' \parencite{wagner1986complexity}. Another view comes
+  from gap functions. Let $\mathrm{GapP}$ be the closure of $\#\mathrm{P}$ under
+  subtraction, so the differences $f - g$ of two counting functions
+  \parencite{fenner1994gap}. Then $\mathrm{C}_{=}\mathrm{P}$ is exactly the class of
+  vanishing sets of gap functions,
+  \[
+    \big\{\, x \mid h(x) = 0 \,\big\}, \qquad h \in \mathrm{GapP} .
+  \]
+  Its canonical complete problem is \textsc{ExactSat}, deciding whether a formula
+  has exactly a given number of satisfying assignments, equivalently one can also
+  ask whether two formulas have the same number of satisfying assigmnets
+  \parencite{wagner1986complexity}.
+
+  \begin{theorem}[Deciding independence]
+  \label{thm:distinguish-ceqp}
+  \textsc{Distinguish} is $\mathrm{C}_{=}\mathrm{P}$-complete. Consequently deciding
+  whether a probe is secret-independent is $\mathrm{C}_{=}\mathrm{P}$-hard.
+  \end{theorem}
+
+  \begin{proof}
+  \emph{Membership.} Put
+  \[
+    f(C, O, \mathbf{a}, \mathbf{b}) \;=\; \sum_{o \in \{0,1\}^{k}}
+      \big(N_{\mathbf{a}}(o) - N_{\mathbf{b}}(o)\big)^2 .
+  \]
+  Each $N_{\mathbf{a}}$ is a $\#\mathrm{P}$ function, and $\mathrm{GapP}$ is closed under
+  subtraction and multiplication \parencite{fenner1994gap}. The sum ranges over
+  $2^{k} \le 2^{d}$ observations, which is a constant since the order $d$ is fixed, thus $f$ is
+  a constant combination of gap functions and is itself in $\mathrm{GapP}$. Remember that a sum of
+  squares vanishes exactly when every term does, hence
+  \[
+    \mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)
+    \iff N_{\mathbf{a}}(o) = N_{\mathbf{b}}(o) \ \forall o
+    \iff f(C, O, \mathbf{a}, \mathbf{b}) = 0 ,
+  \]
+  and \textsc{Distinguish} is the vanishing set of the gap function $f$, so it lies in
+  $\mathrm{C}_{=}\mathrm{P}$.
+
+  \emph{Hardness.} We reduce from the equality form of \textsc{ExactSat}: given two
+  formulas $\varphi_0, \varphi_1$ over $x_1, \dots, x_m$, decide whether
+  $\#\varphi_0 = \#\varphi_1$, which is $\mathrm{C}_{=}\mathrm{P}$-complete
+  \parencite{wagner1986complexity}. Build a circuit with a single secret bit $s$,
+  the $x_i$ as randoms, and one wire
+  \[
+    w \;=\; \varphi_0 \,\oplus\, \big(s \odot (\varphi_0 \oplus \varphi_1)\big) ,
+  \]
+  again realising the formulas over $\oplus$ and $\odot$. Then $w$ reads
+  $\varphi_0$ when $s = 0$ and $\varphi_1$ when $s = 1$, so
+  $N_{s=0}(1) = \#\varphi_0$ and $N_{s=1}(1) = \#\varphi_1$. The one-bit probe
+  $\{w\}$ satisfies $\mathcal{L}_{0} = \mathcal{L}_{1}$ if and only if
+  $\#\varphi_0 = \#\varphi_1$, so \textsc{Distinguish} on this circuit with
+  $\mathbf{a} = 0$, $\mathbf{b} = 1$ decides the equality. The construction is
+  polynomial, so \textsc{Distinguish} is $\mathrm{C}_{=}\mathrm{P}$-hard. One secret
+  bit and one probed wire already suffice, so no feature of the masking is what
+  makes the problem hard.
+  \end{proof}
+
+  \subsection{What the Placements Mean for Verification}
+  \label{sec:hardness-consequences}
+
+  The two results are closely related. The law's entries are $\#\mathrm{P}$
+  counts, and the security question is whether two of them coincide, which is the
+  defining shape of the $\mathrm{C}_{=}\mathrm{P}$ class. The classes fall in the expected
+  places. Every $\mathrm{C}_{=}\mathrm{P}$ query is settled by two calls to a
+  counting oracle, followed by a subtraction, and a test against zero, so
+  $\mathrm{C}_{=}\mathrm{P} \subseteq \mathrm{P}^{\#\mathrm{P}}$. Which means
+  that the decision never costs more than the counting.
+
+  Another observation is the following: a formula is unsatisfiable exactly when its count is
+  zero (as an instance of exact counting) so $\mathrm{coNP} \subseteq
+  \mathrm{C}_{=}\mathrm{P}$. Hence \textsc{Distinguish} is already
+  $\mathrm{coNP}$-hard, and no polynomial-time exact decision exists unless
+  $\mathrm{P} = \mathrm{NP}$. Further showing us that deciding
+  one probe exactly is very much intractable.
+
+  The full verification task only adds on this. $d$-probing security asks \textsc{Distinguish}
+  to answer ``equal'' for every one of the $\sum_{i \le d} \binom{|\mathcal{W}|}{i}$
+  probes and every pair of secrets. A universal quantifier over exponentially many
+  instances of a $\mathrm{C}_{=}\mathrm{P}$-complete question.
+
+  So now we should be fairly certain that computing or
+  equating these counts is out of reach, so we do not compute them. We certify security
+  constructively instead, by exhibiting for a probe a measure-preserving relabelling
+  of the randomness under which its secrets visibly cancel. Such a witness proves independence without ever
+  counting, though at the price of completeness, since a probe can be independent for
+  reasons no relabelling of our kind captures.
 
 \section{Couplings of Probabilistic Programs}
 \todo[inline]{Introduce couplings as a proof technique for distributional equality between probabilistic programs.}
@@ -35,6 +212,3 @@
   
   \subsection{The Derivation of an Explicit Coupling Witness}
   \todo[inline]{Show how a derivation (sequence of substitutions) yields an explicit coupling witness for a probe.}
-  
-  \subsection{Why a Successful Rewrite Yields a Valid Coupling}
-  \todo[inline]{Prove that a successful rewrite derivation, read as a composition of shears, satisfies the coupling definition.}

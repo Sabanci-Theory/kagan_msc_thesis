@@ -75,7 +75,7 @@
 \newglossaryentry{secretassign}{
   name={\ensuremath{\mathbf{a}, \mathbf{b}}},
   text={\ensuremath{\mathbf{a}}},
-  description={Secret assignments, $\mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}}$},
+  description={Secret assignments},
   sort={100},
   type=symbols
 }
@@ -83,7 +83,7 @@
 \newglossaryentry{probe}{
   name={\ensuremath{\mathbf{w}}},
   text={\ensuremath{\mathbf{w}}},
-  description={A probe: an observation set of at most $d$ wires, listed as a tuple $\mathbf{w} = (w_1, \dots, w_k)$},
+  description={A probe set of at most $d$ wires, listed as a tuple $\mathbf{w} = (w_1, \dots, w_k)$},
   sort={110},
   type=symbols
 }
@@ -116,16 +116,23 @@
 \newglossaryentry{substitution}{
   name={\ensuremath{\sigma}},
   text={\ensuremath{\sigma}},
-  description={Randomness substitution $r \mapsto e \oplus r$; its induced
-    measure-preserving map on the random space is written $\widehat{\sigma}$},
+  description={Randomness substitution $r \mapsto e \oplus r$},
   sort={150},
+  type=symbols
+}
+
+\newglossaryentry{substitutionhat}{
+  name={\ensuremath{\widehat\sigma}},
+  text={\ensuremath{\widehat\sigma}},
+  description={The induced measure-preserving map of the random space from $\sigma$},
+  sort={151},
   type=symbols
 }
 
 \newglossaryentry{secretmap}{
   name={\ensuremath{\varphi_{\mathbf{a}}}},
   text={\ensuremath{\varphi_{\mathbf{a}}}},
-  description={The composite tape map a discharge builds under a single secret
+  description={The composite tape map under a single secret
     assignment $\mathbf{a}$; the coupling is $\Phi_{\mathbf{a},\mathbf{b}} =
     \varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$},
   sort={160},
@@ -135,17 +142,77 @@
 \newglossaryentry{coupling}{
   name={\ensuremath{\pmb{\Phi}}},
   text={\ensuremath{\Phi}},
-  description={Coupling functions; a family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$ of
-    measure-preserving bijections of the random space, one per ordered pair of
-    secret assignments},
+  description={A family of measure-preserving bijections of the random space},
   sort={170},
+  type=symbols
+}
+
+\newglossaryentry{countN}{
+  name={\ensuremath{N_{\mathbf{a}}(o)}},
+  text={\ensuremath{N_{\mathbf{a}}(o)}},
+  description={The number of tapes $\rho$ on which a probe reads the observation
+    $o$ under secret assignment $\mathbf{a}$},
+  sort={125},
+  type=symbols
+}
+
+\newglossaryentry{classP}{
+  name={\ensuremath{\mathrm{P}}},
+  text={\ensuremath{\mathrm{P}}},
+  description={The class of decision problems solvable in deterministic
+    polynomial time},
+  sort={172},
+  type=symbols
+}
+
+\newglossaryentry{classNP}{
+  name={\ensuremath{\mathrm{NP}}},
+  text={\ensuremath{\mathrm{NP}}},
+  description={The class of decision problems solvable in nondeterministic
+    polynomial time},
+  sort={173},
+  type=symbols
+}
+
+\newglossaryentry{classcoNP}{
+  name={\ensuremath{\mathrm{coNP}}},
+  text={\ensuremath{\mathrm{coNP}}},
+  description={The class of decision problems whose complements lie in
+    $\mathrm{NP}$},
+  sort={174},
   type=symbols
 }
 
 \newglossaryentry{sharpp}{
   name={\ensuremath{\#\mathrm{P}}},
   text={\ensuremath{\#\mathrm{P}}},
-  description={The counting complexity class},
+  description={The class of functions that count the accepting computations of a
+    nondeterministic polynomial-time machine},
   sort={180},
+  type=symbols
+}
+
+\newglossaryentry{ceqp}{
+  name={\ensuremath{\mathrm{C}_{=}\mathrm{P}}},
+  text={\ensuremath{\mathrm{C}_{=}\mathrm{P}}},
+  description={The exact-counting complexity class},
+  sort={182},
+  type=symbols
+}
+
+\newglossaryentry{gapp}{
+  name={\ensuremath{\mathrm{GapP}}},
+  text={\ensuremath{\mathrm{GapP}}},
+  description={The closure of $\#\mathrm{P}$ under subtraction},
+  sort={184},
+  type=symbols
+}
+
+\newglossaryentry{ppsharpp}{
+  name={\ensuremath{\mathrm{P}^{\#\mathrm{P}}}},
+  text={\ensuremath{\mathrm{P}^{\#\mathrm{P}}}},
+  description={The class of decision problems solvable in polynomial time given
+    an oracle for a $\#\mathrm{P}$ counting function},
+  sort={186},
   type=symbols
 }
