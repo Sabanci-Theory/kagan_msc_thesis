@@ -190,25 +190,153 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
   reasons no relabelling of our kind captures.
 
 \section{Couplings of Probabilistic Programs}
-\todo[inline]{Introduce couplings as a proof technique for distributional equality between probabilistic programs.}
-  
-  \subsection{Coupling Two Runs Under Different Secrets}
-  \todo[inline]{Define a coupling between the run of a probe under one secret assignment and its run under another.}
-  
-  \subsection{Coupling Functions: Randoms to Randoms} % measure-preserving bijections on randomness
-  \todo[inline]{Formalize coupling functions as measure-preserving bijections on the randomness domain.}
+\label{sec:couplings-prob}
 
-  \section{Probing Security via Couplings}
-  \todo[inline]{Relate $d$-probing security to the existence of a coupling for every probe of size $d$.}
-  
-  \subsection{\NoCaseChange{$d$}-Probing Security Implies a (Family of) Coupling Functions}
-  \todo[inline]{Prove that $d$-probing security is equivalent to the existence of a family of coupling functions, one per pair of secret assignments.}
-  
-  \subsection{Secret-Indistinguishability}
-  \todo[inline]{Connect the coupling-existence characterization back to the standard secret-indistinguishability definition of probing security.}
+The hardness of Section~\ref{sec:hardness} rules out counting, so we need a
+different way of certifying that two laws agree. Couplings are exactly such a way.
+The idea, classical in probability theory, is to prove that two distributions are equal
+not by computing them but by ``linking'' their sources. Given distributions $\mu$ and
+$\nu$ on a finite set $X$, a \emph{coupling} is a distribution $\gamma$ on
+$X \times X$ whose two marginals are $\mu$ and $\nu$. A coupling is a witness one
+can exhibit and check locally, and it says something the marginals alone do not capture.
+In particular, if some coupling is supported on the diagonal, giving equal
+coordinates with probability one, then $\mu = \nu$. This is the case we will use,
+and it is the core idea of coupling proofs for probabilistic programs given in
+\parencite{barthe2017coupling}.
+
+Our two distributions are the laws of one probe under two secrets, and they are
+not arbitrary. Both arise as pushforwards of the same uniform source, the
+draw of a tape $\rho \in \{0,1\}^{\mathcal{R}}$, along the maps
+$\rho \mapsto O(\rho; \mathbf{a})$ and $\rho \mapsto O(\rho; \mathbf{b})$. When two
+distributions share a source in this way, a coupling becomes
+available. So, we look for a relabelling of the source that turns one run into the
+other.
+
+  \subsection{Coupling Two Runs Under Different Secrets}
+  \label{sec:coupling-two-runs}
+
+  \begin{definition}[Coupling function]
+  \label{def:coupling-function}
+  Let $O$ be a probe and $\mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}}$ two
+  secret assignments. A \emph{coupling function} from $\mathbf{a}$ to $\mathbf{b}$
+  for $O$ is a bijection $\varphi : \{0,1\}^{\mathcal{R}} \to \{0,1\}^{\mathcal{R}}$
+  with
+  \[
+    O(\rho; \mathbf{a}) \;=\; O\big(\varphi(\rho); \mathbf{b}\big)
+    \qquad \text{for every } \rho \in \{0,1\}^{\mathcal{R}} .
+  \]
+  \end{definition}
+
+  A bijection of the finite set $\{0,1\}^{\mathcal{R}}$ automatically preserves its
+  uniform law, so ``measure-preserving'' actually just means bijectivity here. What
+  the identity demands is the key point. It says $\varphi$ relabels the tapes so
+  that a run under $\mathbf{a}$ is reproduced, observation for observation, by a
+  run under $\mathbf{b}$. Such a $\varphi$ is precisely a diagonal coupling of the
+  two laws, realised by the map $\rho \mapsto \big(O(\rho; \mathbf{a}),\,
+  O(\varphi(\rho); \mathbf{b})\big)$, whose image lies on the diagonal.
+
+  Collecting one function per ordered pair of secrets gives a family
+  $\Phi = \{\, \Phi_{\mathbf{a},\mathbf{b}} \,\}_{\mathbf{a},\mathbf{b}}$ of coupling
+  functions. We may always take $\Phi_{\mathbf{a},\mathbf{a}} = \mathrm{id}$,
+  $\Phi_{\mathbf{b},\mathbf{a}} = \Phi_{\mathbf{a},\mathbf{b}}^{-1}$, and
+  $\Phi_{\mathbf{b},\mathbf{c}} \circ \Phi_{\mathbf{a},\mathbf{b}} =
+  \Phi_{\mathbf{a},\mathbf{c}}$, so the family is a groupoid on the secret
+  assignments and one row $\{\Phi_{\mathbf{a}_0,\,\cdot}\}$ generates the rest.
+
+\section{Probing Security via Couplings}
+\label{sec:probing-via-couplings}
+
+The definition is engineered so that its existence and secret-independence are one
+and the same statement.
+
+\begin{theorem}[Security is a coupling]
+\label{thm:coupling-equiv}
+A probe $O$ is secret-independent if and only if for every ordered pair of secret
+assignments $\mathbf{a}, \mathbf{b}$ there is a coupling function from $\mathbf{a}$
+to $\mathbf{b}$ for $O$.
+\end{theorem}
+
+\begin{proof}
+Suppose $\varphi$ is a coupling function from
+$\mathbf{a}$ to $\mathbf{b}$. For any observation $o$, the identity
+$O(\rho; \mathbf{a}) = O(\varphi(\rho); \mathbf{b})$ and the bijectivity of
+$\varphi$ give
+\[
+  N_{\mathbf{a}}(o) = \big|\{\rho : O(\rho; \mathbf{a}) = o\}\big|
+  = \big|\{\rho : O(\varphi(\rho); \mathbf{b}) = o\}\big|
+  = \big|\{\rho' : O(\rho'; \mathbf{b}) = o\}\big| = N_{\mathbf{b}}(o) ,
+\]
+reindexing by $\rho' = \varphi(\rho)$. Hence
+$\mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)$, and if this holds for
+every pair then $O$ is secret-independent by definition.
+
+For the other way, suppose
+$\mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)$, i.e.\
+$N_{\mathbf{a}}(o) = N_{\mathbf{b}}(o)$ for every $o$. The sets
+$F_{\mathbf{a}}(o) = \{\rho \mid O(\rho; \mathbf{a}) = o\}$ partition
+$\{0,1\}^{\mathcal{R}}$ as $o$ ranges over the observations, and likewise the
+$F_{\mathbf{b}}(o)$. Corresponding blocks have equal size, so we may pick a
+bijection $F_{\mathbf{a}}(o) \to F_{\mathbf{b}}(o)$ for each $o$ and take their
+union $\varphi$. It is a bijection of $\{0,1\}^{\mathcal{R}}$, and by construction
+it carries each $\rho \in F_{\mathbf{a}}(o)$ to some
+$\rho' \in F_{\mathbf{b}}(o)$, so $O(\varphi(\rho); \mathbf{b}) = o =
+O(\rho; \mathbf{a})$. So, $\varphi$ is a coupling function from $\mathbf{a}$ to
+$\mathbf{b}$.
+\end{proof}
+
+  \subsection{\NoCaseChange{$d$}-Probing Security as a Family of Couplings}
+  \label{sec:dprobing-couplings}
+
+  Applying Theorem~\ref{thm:coupling-equiv} to every probe lifts the equivalence
+  to the whole circuit. It is $d$-probing secure exactly when every probe of size
+  at most $d$ admits a family of coupling functions, one per ordered pair of
+  secrets. The two runs with differing secrets are indistinguishable through any
+  $d$ wires precisely because a coupling can relabel the randomness of one into the
+  randomness of the other, wire for wire.
+
+  The construction of such a coupling, assuming that the probe does not leak, turns
+  the assumption into a coupling by matching fibres block by block, and to do so it needs
+  the counts $N_{\mathbf{a}}(o)$, which are the very quantities Section~\ref{sec:hardness}
+  proved to be intractable. So the equivalence, is an existence
+  statement and not really a recipe. It guarantees a coupling without telling us how to
+  find one nor how to check it efficiently. Supplying such an explicit
+  witness is the task of the construction we explain below.
 
 \section{Substitutions as a Coupling Construction}
-\todo[inline]{Explain how the randomness-substitution rewrites of Section~\ref{sec:randomness-substitution} construct an explicit coupling.}
-  
+\label{sec:subst-coupling}
+
+The randomness substitutions of Section~\ref{sec:randomness-substitution} can become the
+building blocks of an explicit coupling. Recall that a substitution
+$\sigma = (r \mapsto e \oplus r)$ induces a measure-preserving map
+$\widehat{\sigma}$ of $\{0,1\}^{\mathcal{R}}$, with
+$(w\sigma)(\rho) = w(\widehat{\sigma}(\rho))$ for every wire
+(Lemma~\ref{lem:substitution}). Each such $\widehat{\sigma}$ is a coupling function
+in a small scale, a single measure-preserving relabelling of the tape, and couplings of
+this shape luckly compose. A finite chain of substitutions therefore composes into a
+bijection of the randomness, and it is this composite that we will exhibit as the
+witness of Theorem~\ref{thm:coupling-equiv}.
+
   \subsection{The Derivation of an Explicit Coupling Witness}
-  \todo[inline]{Show how a derivation (sequence of substitutions) yields an explicit coupling witness for a probe.}
+  \label{sec:derivation-witness}
+
+  A \emph{derivation} for a probe is a finite sequence of substitutions
+  $\sigma_1, \dots, \sigma_K$ that rewrites the probe, one randomness relabelling
+  at a time, until no secret remains in its expression. Composing the induced maps
+  under a fixed secret $\mathbf{a}$ gives a single measure-preserving bijection
+  $\varphi_{\mathbf{a}} = \widehat{\sigma_1} \circ \dots \circ \widehat{\sigma_K}$
+  of $\{0,1\}^{\mathcal{R}}$, and setting $\Phi_{\mathbf{a},\mathbf{b}} =
+  \varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$ assembles the family of
+  Section~\ref{sec:coupling-two-runs}. When the derivation ends on a secret-free
+  form, this family satisfies Definition~\ref{def:coupling-function} and so, by
+  Theorem~\ref{thm:coupling-equiv}, certifies the probe.
+
+  This is the constructive certificate that we wished for.
+  It is explicit, being read straight off the recorded
+  substitutions, and it is checkable without ever counting a fibre. What it is not
+  is \emph{complete}, since a probe can be secret-independent while no chain of
+  substitutions reaches a secret-free form, in which case the search returns no
+  witness though one might exist in the abstract sense of
+  Theorem~\ref{thm:coupling-equiv}. How such a derivation is searched for, recorded,
+  and then replayed to certify many wires at once is the subject of
+  Chapter~\ref{chap:design}, where the construction is given in full and its
+  soundness is proved.
