@@ -124,7 +124,17 @@ count.
 
 This thesis presents \toolname, a verifier of $d$-probing security for masked
 arithmetic circuits over $\mathbb{F}_2$, implemented in Lean~4. Its design rests on
-three ideas, and the contributions follow that division.
+three ideas. Before developing them we place the verification problem itself in the
+complexity hierarchy, and the contributions follow in that order.
+
+\textbf{Placing the exact-verification problem.} Before building anything we ask
+how hard the problem really is. The law of a probe is actually a histogram of integer tape counts,
+and we show that computing one such count is $\#\mathrm{P}$-complete, while deciding
+whether two secrets leave the law unchanged compares two such counts and is
+$\mathrm{C}_{=}\mathrm{P}$-complete (Chapter~\ref{chap:couplings}). Therefore, even a single
+probe lands on a level of the complexity hierarchy above the polynomial hierarchy,
+which is what rules out exact counting and motivates the constructive
+route the rest of our tool takes.
 
 \textbf{Deciding one observation by construction.} At the heart of the tool is a
 rewrite engine that decides whether a single probe depends on the secret by
@@ -132,13 +142,13 @@ substituting its randoms away one at a time, driving the observation toward a
 secret-free form (Chapter~\ref{chap:design}). The engine is layered as a cheap
 single-occurrence rule first, followed by a complete substitution loop behind it,
 and we prove its verdicts sound. Some masks, though, are buried inside products where ordinary
-substitution cannot reach them, and to expose those we add a \emph{multiplicative
-factoring} step that reshapes products so the hidden randoms surface.
+substitution cannot reach them, and to expose those we cleverly add \emph{multiplicative
+factoring} steps that reshape products so the hidden randoms surface.
 
 \textbf{Covering every observation without enumerating them.} Certifying each
 $d$-subset in turn is infeasible, so the tool instead splits the space of
 observations recursively, in the manner of \texttt{maskVerif}
-\parencite{10.1007/978-3-030-29959-0_15}, and discharges whole regions at a stroke.
+\parencite{10.1007/978-3-030-29959-0_15}, and tries to discharge whole regions at once.
 The delicate point, of course, is that the split must lose nothing. So, we prove it covers every
 observation exactly once, by reading a Vandermonde-style subset-counting identity at
 the level of sets (Chapter~\ref{chap:design}).
@@ -154,8 +164,8 @@ mechanisms for this growth, and adopt the coupling-based one, proving that the o
 two sit inside it (Chapter~\ref{chap:design}).
 
 \textbf{Implementation and evaluation.} We describe the data structures that make
-the engine efficient---a hash-consed circuit representation and a bit-sliced, staged
-test for the extension (Chapter~\ref{chap:implementation})---and we evaluate
+the engine efficient (a hash-consed circuit representation and a bit-sliced test for the extension)
+(Chapter~\ref{chap:implementation}). and we evaluate
 \toolname\ on a suite of masked gadgets, reporting its verification outcomes
 (Chapter~\ref{chap:evaluation}).
 
