@@ -13,13 +13,13 @@ measures those physical quantities can recover a key the mathematics was suppose
 to protect. This is called a \emph{side-channel attack}, and differential power analysis
 \parencite{kocher1999differential} is a canonical example. By correlating many
 power traces against a guess of an intermediate value, it extracts secret keys from
-implementations whose black-box behaviour is beyond reproach. So, the insecurity
+implementations that are deemed secure in theory. So, the insecurity
 lies not in the cipher but in the way the hardware computes it.
 
 \emph{Masking} is the standard algorithmic countermeasure against such attacks
 \parencite{chari1999towards}. It splits each secret value into $n$ \emph{shares} so
-that any $n-1$ of them, taken together, are independent of the secret, and it
-carries the computation out on the shares rather than on the secret itself. The
+that any $n-1$ of them, taken together, are independent of the secret. Then,
+computations are carried out on the shares rather than on the secret itself. The
 shares are recombined by an operation fixed in advance, and the choice of operation
 names the scheme: arithmetic masking adds the shares in a ring and multiplicative
 masking multiplies them, but the form we adopt is \emph{Boolean masking}, where the
@@ -33,12 +33,12 @@ measurement that reflects only some of the shares of a secret is, by constructio
 independent of that secret; it carries no information an attacker can use. To learn
 anything the attacker must combine the leakage of several shares at once and
 average away the noise, and the cost of doing so grows steeply. For a fixed noise
-level, the number of traces needed to mount a successful attack grows exponentially
+level, the number of traces needed to execute a successful attack grows exponentially
 in the number of shares \parencite{chari1999towards}. Adding a share is therefore a
 tunable defence as well, trading circuit size for attack cost.
 
-The difficulty is that this premise holds only if the shares are kept apart
-everywhere the attacker can reach. Implementing masking across a whole cipher is
+The difficulty is that this gurantee holds only if the shares are kept apart
+at places the attacker can reach. Implementing masking across a whole cipher is
 delicate, because the non-linear operations of the unmasked algorithm force the
 shares of different variables to interact in the masked version, and it is precisely
 those interactions that a scheme must handle with care \parencite{10.1007/978-3-540-45146-4_27,
@@ -50,12 +50,12 @@ close.
 
 Reasoning about masking directly in terms of noisy power traces is unwieldy. The
 adversary's advantage is a statistical quantity that depends on the device, the
-measurement setup, and the noise distribution, none of which the circuit designer
-controls. The field instead reasons about masking through a discrete abstraction,
+measurement setup, and the noise distribution, none of which the designers
+control completely. The field instead reasons about masking through a discrete abstraction,
 called the \emph{probing model} owing to Ishai, Sahai, and Wagner
 \parencite{10.1007/978-3-540-45146-4_27}. In this model an adversary of order $d$
 does not measure anything; it simply chooses any $d$ wires of the circuit and is
-handed their exact values over the draw of the internal randomness. The circuit is
+handed their exact values. The circuit is
 \emph{$d$-probing secure} when no such choice of $d$ wires lets the adversary tell
 one secret from another. An order-$d$ masking accordingly uses $d+1$ shares, so
 that no $d$ probes ever meet all the shares of a secret at once.
@@ -64,14 +64,14 @@ The probing model trades physical fidelity for a question one can actually decid
 Security becomes a combinatorial property of the circuit, checkable in principle by
 inspecting finitely many sets of wires. What makes the trade legitimate is that the
 abstraction is not merely convenient but provably faithful. Duc, Dziembowski, and
-Faust \parencite{duc2014unifying} give a reduction showing that security in the
+Faust \parencite{duc2014unifying} gave a reduction showing that security in the
 probing model implies security in the more realistic \emph{noisy leakage} model, in
 which every wire leaks a noisy function of its value; the abstract, value-based
 guarantee thus entails the physical one. We should note that the reduction is not trivial,
 it asks that the noise grow with the number of shares, and it carries a dependence on the field
 size, but establishing it as a question about leakage models rather than about any
-particular circuit, settles the question. We therefore take
-$d$-probing security as our target throughout and do not revisit this bridge; the
+particular circuit, is useful in practice. We therefore take
+$d$-probing security as our target throughout and do not revisit this bridge. The
 reader should simply keep in mind that a $d$-probing-secure circuit is what a
 faithful masked implementation is ultimately certifying.
 
@@ -81,9 +81,8 @@ faithful masked implementation is ultimately certifying.
 Masking is easy to get subtly wrong, and the probing model makes the failures
 precise without making them easy to find. A single wire may recombine several
 shares of one secret, or a random mask meant to hide one value may cancel against a
-copy of itself elsewhere; either reopens the very leak the masking was meant to
-close, and either shows up as some set of $d$ wires whose joint values depend on
-the secret. Correctness cannot be judged wire by wire, because $d$-probing security
+copy of itself elsewhere; either case reopens the very leak the masking was meant to
+close. Correctness cannot be judged wire by wire as well, because $d$-probing security
 is a statement about how wires leak \emph{jointly}, and the number of $d$-subsets
 grows quickly with the size of the circuit and the order $d$, which puts checking by
 hand out of reach for all but the smallest implementations.
@@ -95,32 +94,34 @@ grown around it \parencite{barthe2015verified, 10.1007/978-3-030-29959-0_15}. Tw
 difficulties stand in the way. Even a single subset already poses a question about a
 distribution over all of the circuit's internal random choices
 and there are combinatorially many subsets to settle. The tools
-that scale do not compute those distributions head-on.
+that scale do not compute those distributions explicitly.
 
 \section{Scope and Threat Model}
 \label{sec:intro-scope}
 
-Now we should fix the model precisely. The circuit is arithmetic over $\mathbb{F}_2$,
+Before moving on, we should fix the model precisely. The circuit definition we work with
+is arithmetic circuits over $\mathbb{F}_2$,
 built from two-input XOR and AND gates, and its inputs are partitioned into secret,
 random, and public wires. Leakage is \emph{value-based}, so, a probed wire leaks the
 logical value it carries and nothing more. Physical effects that make a wire leak
-about more than its final value---such as glitches and transitions in hardware
-\parencite{10.1007/978-3-030-29959-0_15}---are outside the model, as is any question
-of composing separately verified gadgets into a larger one. The object of study is
+more than its final value --- such as glitches and transitions in hardware
+\parencite{10.1007/978-3-030-29959-0_15} --- are outside the model, as is any question
+of composing separately verified circuits into a larger one. The object of study is
 the exact probing security of a single circuit, decided over its wire values.
 
 Within that model our aim is exact verification rather than a sound approximation.
-When the tool reports a circuit secure, every one of its $\sum_{i \le d}
+So, when the tool reports a circuit secure, every one of its $\sum_{i \le d}
 \binom{|\mathcal{W}|}{i}$ observation sets has been accounted for; when it reports a
-circuit insecure it returns a specific leaking observation as a witness. With the
-exception of the incomplete fragment, which flag in
-Chapter~\ref{chap:design}. The decision problem underlying even a single observation
-is hard in general, in a sense Chapter~\ref{chap:couplings} makes precise, and it is
-that hardness that forces the constructive route the tool takes rather than a direct
-count.
+circuit insecure it returns a specific leaking observation as a witness --- with the
+exception of the incomplete fragment flagged in
+Chapter~\ref{chap:design}.
+% The decision problem underlying even a single observation
+% is hard in general, in a sense Chapter~\ref{chap:couplings} makes precise, and it is
+% that hardness that forces the constructive route the tool takes rather than a direct
+% count.
 
 \section{Contributions}
-\label{sec:intro-contributions}
+\label{sec:intro-contributions} 
 
 This thesis presents \toolname, a verifier of $d$-probing security for masked
 arithmetic circuits over $\mathbb{F}_2$, implemented in Lean~4. Its design rests on
@@ -158,7 +159,7 @@ discharge can be read as more than a yes-or-no verdict. We reinterpret it as a
 measure-preserving \emph{coupling} of the circuit's randomness, in the tradition of
 coupling proofs for probabilistic programs \parencite{barthe2017coupling}, and
 develop this reading for probing security in Chapter~\ref{chap:couplings}. The
-payoff is that one certificate can vouch for many wires, in turn we grow a certified probe
+benefit is that one certificate can apply for many wires, in turn we grow a certified probe
 into a whole \emph{safe set} of wires that a single discharge settles. We study three
 mechanisms for this growth, and adopt the coupling-based one, proving that the other
 two sit inside it (Chapter~\ref{chap:design}).
