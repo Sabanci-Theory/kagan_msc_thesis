@@ -28,18 +28,12 @@
 
 \let\MakeUppercase\MakeTextUppercase
 
-% book class defaults to openright even in oneside mode; override so chapters
-% start on the very next page instead of always on an odd page.
 \makeatletter
 \@openrightfalse
 \makeatother
 
 \raggedbottom
 
-% Fix 1: show page number on dedication (remove \thispagestyle{empty}) and
-% remove the trailing \clearpage so no blank page is inserted after it.
-% Fix 2: remove \SUstartmain's own \clearpage; the \clearpage that begins
-% \SUprintfrontlists (prepended to \mainmatter) provides the needed break.
 \makeatletter
 \renewcommand{\SUdedication}{%
   \ifSU@hasdedication
@@ -57,29 +51,31 @@
 }
 \makeatother
 \newcommand{\toolname}{Coppula}
+\newcommand{\Secure}{\textsf{Secure}}
+\newcommand{\Insecure}{\textsf{Insecure}}
 
 \begin{document}
 %---------------------------------------------------------------------------------------------------------------------------------------
 % Students should complete/check the following fields before submission.
 %---------------------------------------------------------------------------------------------------------------------------------------
 \degree{Master}
-\thesistitle{On Formal Verification Techniques for Masked Circuits: Approaches and Theoretical Underpinnings}
-\tezbaslik{Maskelenmiş Devreler İçin Formal Doğrulama Teknikleri Üzerine: Yaklaşimlar ve Kuramsal Temeller}
+\thesistitle{Verification of Probing Security for Masked Circuits: A Constructive Approach and Theoretical Study}
+\tezbaslik{ha bura baslik gelcek}
 \authorname{Kağan Gülsüm}
 \programnameEN{Computer Science and Engineering}
 \programnameTR{Bilgisayar Bilimi ve Mühendisliği}
 \institute{Graduate School of Engineering and Natural Sciences}
-\approvaldate{22-07-2026}
+\approvaldate{20-07-2026}
 \advisor{Asst. Prof.}{SÜHA ORHUN MUTLUERGİL}
 \jurymember{Prof.}{ERKAY SAVAŞ}
 \jurymember{Asst. Prof.}{KLAUS FREIHERR VON GLEISSENTHAL}
 %---------------------------------------------------------------------------------------------------------------------------------------
 % ABSTRACT/OZET
 %---------------------------------------------------------------------------------------------------------------------------------------
-\abstractkeywordsEN{keyword1, keyword2, keyword3, keyword4}
+\abstractkeywordsEN{masking, probing security, formal verification, side-channel analysis, coupling}
 \abstractkeywordsTR{kelime1, kelime2, kelime3, kelime4}
 
-\abstractEN{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus.}
+\abstractEN{Masking defends cryptographic hardware and software implementations against side-channel attacks by splitting each secret into randomised shares. The probing model of Ishai, Sahai, and Wagner reduces the security of a masked circuit to a combinatorial question: is every set of $d$ wires, called a probe, jointly independent of the secrets? This thesis studies the exact verification of that property, namely $d$-probing security, for masked arithmetic circuits over the two-element field. We first identify the computational complexity of the problem. Computing the distribution of a single probe is \#P-complete, and the corresponding security decision problem is complete for the exact-counting class C$_{=}$P, so verifying even a single probe sits above the polynomial hierarchy. Hence, we verify constructively and present Coppula, a $d$-probing security checker implemented in Lean 4 featuring a layered design. At its core is a rewrite engine acting as a probe oracle, which uses substitutions and a multiplicative factoring step to expose and isolate masks buried inside products. It operates alongside a subset-space traversal that avoids explicit enumeration of every $d$-subset by partitioning the space via a set-level Vandermonde identity. Ultimately, a successful discharge is interpreted as a measure-preserving coupling of the randomness space, extending the security guarantee of one certified probe to a larger safe set of wires. The checker is sound but necessarily incomplete; we formally prove its guarantees and evaluate it on masked gadgets.}
 
 \abstractTR{Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. et magnis dis parturient montes, nascetur ridiculus mus.}
 
