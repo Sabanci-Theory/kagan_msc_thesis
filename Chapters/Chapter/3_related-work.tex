@@ -3,28 +3,183 @@
 \chapter{Related Work}
 \label{chap:related}
 % ------------------------------------------------------------
+Verifying that a masked circuit leaks nothing has been approached from several
+sides.
+The question is always the one of Chapter~\ref{chap:preliminaries}, asking whether the joint
+distribution of a set of wires vary with the secrets, but one may resolve it by
+rewriting an expression, by measuring a spectrum, by counting satisfying
+assignments, or by building the distributions explicitly. This chapter surveys those
+approaches, and places our work among them.
+
 \section{Language-Based Verification} % main inspiration
-\todo[inline]{Survey language-based approaches to masking verification, the main inspiration for this thesis.}
+\label{sec:language-based}
+
+The approach we build on views a masked circuit as a probabilistic program and
+treats a probe's leakage symbolically. Rather than estimating a distribution, it
+manipulates the expressions a set of wires compute until secrets have
+visibly cancelled. The line begins with \parencite{barthe2015verified},
+and their framing of secret-independence as a property that can be established by
+distribution-preserving rewriting, is the largest influence of this work.
+
   \subsection{Verified Proofs of Higher-Order Masking}
-  \todo[inline]{Discuss prior work on verified/formal proofs of higher-order masking schemes.}
+  \label{sec:related-barthe}
+
+  Barthe et al.\ \parencite{barthe2015verified} gave a machine-checked
+  proof of higher-order masking, built inside the EasyCrypt proof assistant and
+  its probabilistic relational Hoare logic. Their checker decides whether a set of % add easycrypt ref
+  intermediate wires is independent of the secret by rewriting. The central
+  method is called optimistic sampling, where a random $r$ occurring once, as
+  $e \oplus r$, is replaced by a fresh uniform variable, since $e \oplus r$ is
+  itself uniform when $r$ does not appear in $e$. When a substitution alone
+  exposes no cancellation, the expression is put into algebraic normal form so that
+  products collapse, and independence can be declared if no secret variable occurs in that form.
+  This is, in miniature, the rewrite engine of our Component~I
+  (Section~\ref{sec:rewrite-engine}). The optimistic sampling substitution is
+  exactly the single-occurrence rule we inherit. However, where they go to ANF,
+  we instead factor the expression (Section~\ref{sec:factoring}), which can reach
+  products that normalisation miss.
+
   \subsection{Large Sets and the Exploration Algorithm}
-  \todo[inline]{Discuss prior large-set exploration algorithms for probing security and how this thesis's subset-space traversal relates.}
+  \label{sec:related-largesets}
+
+  Deciding one set is not the only difficulty; indeed, there are
+  $\sum_{i \le d} \binom{|\mathcal{W}|}{i}$ of them. The language-based tools escape
+  this enumeration with a large-set argument that the \texttt{maskVerif} tool
+  \parencite{10.1007/978-3-030-29959-0_15} made systematic. Secret-independence
+  passes to subsets, so a proof about a large set of wires discharges every
+  one of its subsets at once. So, the search tries to verify maximal sets and, on failure,
+  splits and recurses. Our Component~II
+  (Section~\ref{sec:subset-space}) is this exploration, and our contribution there
+  is to make the split's exhaustiveness a proved identity. The set-level
+  Vandermonde partition of Section~\ref{sec:vandermonde} certifies that no probe
+  slips through such a recursion.
+
   \subsection{Witness Replay and Derivation Reuse}
-  \todo[inline]{Discuss prior work on reusing a certification witness/derivation across related probes, and how it relates to Component III's replay-driven extension (Section~\ref{sec:replay}).}
-  \subsection{maskVerif with Physical Defaults}
-  \todo[inline]{Discuss \texttt{maskVerif} and its physical-default extensions, and compare to the rewrite engine of Chapter~\ref{chap:design}.}
+  \label{sec:related-replay}
+
+  A certified set leaves behind a derivation, which is the sequence of rewrites that
+  discharged it, and that derivation can be reused. \texttt{maskVerif}
+  \parencite{10.1007/978-3-030-29959-0_15} enlarges a verified set by replaying its
+  derivation against neighbouring positions and keeping those that are also carried to a
+  secret-free form after the same sequence of rewrites.
+  So, one certification serves many wires. This is the direct
+  ancestor of our Component~III (Section~\ref{sec:replay}). The reuse is imperfect
+  for us, because our engine factors and factoring is not a neatly replayable step. Re-running
+  a recorded derivation on a fresh wire misses the cancellations a factoring might have
+  made possible. We therefore read the derivation not as a script to rerun but as a
+  measure-preserving coupling of the randomness (Chapter~\ref{chap:couplings}), and
+  we test each candidate against it with the exact criterion of
+  Section~\ref{sec:coupling-extension}, which admits every wire replays also would.
+
+  \subsection{maskVerif and Physical Defaults}
+  \label{sec:related-maskverif}
+
+  The value-based model, in which a probed wire leaks solely its logical value, is
+  very optimistic about issues in hardware. A real gate \emph{glitches}, briefly computing on unsettled
+  inputs, and a register transition may leak two successive values.
+  \texttt{maskVerif} \parencite{10.1007/978-3-030-29959-0_15} captures
+  these physical defaults, verifying masking in a glitch-extended probing
+  model where a probe on a glitching gate carries information about all of that gate's stable
+  inputs.
+  We stay in the value-based model and do not treat glitches
+  (Chapter~\ref{chap:preliminaries}), so those stronger models which do, bound the guarantee
+  our checker delivers.
+
 \section{Fourier-Analytic Verification} % Bloem
 \label{sec:fourier-analytic}
-\todo[inline]{Survey Fourier-analytic approaches to masking verification (Bloem et al.).}
-  \subsection{The Xiao-Massey Criterion and Approximations}
-  \todo[inline]{Discuss the Xiao-Massey criterion and its approximate variants for testing correlation-immunity/independence.}
+
+A different approach does not rewrite at all. Observe that a set of wires is
+independent of the secret exactly when certain Fourier coefficients of the Boolean
+function they compute vanish, and one can verify masking by checking that spectral
+condition.
+
+  \subsection{The Xiao\textendash Massey Criterion and Approximations}
+  \label{sec:related-xiaomassey}
+
+  The spectral implications of independence is widely known. Xiao and Massey
+  \parencite{xiao1988spectral} characterised the correlation-immune Boolean
+  functions as those whose Walsh spectrum vanishes at every nonzero point of
+  Hamming weight at most $t$. So, a function is $t$-th order correlation-immune, that
+  is, statistically independent of any $t$ of its inputs, precisely under this
+  condition. Bloem et al.\ \parencite{bloem2018formal} carry this into masking
+  verification. Their tool, \texttt{REBECCA}, propagates a conservative correlation set
+  for each wire through the circuit. This set consists of monomials that might have a non-zero
+  Fourier coefficient (indicating potential correlation), and the tool reports a
+  leak when such a monomial mixes a secret with no fresh masking variable to blind it.
+  Tracking which monomials can appear, rather than their exact coefficients, is the
+  over-approximation that keeps the computation feasible, at the cost of the occasional
+  false positives.
+
   \subsection{SAT-Based Realization and Its Cost}
-  \todo[inline]{Discuss SAT-based realizations of Fourier-analytic verification and their computational cost.}
+  \label{sec:related-sat}
+
+  The correlation-immunity condition is discharged to a SAT solver. \texttt{REBECCA}
+  \parencite{bloem2018formal} reduces the search for a secret-dependent, unblinded
+  correlation to a family of SAT queries whose number is polynomial in the count of
+  gates and wires, and it runs in the glitch-extended model, making it one of the
+  first tools to verify hardware masking under physical defaults. The correlation
+  sets get increasingly convoluted with the masking order, so the propagation and
+  the satisfiability search both climb as the order grows, and the over-approximation
+  has to be loosened or tightened to trade precision against effort.
+
 \section{Other Approaches}
-\todo[inline]{Survey other verification approaches not covered above.}
+\label{sec:related-other}
+
+Beyond rewriting and spectra, two further approaches are worth mentioning. One decides
+independence by educated counting, the other sidesteps the per-circuit question
+by reasoning about compositions of smaller gadgets.
+
   \subsection{Model Counting and SMT}
-  \todo[inline]{Discuss model-counting and SMT-based approaches to verifying secret-independence.}
+  \label{sec:related-modelcounting}
+
+  Independence is a statement about a distribution, so one can check it by encoding
+  the distribution and asking a solver. Eldib, Wang, and Schaumont
+  \parencite{eldib2014formal} verify software masking by expressing
+  secret-independence as a satisfiability question and discharging it to an SMT
+  solver. Gao et al.\ \parencite{gao2019verifying} makes the question quantitative,
+  asking how far a wire is from independence through a model-counting notion of
+  masking strength and scaling it with a refinement loop. \texttt{SILVER}
+  \parencite{knichel2020silver} goes fully exact, constructing the wires' joint
+  distribution with reduced-ordered binary decision diagrams and testing
+  statistical independence on it directly. These tools are exact where ours is
+  incomplete, and the reason we do not follow them is the hardness of
+  Chapter~\ref{chap:couplings}. Computing or comparing these distributions is
+  $\#\mathrm{P}$- and $\mathrm{C}_{=}\mathrm{P}$-hard, so the exact route is taken
+  with a heavy cost.
+
   \subsection{Compositional Reasoning and Relabeling}
-  \todo[inline]{Discuss compositional reasoning and relabeling/symmetry techniques used elsewhere, relating to Future Work's symmetry-orbit proposal.}
+  \label{sec:related-composition}
+
+  Probing security does not trivially compose. A gadget which is secure in isolation can leak once
+  wired into another secure one. A body of work isolates stronger notions that allow compositions. Barthe et
+  al.\ \parencite{barthe2016strong} introduce strong non-interference, which handle
+  output and internal probes separately and composes by construction, and Cassiers
+  and Standaert \parencite{cassiers2020trivially} refine this to a probe-isolating
+  non-interference, under which gadgets compose neatly. Belaïd, Goudarzi, and
+  Rivain \parencite{belaid2018tight} verify tight probing security directly,
+  characterising when a masked circuit is secure with the least refreshing. These
+  notions allow the assembly of large masked circuits from smaller components. We stay with in
+  plain probing security of a single circuit (Chapter~\ref{chap:preliminaries}) and do
+  not pursue composition, so they are related to our work but do not overlap it.
+
 \section{Position of This Work}
-\todo[inline]{Position this thesis's contributions relative to the surveyed related work.}
+\label{sec:related-position}
+
+This thesis sits in the language-based lineage of Barthe et al.\
+\parencite{barthe2015verified, 10.1007/978-3-030-29959-0_15}. As they do, we decide
+a probe by rewriting it toward a secret-free form, we escape the subset enumeration
+by exploring large sets, and we reuse a certified derivation to enlarge a safe set.
+Three things set our treatment apart. First, we read a successful discharge as an
+explicit measure-preserving coupling of the randomness
+(Chapter~\ref{chap:couplings}) and admit neighbouring wires by an exact test
+through it. Second, we prove the
+exhaustiveness of the set-splitting, turning the traversal's soundness into the
+Vandermonde identity of Section~\ref{sec:vandermonde} rather than an informal % bu kismi suha hocaya bi danis
+argument. Third, we add multiplicative factoring (Section~\ref{sec:factoring}) to
+reach randoms buried inside products.
+Unlike the Fourier and BDD
+tools we stay value-based and do not model glitches, and unlike the compositional
+notions we verify a whole circuit rather than assembling it from verified parts.
+Against the exact solvers and decision-diagram engines we decline to build the
+distribution at all, since Chapter~\ref{chap:couplings} shows that to be
+intractable, and we certify constructively instead, sound but incomplete.
