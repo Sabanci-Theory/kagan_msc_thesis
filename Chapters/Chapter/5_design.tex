@@ -63,6 +63,9 @@ why this certificate is sound.
 The engine has three tiers of rewriting rules, increasing in generality and cost,
 summarized in
 Algorithm~\ref{alg:rewrite-engine} and mirrored in the structure of this section.
+Its single entry point is the routine \textproc{CheckProbe} of
+Algorithm~\ref{alg:rewrite-engine}, which tries the tiers in turn and returns a
+verdict together with the derivation $T$ that Component~III later uses.
 \textproc{SimpleRewrite} (Section~\ref{sec:simple-rule}) handles the common case of
 every random occurring at most once, cheaply. It is tried first on the unfactored
 probe and, on failure, once more after the multiplicative factoring of
@@ -80,31 +83,32 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
 \caption{Discharging a probe (Component I)}
 \label{alg:rewrite-engine}
 \small
+\begin{minipage}{\linewidth}
 \begin{algorithmic}[1]
 \Function{CheckProbe}{$\mathbf{w}$}
   \Require probe $\mathbf{w}$, a tuple of wires of the circuit
-  \Ensure \textsc{Secure}, or \textsc{Insecure}$(\mathbf{w})$
-  \State $(\mathit{ok}, T) \gets \Call{SimpleRewrite}{\mathbf{w}}$ \Comment{Tier 1: unfactored}
-  \If{$\mathit{ok}$} \Return \textsc{Secure} \EndIf
-  \State $(\mathit{ok}, T) \gets \Call{SimpleRewrite}{\mathrm{Factor}(\mathbf{w})}$ \Comment{Tier 2: factor (\S\ref{sec:factoring}), retry}
-  \If{$\mathit{ok}$} \Return \textsc{Secure} \EndIf
+  \Ensure a verdict, \Secure{} or \Insecure{}, with the recorded derivation $T$ (the shears of \S\ref{sec:coupling-view})
+  \State $(\mathit{ok}, T) \gets \Call{SimpleRewrite}{\mathbf{w}, \langle\rangle}$ \Comment{Tier 1: unfactored}
+  \If{$\mathit{ok}$} \Return $(\Secure{}, T)$ \EndIf
+  \State $\mathbf{w}_f \gets \Call{Factor}{\mathbf{w}}$ \Comment{Tier 2: factor (\S\ref{sec:factoring})}
+  \State $(\mathit{ok}, T) \gets \Call{SimpleRewrite}{\mathbf{w}_f, \langle\rangle}$ \Comment{retry the simple rule}
+  \If{$\mathit{ok}$} \Return $(\Secure{}, T)$ \EndIf
   \State $(\mathit{ok}, T) \gets \Call{GeneralRewrite}{\mathbf{w}, \emptyset, \mathit{fuel}, \mathit{false}, \langle\rangle}$ \Comment{Tier 3: complete fallback}
-  \State \Return $\mathit{ok}$ ? \textsc{Secure} : \textsc{Insecure}($\mathbf{w}$)
+  \State \Return $\mathit{ok}\ ?\ (\Secure{}, T) : (\Insecure{}, T)$
 \EndFunction
 \Statex
-\Function{SimpleRewrite}{$\mathbf{w}$}
+\Function{SimpleRewrite}{$\mathbf{w}, T$}
   \State $\mathit{todo} \gets \{\, r \in \mathrm{vars}(\mathbf{w}) : r \text{ occurs once, additively}, r \notin \mathbf{w} \,\}$
-  \State \emph{(sort $\mathit{todo}$ w.r.t. increasing multiplicative depth)}
-  \State $T \gets \langle\rangle$
-  \While{$\mathit{todo} \neq \langle\rangle$ \textbf{and not} \Call{SecretFree}{$\mathbf{w}$}}
+  \State $\mathit{todo} \gets \Call{SortByMulDepth}{\mathit{todo}}$ \Comment{shallowest multiplicative depth first}
+  \While{$\mathit{todo} \neq \langle\rangle$ \textbf{and not} \Call{SecretFree}{$\mathbf{w}$}\footnote{\textproc{SecretFree}$(\mathbf{w})$ returns true exactly when no secret variable
+  occurs in the current expression of any wire of~$\mathbf{w}$.}}
     \State $r \gets$ pop shallowest element of $\mathit{todo}$
-    \State \ $x \gets$ unique additive parent of $r$ \Comment{$x = e \oplus r$}
+    \State $x \gets$ unique additive parent of $r$ \Comment{$x = e \oplus r$}
     \State mark $x$ as a fresh random leaf
-    \State \ $T \gets T.\mathrm{push}(r, x)$
-    \State drop $r$
-    \State \emph{(a random now matching the pattern above, $\notin \mathbf{w}$, may join $\mathit{todo}$)}
+    \State $T \gets T.\mathrm{push}(r, x)$
+    \State drop $r$ \Comment{may expose a new single-occurrence random for $\mathit{todo}$}
   \EndWhile
-  \State \Return $(\Call{SecretFree}{\mathbf{w}}, T)$ \Comment{shears now recorded --- \S\ref{sec:coupling-view}}
+  \State \Return $(\Call{SecretFree}{\mathbf{w}}, T)$
 \EndFunction
 \Statex
 \Function{GeneralRewrite}{$\mathbf{w}, \mathit{used}, \mathit{fuel}, \mathit{factored}, T$}
@@ -114,13 +118,15 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \If{$r = \bot$} \ $r \gets \Call{FindGeneral}{\mathbf{w}, \mathit{used}}$ \Comment{multi-occurrence, at least one additive instance} \EndIf
   \If{$r = \bot$}
     \If{$\mathit{factored}$} \Return $(\mathit{false}, T)$ \EndIf
-    \State \Return $\Call{GeneralRewrite}{\mathrm{Factor}(\mathbf{w}), \mathit{used}, \mathit{fuel}, \mathit{true}, T}$ \Comment{lazy factoring}
+    \State $\mathbf{w}_f \gets \Call{Factor}{\mathbf{w}}$ \Comment{lazy factoring (\S\ref{sec:factoring})}
+    \State \Return $\Call{GeneralRewrite}{\mathbf{w}_f, \mathit{used}, \mathit{fuel}, \mathit{true}, T}$
   \EndIf
   \State $x \gets$ chosen additive parent of $r$; \ $e \gets \bigoplus(\mathrm{children}(x) \setminus \{r\})$ \Comment{$r \notin \mathrm{vars}(e)$}
   \State $t \gets e \oplus r$; \ $\mathbf{w}' \gets \mathbf{w}[r \mapsto t]$ \Comment{Lemma~\ref{lem:substitution}}
   \State \Return $\Call{GeneralRewrite}{\mathbf{w}', \mathit{used} \cup \{r\}, \mathit{fuel}-1, \mathit{false}, T.\mathrm{push}(r,t)}$
 \EndFunction
 \end{algorithmic}
+\end{minipage}
 \end{algorithm}
 
   \subsection{The Simple Rewrite Rule}
@@ -225,7 +231,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \subsection{Relation to the Coupling-Construction View}
   \label{sec:coupling-view}
 
-  A discharge does more than answer \textsc{Secure}/\textsc{Insecure}. Read the
+  A discharge does more than answer \Secure{}/\Insecure{}. Read the
   right way, it hands back the object Chapter~\ref{chap:couplings} asks for: a
   coupling for the probe. We state that object declaratively first, then show how
   the engine produces one.
@@ -281,7 +287,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \begin{theorem}[Soundness of discharge]
   \label{thm:rewrite-soundness}
   If \textup{\textproc{CheckProbe}}$(\mathbf{w})$
-  (Algorithm~\ref{alg:rewrite-engine}) returns \textup{\textsc{Secure}}, then the
+  (Algorithm~\ref{alg:rewrite-engine}) returns \textup{\Secure{}}, then the
   joint distribution of $\mathbf{w}(\rho; \mathbf{a})$, for $\rho$ sampled
   uniformly at random, does not depend on the secret assignment $\mathbf{a}$.
   Moreover the recorded substitutions realise a coupling of $\mathbf{w}$ in the
@@ -307,7 +313,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
     \mathbf{w}\big(\varphi_{\mathbf{a}}(\rho);\, \mathbf{a}\big) \;=\; \overline{\mathbf{w}}(\rho) .
   \]
 
-  A \textsc{Secure} verdict means $\overline{\mathbf{w}}$ is syntactically
+  A \Secure{} verdict means $\overline{\mathbf{w}}$ is syntactically
   secret-free, so its value is
   one and the same for every secret assignment. Since
   $\varphi_{\mathbf{a}}$ preserves the uniform law on $\{0,1\}^{\mathcal{R}}$, the
@@ -419,19 +425,20 @@ in batches as large as possible rather than one at a time.
 \label{alg:subset-space}
 \begin{algorithmic}[1]
 \Function{CheckAll}{$wl = \langle (c_1, W_1), \dots, (c_m, W_m) \rangle$}
-  \If{$\llbracket wl \rrbracket = \emptyset$} \Return \textsc{Secure} \Comment{some $|W_j| < c_j$, or every $c_j = 0$} \EndIf
+  \If{$\llbracket wl \rrbracket = \emptyset$} \Return \Secure{} \Comment{some $|W_j| < c_j$, or every $c_j = 0$} \EndIf
   \State $U \gets W_1 \cup \dots \cup W_m$
-  \If{\Call{CheckProbe}{$U$} $=$ \textsc{Secure}} \Return \textsc{Secure} \Comment{large-set pruning (\S\ref{sec:large-set-pruning})} \EndIf
+  \State $(v, T) \gets \Call{CheckProbe}{U}$ \Comment{large-set pruning (\S\ref{sec:large-set-pruning})}
+  \If{$v = \Secure{}$} \Return \Secure{} \EndIf
   \State $\mathbf{w} \gets$ a representative of $\llbracket wl \rrbracket$ \Comment{$c_j$ wires from each $W_j$}
-  \State $(\mathit{sec}, T) \gets \Call{CheckProbe}{\mathbf{w}}$ \Comment{Component I (\S\ref{sec:rewrite-engine})}
-  \If{\textbf{not} $\mathit{sec}$} \Return \textsc{Insecure}($\mathbf{w}$) \EndIf
+  \State $(v, T) \gets \Call{CheckProbe}{\mathbf{w}}$ \Comment{Component I (\S\ref{sec:rewrite-engine})}
+  \If{$v = \Insecure{}$} \Return \Insecure{}($\mathbf{w}$) \EndIf
   \State $\mathsf{safe} \gets \Call{Extend}{\mathbf{w}, T, U}$ \Comment{Component III (\S\ref{sec:extension}); \ $\mathbf{w} \subseteq \mathsf{safe} \subseteq U$}
   \ForAll{$(i_1, \dots, i_m) \in \textstyle\prod_{j} \{0, \dots, c_j\}$ \textbf{with} $(i_j)_j \neq (c_j)_j$}
     \State $wl' \gets \big\langle\, (i_j,\ W_j \cap \mathsf{safe}),\ \ (c_j - i_j,\ W_j \setminus \mathsf{safe}) \,\big\rangle_{j=1}^{m}$ \Comment{drop zero-count parts}
     \State $r \gets \Call{CheckAll}{wl'}$
-    \If{$r \neq \textsc{Secure}$} \Return $r$ \EndIf
+    \If{$r \neq \Secure{}$} \Return $r$ \EndIf
   \EndFor
-  \State \Return \textsc{Secure}
+  \State \Return \Secure{}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -518,10 +525,10 @@ in batches as large as possible rather than one at a time.
   \begin{theorem}[Soundness of the traversal]
   \label{thm:traversal}
   \textup{\textproc{CheckAll}}$(wl)$ (Algorithm~\ref{alg:subset-space})
-  terminates, and if it returns \textup{\textsc{Secure}} then every probe in
+  terminates, and if it returns \textup{\Secure{}} then every probe in
   $\llbracket wl \rrbracket$ is secret-independent. In particular
   \textup{\textproc{CheckAll}}$\big\langle (d, \mathcal{W}) \big\rangle$, returning
-  \textup{\textsc{Secure}}, certifies $d$-probing security.
+  \textup{\Secure{}}, certifies $d$-probing security.
   \end{theorem}
 
   \begin{proof}
@@ -536,32 +543,32 @@ in batches as large as possible rather than one at a time.
   the recursion is well-founded.
 
   \emph{Soundness}, by induction along that order. \textproc{CheckAll} returns
-  \textsc{Secure} only in one of three ways. If the union $U = \bigcup_j W_j$
+  \Secure{} only in one of three ways. If the union $U = \bigcup_j W_j$
   discharges, every subset of $U$ (hence all of $\llbracket wl \rrbracket$)
   is secret-independent by marginalisation. If a degenerate worklist bottoms out,
   $\llbracket wl \rrbracket$ is empty or the lone empty probe, which is trivially secure.
   Otherwise the representative certifies and the recursive cells all return
-  \textsc{Secure}. By Lemma~\ref{lem:set-vandermonde} those cells together with the
+  \Secure{}. By Lemma~\ref{lem:set-vandermonde} those cells together with the
   skipped all-safe cell partition $\llbracket wl \rrbracket$; the all-safe cell is
   secret-independent by Component III, and each recursive cell is
   $\llbracket wl_{(i_j)} \rrbracket$ of strictly smaller measure, hence secret-independent
   by the induction hypothesis. Every probe of $\llbracket wl \rrbracket$ lies in
   exactly one part, so all are secret-independent. Finally, since
   $\llbracket \langle (d, \mathcal{W}) \rangle \rrbracket = \binom{\mathcal{W}}{d}$,
-  a \textsc{Secure} verdict on $\langle (d, \mathcal{W}) \rangle$ certifies that every $d$-subset
+  a \Secure{} verdict on $\langle (d, \mathcal{W}) \rangle$ certifies that every $d$-subset
   of $\mathcal{W}$ is secret-independent, i.e.\ $d$-probing secure.
   \end{proof}
 
   We close this section with two remarks. The soundness above is one-directional by design:
-  a \textsc{Secure} verdict is trustworthy, but the traversal inherits Component
-  I's incompleteness verbatim and nothing more. An \textsc{Insecure} verdict is
+  a \Secure{} verdict is trustworthy, but the traversal inherits Component
+  I's incompleteness verbatim and nothing more. An \Insecure{} verdict is
   raised only when Component I declines a representative
   (Section~\ref{sec:general-substitution}), never because a subset slipped through
   unexamined. Lemma~\ref{lem:set-vandermonde} guarantees the cells cover
   $\llbracket wl \rrbracket$ exactly, so the sweep is genuinely exhaustive. The
   reported witness is therefore a true counterexample precisely when Component I is
   complete on it, as in the linear/affine case; a fuel-bounded refusal there is the
-  one place a spurious \textsc{Insecure} can enter, and it enters through Component
+  one place a spurious \Insecure{} can enter, and it enters through Component
   I, not through this traversal. Second, the efficiency of the whole scheme rests
   on the safe set being large: the bigger $\mathsf{safe}$, the fewer and smaller
   the surviving cells, and the closer the union prune comes to settling a branch
