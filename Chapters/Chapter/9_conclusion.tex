@@ -3,4 +3,57 @@
 \chapter{Conclusion}
 \label{chap:conclusion}
 % ------------------------------------------------------------
-\todo[inline]{Write the conclusion: summarize the problem, the approach (rewrite engine, subset-space traversal, probe-set extension), the main results, and their significance.}
+Masking is prone to design flaws. Shares of a secret might entangle as non-linearity
+necessitates it. Hence, a checker verifying that shares never come back
+together is of value. This thesis set out to make that check exact. The question we fixed
+on is $d$-probing security of masked arithmetic circuits over $\mathbb{F}_2$,
+checking whether every set of at most $d$ wires is jointly independent of the secrets, and
+our aim throughout was to answer it without approximation, either certifying a
+circuit or handing back a concrete probe that we suspect to leak. The difficulty is that
+exactness is expensive, and much of the work was in finding a route that pays for
+it in an accaptable way.
+
+We began by measuring the cost precisely. The law of a probe is a histogram of tape
+counts, and we showed that computing one such count is $\#\mathrm{P}$-complete while
+deciding whether two secrets leave the law unchanged is
+$\mathrm{C}_{=}\mathrm{P}$-complete (Chapter~\ref{chap:couplings}). Even a single
+probe therefore lands above the polynomial hierarchy, which settles that no exact
+procedure built on mere counting can be efficient and points away from the distribution
+and toward its structure. This is the motivation that shapes everything after
+it.
+
+The rest of the thesis is the constructive answer, an executable checker,
+\toolname, organised around three components and one idea that ties them together.
+Heavily based on Barthe et al.'s work on language-based verification
+\parencite{barthe2015verified, 0.1007/978-3-030-29959-0_15}.
+Component~I, the rewrite engine, decides a single probe by substituting its randoms
+away one at a time until no secret remains, cheaply when each random occurs once
+and by a complete fallback otherwise, with a multiplicative factoring step that
+reaches masks buried inside products (Chapter~\ref{chap:design}). Component~II
+sweeps every $d$-subset without enumerating them, splitting the space recursively
+and losing nothing, which we proved by Vandermonde's identity at the level
+of sets. Component~III grows a single certified probe into a whole safe set of
+wires, so that one discharge settles many probes at once. The idea underneath all
+three is the \emph{coupling}. A successful discharge is not merely a secure verdict, but a
+measure-preserving relabelling of the randomness under which the secrets visibly
+cancel, and reading it that way is what lets one certificate vouch for a probe, for
+its neighbours, and for the soundness of the traversal that calls it. The resulting
+checker is sound but incomplete.
+
+We implemented \toolname\ in Lean~4 on a hash-consed circuit representation with a
+bit-sliced test for the extension (Chapter~\ref{chap:implementation}), and
+evaluated it on a suite of masked gadgets (Chapter~\ref{chap:evaluation}), where it
+certifies the secure constructions and, on an insecure one, returns a witnessing
+probe.
+
+What we take from the work is that couplings are the right lens on probing
+security. They turn a distributional statement into a constructive object one can
+build, record, and replay, and they unify the three components under a single
+soundness argument rather than three. As stated, the approach stands in the language-based
+lineage of Barthe et al.\ \parencite{barthe2015verified,
+10.1007/978-3-030-29959-0_15}, and its departures, the explicit coupling with an
+exact endpoint, the factoring, the bit-sliced fast-reject test, are what this thesis
+contributes to that line. Much
+is left open, from larger fields and glitches to composition and the composing of
+couplings across safe sets (Chapter~\ref{chap:futurework}), and the hardness result
+guarantees that no single technique will close the gap completely.
