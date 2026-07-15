@@ -4,7 +4,7 @@
 \label{chap:conclusion}
 % ------------------------------------------------------------
 Masking is prone to design flaws. Shares of a secret might entangle as non-linearity
-necessitates it. Hence, a checker verifying that shares never come back
+necessitates it to a degree. Hence, a checker verifying that too many shares never come back
 together is of value. This thesis set out to make that check exact. The question we fixed
 on is $d$-probing security of masked arithmetic circuits over $\mathbb{F}_2$,
 checking whether every set of at most $d$ wires is jointly independent of the secrets, and
@@ -19,16 +19,15 @@ deciding whether two secrets leave the law unchanged is
 $\mathrm{C}_{=}\mathrm{P}$-complete (Chapter~\ref{chap:couplings}). Even a single
 probe therefore lands above the polynomial hierarchy, which settles that no exact
 procedure built on mere counting can be efficient and points away from the distribution
-and toward its structure. This is the motivation that shapes everything after
-it.
+and toward its structure. This is the motivation that shapes our approach.
 
 The rest of the thesis is the constructive answer, an executable checker,
 \toolname, organised around three components and one idea that ties them together.
 Heavily based on Barthe et al.'s work on language-based verification
-\parencite{barthe2015verified, 0.1007/978-3-030-29959-0_15}.
+\parencite{barthe2015verified, 10.1007/978-3-030-29959-0_15}.
 Component~I, the rewrite engine, decides a single probe by substituting its randoms
 away one at a time until no secret remains, cheaply when each random occurs once
-and by a complete fallback otherwise, with a multiplicative factoring step that
+and by a generalized fallback otherwise, with a multiplicative factoring step that
 reaches masks buried inside products (Chapter~\ref{chap:design}). Component~II
 sweeps every $d$-subset without enumerating them, splitting the space recursively
 and losing nothing, which we proved by Vandermonde's identity at the level
@@ -37,8 +36,8 @@ wires, so that one discharge settles many probes at once. The idea underneath al
 three is the \emph{coupling}. A successful discharge is not merely a secure verdict, but a
 measure-preserving relabelling of the randomness under which the secrets visibly
 cancel, and reading it that way is what lets one certificate vouch for a probe, for
-its neighbours, and for the soundness of the traversal that calls it. The resulting
-checker is sound but incomplete.
+its neighbour wires, and for the soundness of the traversal that calls it. The resulting
+checker is a sound but incomplete tool.
 
 We implemented \toolname\ in Lean~4 on a hash-consed circuit representation with a
 bit-sliced test for the extension (Chapter~\ref{chap:implementation}), and
@@ -54,6 +53,6 @@ lineage of Barthe et al.\ \parencite{barthe2015verified,
 10.1007/978-3-030-29959-0_15}, and its departures, the explicit coupling with an
 exact endpoint, the factoring, the bit-sliced fast-reject test, are what this thesis
 contributes to that line. Much
-is left open, from larger fields and glitches to composition and the composing of
+is left open, from larger fields and glitches to composition and to the composing of
 couplings across safe sets (Chapter~\ref{chap:futurework}), and the hardness result
 guarantees that no single technique will close the gap completely.
