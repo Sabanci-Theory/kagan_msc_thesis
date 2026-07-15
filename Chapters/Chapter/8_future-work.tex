@@ -3,11 +3,134 @@
 \chapter{Future Work}
 \label{chap:futurework}
 % ------------------------------------------------------------
+The tool as it stands leaves several research directions unaddressed. Some of these directions
+sharpen the engine
+without changing the model it verifies, others widen the model, making the hardware
+it protects represent a larger, more realistic class. We collect them here, from the most immediate to the most
+ambitious.
+
 \section{Arithmetic Circuits on Larger Fields}
-\todo[inline]{Discuss extending the approach beyond $\mathbb{F}_2$ to larger fields.}
+\label{sec:fw-fields}
+
+It is tempting to file work over larger fields under ``not yet supported,'' but
+much of the machinery is already field-agnostic and it is worth saying exactly
+is supported and what is not. The coupling characterisation of Chapter~\ref{chap:couplings} and the
+subset-space traversal of Section~\ref{sec:subset-space} never used any property of
+$\mathbb{F}_2$ beyond a finite randomness space sampled uniformly, so they carry
+over to any finite field trivially. The substitution at the heart of the engine
+generalises just as cleanly. Over $\mathbb{F}_q$ the invertible affine map
+$r \mapsto c \cdot r + e$ with $c \neq 0$ and $r \notin \mathrm{vars}(e)$ is
+also measure-preserving on the randomness space and plays exactly the role the shear
+$r \mapsto e \oplus r$ plays over $\mathbb{F}_2$.
+
+What is genuinely tied to $\mathbb{F}_2$ is the concrete engine built on that
+substitution. The exact endpoint test when extending a probe set rests on the algebraic normal form, whose
+multilinearity is the $\mathbb{F}_2$ identity $x^2 = x$; the multiplicative
+factoring of Section~\ref{sec:factoring} and the canonicalisation it runs through
+are likewise $\mathbb{F}_2$ algebra, as is the two-input XOR/AND gate basis. So the
+step to a larger field necessitates to build on top rather than to redesign. One can replace
+the endpoint with a suitable normal form, or with a Schwartz--Zippel probabilistic
+identity test (though that would harm the exactness), which is in fact cheaper in the larger field,
+re-derive factoring
+for the new algebra, and enlarge the gate set. Verification is already moving this
+way, toward arithmetic and prime-field masking under the pressure of post-quantum
+schemes \parencite{gigerl2023formal} which work on larger fields, and a field-generic version of our coupling
+engine would fit naturally into that line.
+
+\section{Factoring Heuristics}
+\label{sec:fw-factoring}
+
+The multiplicative factoring of Section~\ref{sec:factoring} pulls out, greedily,
+the factor shared by the most product terms, breaking ties by identifiers.
+Factoring is not confluent: which factor one extracts, and in what order relative
+to the substitutions, decides whether a buried random surfaces and how much
+cancellation follows. The present choice is cheap and suffices on our benchmarks,
+but it is surely not optimal. One might weight a candidate factor by whether
+pulling it out actually exposes an additive single-occurrence random rather than
+merely by how often it appears, i.e. it can explore a shallow lookahead over factor choices, or
+infer an order from the gadget's structure. Because factoring preserves a
+wire's value (Section~\ref{sec:enlarging-verifiable}), every such heuristic is
+sound by construction; the question is purely how often, and how quickly, it
+reaches a discharge. A systematic study of these heuristics, measured against the
+completeness they buy, is left open.
+
+\section{Composing Couplings for Unions of Safe Sets}
+\label{sec:fw-coupling-union}
+
+Component~III certifies one safe set from one coupling. When the traversal
+certifies probes on sibling branches it obtains two safe sets $S_1$ and $S_2$, each
+internally secret-independent, with couplings $\varphi_1$ and $\varphi_2$. Their
+union need not be secret-independent of course, and the present scheme makes no attempt on
+it; the branches are kept apart. The couplings themselves, though, may sometimes be
+composed into a certificate for the union.
+
+Call the \emph{randomness footprint} of a safe set the randoms its wires depend on
+together with the randoms its coupling relabels. Suppose $S_1$ and $S_2$ have
+disjoint footprints. Then $\varphi_1$ and $\varphi_2$ move disjoint coordinates of
+the randomness space, so they commute nicely, and neither disturbs the wires the other has
+already blinded. Their composite $\varphi_1 \circ \varphi_2$ is again
+measure-preserving, and it carries every wire of $S_1 \cup S_2$ to a secret-free
+form. In such a case, a wire of $S_1$ is blinded by $\varphi_1$ and left untouched by $\varphi_2$,
+and symmetrically for $S_2$. By the safe set fact of
+Section~\ref{sec:coupling-extension} that single composite certifies the whole
+union, merging two safe sets with no fresh discharge.
+
+The disjointness is the key here, and it is why the idea is a direction and not
+yet a method. When the footprints overlap, as two gadgets sharing a mask, the
+shears no longer commute and one coupling can undo the blinding the other needs,
+so the composite is not automatically a coupling for the union. Detecting the
+disjoint case cheaply, and finding a principled combination when footprints
+overlap, is the open problem. Its payoff would be direct. The traversal could fuse
+the safe sets of neighbouring cells and prune the subset space far more
+aggressively than certifying each in isolation allows.
+
 \section{Symmetry-Orbit Space Exploration} % automorphisms / relabeling
-\todo[inline]{Discuss exploiting circuit automorphisms/relabeling symmetries to reduce the subset space explored.}
+\label{sec:fw-symmetry}
+
+The subset-space traversal treats all wires alike, but masked gadgets are highly
+symmetric. Permuting the share indices of an input, or relabelling interchangeable
+masks, carries one probe to another with identical secret-dependence. Such a
+relabelling is a circuit automorphism, and the automorphisms partition the probes
+into orbits on which the verdict is constant, so verifying one representative per
+orbit would certify the entire orbit and shrink the space the traversal must
+explore by roughly the size of the symmetry group. Cutting a search by exploiting
+its symmetry this way is a known technique in model checking
+\parencite{clarke1996exploiting}. Carrying it into our setting, by detecting a
+gadget's automorphisms and quotienting the Vandermonde recursion of
+Section~\ref{sec:vandermonde} by them, is a promising and, to our knowledge,
+largely unexplored direction for language-based probing-security verification.
+
 \section{Scaling and Compositional Verification}
-\todo[inline]{Discuss compositional verification techniques for scaling to larger circuits/gadgets.}
+\label{sec:fw-composition}
+
+We have previously mentioned that probing security does
+not compose, so the approach does not, on its own, scale to a full cipher assembled
+from gadgets. The composability notions surveyed in
+Section~\ref{sec:related-composition} are the established works in this line. Strong
+non-interference \parencite{barthe2016strong} and probe-isolating non-interference
+\parencite{cassiers2020trivially} let one certify small gadgets once and wire them
+together with the order preserved, while tight approaches
+\parencite{belaid2018tight} track exactly the refreshing this needs. Our engine
+could serve as the per-gadget oracle inside such a scheme, discharging each
+gadget's stronger non-interference obligation while a compositional layer handles
+the assembly. Adapting the work to include such compositional methods is work that remains
+to be explored.
+
 \section{Glitches and Practical Aspects}
-\todo[inline]{Discuss extending the model to account for glitches and other practical hardware effects.}
+\label{sec:fw-glitches}
+
+Our model is value-based (Chapter~\ref{chap:preliminaries}). So, a probed wire leaks
+its logical value and nothing more. Any hardware designer knows that reality is a lot less forgiving. A gate
+glitches on unsettled inputs and a register transition leaks a function of two
+successive values, and either can reopen a leak that a value-based check certifies.
+The glitch-extended probing model, formalised together with composition in
+the robust probing model \parencite{faust2018robust}, captures these effects, and
+some tools verify masking under them \parencite{bloem2018formal,
+10.1007/978-3-030-29959-0_15}, with recent work spanning both Boolean and
+arithmetic masking across hardware and software \parencite{gigerl2023formal}.
+Lifting our checker to a glitch-extended model would mean charging a probe on a
+glitching gate with all of that gate's stable inputs, enlarging each observation
+before the engine ever sees it. The coupling machinery would carry over easily as well;
+what changes is the front end that forms the probes. Validating the result on real
+netlists is the practical work that would turn the tool from a checker of simple circuits
+into a verifier of practical implementations.
