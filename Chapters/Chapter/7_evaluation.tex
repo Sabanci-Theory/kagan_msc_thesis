@@ -4,13 +4,64 @@
 \label{chap:evaluation}
 % ------------------------------------------------------------
 \section{Benchmarks}
-\todo[inline]{Describe the benchmark suite of masked circuits used to evaluate the tool (sources, sizes, masking orders).}
+\label{sec:eval-benchmarks}
+
+We evaluate \toolname\ on a suite of masked gadgets drawn from the masking
+literature, grouped by family in Table~\ref{tab:extension-comparison}. The suite 
+collects the standard nonlinear building blocks of masked hardware at masking orders
+one through four, so that both the secure cases and the expected failure cases are exhibited.
+
+The gadgets can be categorized into 4 large classes. The ISW multiplication and its refresh gadgets are
+the field-agnostic core of the higher-order masking of Ishai, Sahai, and Wagner
+\parencite{10.1007/978-3-540-45146-4_27} and Rivain and Prouff
+\parencite{rivain2010provably}. We instantiate them over $\mathbb{F}_2$ at orders
+one through four, similar to the verification suites of Barthe et al.\
+\parencite{barthe2015verified, 10.1007/978-3-030-29959-0_15} do. The
+domain-oriented masking (DOM) gadgets \parencite{gross2016domain}, the Trichina AND
+\parencite{trichina2003combinational}, and the threshold-implementation (TI) AND
+\parencite{nikova2006threshold} are the recurring masked-multiplication cores of the
+same suites. The threshold implementations of small S-boxes of Bilgin et al.\
+\parencite{bilgin2015threshold} supply the rest, made up of the quadratic-class representative
+$Q^4_{12}$, the Fides/PRIMATEs five-bit S-box, the Keccak $\chi$ sharings, and the
+$x+yz$ and $x+yz+xyz$ constructions.
+
+On top of these standard gadgets we extend one family, the $d{+}1$
+quadratic S-box family (the $Q^3$ and $Q^4$ rows of
+Table~\ref{tab:extension-comparison}). These are first-order, randomness-free
+$d{+}1$ maskings with share compression of the quadratic permutation classes of
+\parencite{bilgin2015threshold}, presenting a low-randomness hardware style, and we
+include them because they stress the factoring capability of the engine, as
+Section~\ref{sec:eval-outcomes} mentions.
+
+We should adress a limitation before diving into the methodology. As we know, the model
+is value-based over $\mathbb{F}_2$, so the $\mathrm{GF}(2^8)$ benchmarks of
+\parencite{barthe2015verified}, the AES S-box and rounds, are present only through their
+field-agnostic ISW-multiplication core. % because bit-blasting the field multiplication would change the model.
+A pair of representative gadgets is transcribed as netlists in Appendix~\ref{app:netlists}.
 
 \section{Methodology and Metrics}
-\todo[inline]{Describe the evaluation methodology and the metrics reported (verification time, number of probes discharged, redundancy, etc.).}
+\label{sec:eval-method}
+
+Each gadget is verified by the compiled Lean executable, one run per
+configuration, on an AMD Ryzen~7 5800H. For a gadget and a probing order $d$ we
+record the verdict, the wall-clock time, and two structural counts that are
+insensitive to the machine and to engine-version differences. The first is the
+number of \emph{discharges}, the calls made to the rewrite engine of Component~I;
+the second is the extension yield, or \emph{free wires}, the wires that
+Component~III certifies for nothing beyond the probes actually discharged.
+
+Correctness is checked on two levels. Each hand-transcribed sharing was
+brute-forced to confirm that its shares recombine to the intended function before
+it entered the suite. And every configuration is run twice, once with
+Component~III's extension enabled and once against a naive baseline that discharges
+each probe from scratch with no extension. Of course, the two must return the same verdict,
+which they do on every entry. Finally, the extension mechanisms of
+Chapter~\ref{chap:design} are compared against one another by porting the whole
+suite to three engine variants, coupling-driven, witness replay, and
+closure-driven, and running each under its own mechanism
+(Table~\ref{tab:extension-comparison}).
 
 \section{Results}
-\todo[inline]{Present the overall results of running the tool on the benchmark suite.}
 
 Figure~\ref{fig:scaling} shows verification time against
 circuit depth for a chain of $\ell$ cascaded ISW-AND gadgets, each computing
@@ -18,27 +69,75 @@ $y^{(k)} = y^{(k-1)} \odot x^{(k)}$ with fresh randomness and each secure at eve
 length.
 The time axis is logarithmic, so the near-straight lines show verification cost
 growing exponentially in the chain length even though the netlist grows only
-linearly ($8$ wires per stage). The cause is that the canonical DAG of a deep
-wire grows with its multiplicative depth. The coupling engine (solid lines) runs a
-constant factor faster than the naive, no-extension baseline (dashed lines) shares
-its asymptotics; this is the scalability boundary of the present representation.
-Measured on an AMD Ryzen~7 5800H.
+linearly ($8$ wires per stage). The coupling engine (solid lines) runs a
+constant factor faster than the naive, no-extension baseline (dashed lines) but
+shares its asymptotics. This shows the scalability boundary of the present
+representation.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.82\textwidth]{scaling.png}
+  \includegraphics[width=0.85\textwidth]{scaling.png}
   \caption[Verification time versus circuit depth]{Verification time versus circuit depth}
   \label{fig:scaling}
 \end{figure}
 
   \subsection{Verification Outcomes and Case Studies}
-  \todo[inline]{Report verification outcomes per benchmark, including the case study of the $Q^3$ and $Q^4$ families.}
+  \label{sec:eval-outcomes}
 
-  \subsection{Redundancy in the Search} % union vs. chosen discharge, closure collisions
-  \todo[inline]{Analyze redundancy in the search: union vs. chosen re-discharge, and closure collisions, together with possible causes.}
+  Across all forty examples the verdict matches the ground truth. The secure
+  constructions are certified, and the genuinely insecure ones return a witnessing
+  probe, which are: the DOM and TI ANDs probed one order beyond their design, the mis-associated
+  Trichina AND, the $x+yz$ TI at order three, and the $Q^3_3$ and $Q^4_{300}$
+  classes. Two case studies are worth focusing on.
+
+  \begin{itemize}
+    \item \textbf{A first-order TI beyond its order:}
+    The $x+yz$ four-share threshold implementation of Bilgin et al.\
+    \parencite{bilgin2015threshold} is a first-order countermeasure. \toolname\
+    certifies it secure at orders one and two and returns a distinguishing probe at
+    order three (Table~\ref{tab:extension-comparison}). This is the expected behaviour
+    of a first-order TI rather than a flaw in the construction; what it exercises is
+    the tool's counterexample-returning side on a gadget whose failure order is known.
+
+    \item \textbf{The factoring family:}
+    The $d{+}1$ quadratic S-box family is where the coupling engine separates from the
+    alternatives. These gadgets interleave their shares without fresh randomness, so a
+    certifying rewrite must first factor a share-sum,
+    $u_i \odot w_1 \oplus u_i \odot w_2 \mapsto u_i \odot (w_1 \oplus w_2)$, before the
+    blinding random telescopes into view (Section~\ref{sec:factoring}). The
+    factoring-free replay engine, mirroring \texttt{maskVerif}, therefore
+    false-reports \Insecure{} on the four quadratic-feedback classes $Q^3_2$,
+    $Q^4_{12}$, $Q^4_{293}$, $Q^4_{299}$, together with the direct $Q^4_{12}$ sharing,
+    while the coupling engine, which factors, verifies every
+    one (the $\dagger$ rows of Table~\ref{tab:extension-comparison}). The two classes
+    the tool reports insecure, $Q^3_3$ and $Q^4_{300}$, are exactly the quadratic
+    classes that admit no uniform three-share TI \parencite{bilgin2015threshold}.
+    This family is the concrete example where our engine certifies circuits that a
+    comparable factoring-free tool cannot.
+  \end{itemize}
+
+  \subsection{Redundancy in the Search}
+  \label{sec:eval-redundancy}
+
+  In our experiments, we have noted that the traversal of Component~II, combined with
+  the extensions of Components~III, can discharge the same probe more than once.
+  The first source of this redundancy was the large-set prune of
+  Section~\ref{sec:large-set-pruning}. Before splitting a batch, Component~II
+  discharges the whole union to try the prune, and on a secure circuit the same
+  union recurs on neighbouring branches. After this observation, we memoised the verdict of every set the
+  engine discharges, so such a repeat is served from the cache instead of re-running
+  the engine; the union verdict is all the prune needs anyways, so no coupling has to be
+  recomputed. On the ISW multiplication the cache spares three of these engine runs
+  at three shares, nine at four, and eighty at five, and it grows with order. What
+  remains is a milder redundancy and comes from Component~III's extensions. Now and then two
+  different certified probes grow into the same safe set, an \emph{extension
+  collision}, so one region of the observation space is covered twice. These stay
+  few, none at three shares and eighteen at five, and, each carrying its own
+  coupling, they are not memoised away. They are a mild over-count that never
+  threatens soundness.
 
   \subsection{The Cost and Benefit of Extending Probe Sets}
-  \todo[inline]{Measure the cost/benefit trade-off of Component III's probe-set extension against the baseline traversal.}
+  \label{sec:eval-extension}
 
   Table~\ref{tab:extension-comparison} compares the three extension mechanisms of
   Chapter~\ref{chap:design}, coupling-driven (C, Section~\ref{sec:coupling-extension}),
@@ -47,12 +146,9 @@ Measured on an AMD Ryzen~7 5800H.
   triple giving the verdict (S~$=$~\Secure{}, I~$=$~\Insecure{}), the wall-clock
   time, the number of rewrite-engine discharges, and the extension yield (\emph{free
   wires}, the wires certified beyond the chosen probes). Replay is factoring-free by
-  design, mirroring \texttt{maskVerif}, so it false-reports \Insecure{} on the five
-  factoring-dependent rows marked $\dagger$, where the coupling and closure engines,
-  which keep factoring, agree. The discharge and free-wire counts are the
-  mechanism-fair metrics; wall-clock is indicative only, since the closure engine
-  predates several later optimisations, and a controlled timing comparison is given
-  in Figure~\ref{fig:scaling}. All runs are on an AMD Ryzen~7 5800H.
+  design, like \texttt{maskVerif}, so it false-reports \Insecure{} on the five
+  factoring-dependent rows marked with a $\dagger$, where the coupling and closure engines,
+  which keep factoring, agree.
 
   {\singlespacing\footnotesize
   \setlength{\tabcolsep}{5pt}
@@ -135,5 +231,41 @@ Measured on an AMD Ryzen~7 5800H.
   \end{longtable}
   }
 
+  Three observations stand out. First, coupling matches replay's yield exactly. On every
+  entry both engines verify, their discharge counts and free-wire yields agree to the
+  digit, $4735$ discharges and $8078$ free wires for the five-share ISW
+  multiplication on both for example. Replay is a small constant faster, having no factoring
+  attempts to make, but it pays for that speed with the five false positives of the
+  factoring family. Coupling attains replay's yield while keeping the correct
+  verdict. Second, the extension pays for itself greatly. On the Fides S-box a
+  single run makes only $55$ engine discharges yet certifies $537$ wires for free, on
+  a gadget of some $900$ wires, and against the naive baseline that discharges each
+  probe alone for the five-share ISW multiplication falls from roughly $609$ seconds to
+  under two, a factor of about $337$ (Figure~\ref{fig:scaling}). The free wires are
+  the mechanism by which the Vandermonde split prunes, so a generous yield
+  directly implies a smaller search. Third, closures keep the verdicts but fail on efficiency.
+  Retaining factoring, the closure engine agrees with coupling on every verdict, but
+  its local, topological deduction yields far fewer free wires as the traversal
+  fragments, $14$ against $537$ on Fides and $645$ against $2671$ on the three-share
+  DOM Keccak $\chi$, so the split degrades toward enumeration: the five-share ISW
+  multiplication needs $632{,}834$ discharges under closures against $4{,}735$ under
+  coupling. The wall-clock gap is also considerably larger.
+
 \section{Discussion}
-\todo[inline]{Discuss what the results imply about the tool's strengths, limitations, and how it compares to related work.}
+\label{sec:eval-discussion}
+
+The evaluation supports that on the standard masking gadgets
+\toolname\ is exact and fast, certifying the secure constructions and returning true
+witnesses on the insecure ones, and its coupling extension attains the yield of
+witness replay while keeping the verdict quality that factoring buys. The $d{+}1$
+quadratic family is a concrete class of circuits it certifies where a factoring-free,
+\texttt{maskVerif}-style engine does not.
+
+The limits are also made clear. The model is value-based, so the
+glitch and transition leakage that a hardware verifier must eventually treat is out
+of scope (Chapter~\ref{chap:futurework}); the tool verifies a circuit whole and does
+not compose gadgets; and, as Figure~\ref{fig:scaling} shows, verification time grows
+exponentially in a wire's multiplicative depth. Our contribution
+is not so much scale or performance but exactness through a constructive and coupling-based
+certificate, together
+with the family of low-randomness compression circuits that this certificate brings within reach.
