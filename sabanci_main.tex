@@ -62,12 +62,12 @@
 %---------------------------------------------------------------------------------------------------------------------------------------
 \degree{Master}
 \thesistitle{Verification of Probing Security for Masked Circuits: A Constructive Approach and Theoretical Study}
-\tezbaslik{ha bura baslik gelcek}
+\tezbaslik{gecici baslik}
 \authorname{Kağan Gülsüm}
 \programnameEN{Computer Science and Engineering}
 \programnameTR{Bilgisayar Bilimi ve Mühendisliği}
 \institute{Graduate School of Engineering and Natural Sciences}
-\approvaldate{20-07-2026}
+\approvaldate{21-07-2026}
 \advisor{Asst. Prof.}{SÜHA ORHUN MUTLUERGİL}
 \jurymember{Prof.}{ERKAY SAVAŞ}
 \jurymember{Asst. Prof.}{KLAUS FREIHERR VON GLEISSENTHAL}
@@ -115,20 +115,20 @@
 %---------------------------------------------------------------------------------------------------------------------------------------
 % APPENDICES
 %---------------------------------------------------------------------------------------------------------------------------------------
-% \makeatletter
-% \renewcommand{\SU@appendixchapter}[1]{%
-%   \stepcounter{SU@appCount}%
-%   \refstepcounter{chapter}%
-%   \clearpage
-%   \begin{center}
-%     \vspace{-4.25\baselineskip}%
-%     {\bfseries APPENDIX\par}%
-%   \end{center}%
-%   \addcontentsline{toc}{chapter}{APPENDIX}%
-% }
-% \makeatother
-% \SUstartappendix
-% \import{"Chapters/Appendix/"}{appendix}
-% \SUafterappendix
+\makeatletter
+\renewcommand{\SU@appendixchapter}[1]{%
+  \stepcounter{SU@appCount}%
+  \refstepcounter{chapter}%
+  \clearpage
+  \begin{center}
+    \vspace{-4.25\baselineskip}%
+    {\bfseries APPENDIX\space-\space\MakeUppercase{#1}\par}%
+  \end{center}%
+  \addcontentsline{toc}{chapter}{APPENDIX\space-\space\MakeUppercase{#1}}%
+}
+\makeatother
+\SUstartappendix
+\import{"Chapters/Appendix/"}{appendix}
+\SUafterappendix
 
 \end{document}
