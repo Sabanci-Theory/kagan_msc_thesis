@@ -73,13 +73,13 @@ size, but establishing it as a question about leakage models rather than about a
 particular circuit, is useful in practice. We therefore take
 $d$-probing security as our target throughout and do not revisit this bridge. The
 reader should simply keep in mind that a $d$-probing-secure circuit is what a
-faithful masked implementation is ultimately certifying.
+faithful masked implementation is supposed to achieve.
 
 \section{Verifying Masked Implementations}
 \label{sec:intro-verification}
 
 Masking is easy to get subtly wrong, and the probing model makes the failures
-precise without making them easy to find. A single wire may recombine several
+precise. A single wire may recombine several
 shares of one secret, or a random mask meant to hide one value may cancel against a
 copy of itself elsewhere; either case reopens the very leak the masking was meant to
 close. Correctness cannot be judged wire by wire as well, because $d$-probing security
@@ -114,7 +114,7 @@ So, when the tool reports a circuit secure, every one of its $\sum_{i \le d}
 \binom{|\mathcal{W}|}{i}$ observation sets has been accounted for; when it reports a
 circuit insecure it returns a specific leaking observation as a witness --- with the
 exception of the incomplete fragment flagged in
-Chapter~\ref{chap:design}.
+Chapter~\ref{chap:design}. % TODO: do we really flag this!
 % The decision problem underlying even a single observation
 % is hard in general, in a sense Chapter~\ref{chap:couplings} makes precise, and it is
 % that hardness that forces the constructive route the tool takes rather than a direct
@@ -123,7 +123,7 @@ Chapter~\ref{chap:design}.
 \section{Contributions}
 \label{sec:intro-contributions} 
 
-This thesis presents \toolname, a verifier of $d$-probing security for masked
+This thesis presents \toolname\footnote{\url{https://github.com/Sabanci-Theory/coppula/}}, a verifier of $d$-probing security for masked
 arithmetic circuits over $\mathbb{F}_2$, implemented in Lean~4. Its design rests on
 three ideas. Before developing them we place the verification problem itself in the
 complexity hierarchy, and the contributions follow in that order.

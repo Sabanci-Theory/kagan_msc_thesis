@@ -85,7 +85,7 @@ interchangeably of the gate and the wire carrying its output.
 \end{definition}
 
 Over $\mathbb{F}_2$ there is no difference between the Boolean and the arithmetic
-reading of such a circuit: exclusive-or is addition, logical-and is
+view of such a circuit: exclusive-or is addition, logical-and is
 multiplication, and the two together already express every function
 $\mathbb{F}_2^{\,n} \to \mathbb{F}_2$, i.e. they are universal. So we fix
 \[
@@ -115,14 +115,14 @@ $\mathrm{vars}(w_i) = \mathrm{vars}(w_j) \cup \mathrm{vars}(w_k)$ for a gate
 with operands $w_j, w_k$.
 \end{notation}
 
-Two conventions, fixed here once, are used throughout. First, a topological
-order realises the circuit as a \emph{straight-line program}: each wire is
-defined at most once, in terms only of wires already defined, so there is no
-branching and no recomputation of a gate under a different name. We pass freely
-between the digraph of Definition~\ref{def:circuit} and this sequential reading,
-whichever is clearer at the moment. Second, the restriction to $2$-ary gates is
-a modelling choice, not a loss of generality: an $n$-ary sum or product is
-always expressible as a chain of $2$-ary gates.
+% Two conventions, fixed here once, are used throughout. First, a topological
+% order realises the circuit as a \emph{straight-line program}: each wire is
+% defined at most once, in terms only of wires already defined, so there is no
+% branching and no recomputation of a gate under a different name. We pass freely
+% between the digraph of Definition~\ref{def:circuit} and this sequential reading,
+% whichever is clearer at the moment. Second, the restriction to $2$-ary gates is
+% a modelling choice, not a loss of generality: an $n$-ary sum or product is
+% always expressible as a chain of $2$-ary gates.
 
 \section{Secret Sharing and Masking}
 \label{sec:secret-sharing}
@@ -154,8 +154,8 @@ about the secret.
   A masked circuit carries every value in shared form and replaces each operation
   by a \emph{gadget}, a sub-circuit computing a sharing of the result from sharings
   of its inputs. Linear operations are trivial, since $\oplus$ acts share by share.
-  Multiplication is where the difficulty and the fresh randomness live, as a gadget
-  for it must combine shares of both inputs without ever forming a value that
+  Multiplication is where the difficulty and the fresh randomness live, such a gadget
+  must combine shares of both inputs without ever forming a value that
   depends on a secret. The masked \textsc{and} of Ishai, Sahai and Wagner
   \parencite{10.1007/978-3-540-45146-4_27} is the archetype, and the circuits we
   verify are built from gadgets of this kind.
@@ -235,14 +235,14 @@ are not exposited in this thesis.
   $\mathsf{Sim}(O)$, given the probe and the public inputs but never the secrets,
   has output law equal to $\mathcal{L}_{\mathbf{a}}(O)$ for every $\mathbf{a}$. Such
   a probe shows the adversary nothing it could not have produced on its own without
-  the secret, which is the guarantee masking is meant to provide. Simulability and
+  the secret. Simulability and
   equality of laws are the same property. If the laws agree, their common value is a
   distribution the simulator samples outright, and conversely a single simulator
   that matches every $\mathbf{a}$ forces all the $\mathcal{L}_{\mathbf{a}}(O)$ to
   coincide with its output, hence with one another.
 
   The third reading is a game, and it is the sharpest picture of what security
-  denies the adversary. The adversary names a probe $O$ of size at most $d$ together
+  entails for the adversary. The adversary names a probe $O$ of size at most $d$ together
   with two secret assignments $\mathbf{a}_0$ and $\mathbf{a}_1$. A challenger draws
   a hidden bit $c \in \{0,1\}$ and fresh randomness $\rho$, runs the circuit under
   $\mathbf{a}_c$, and hands back the transcript $O(\rho; \mathbf{a}_c)$. The
@@ -259,9 +259,7 @@ are not exposited in this thesis.
   \emph{secret-indistinguishability}.
 
   The three are one condition seen from three sides, equal laws, a secret-free
-  simulator, and a game no adversary wins. Non-interference is the form the
-  verification literature builds on, because it turns a question about distributions
-  into one about expressions.
+  simulator, and a game no adversary wins.
   % To show that a probe is non-interfering, it is enough to
   % rewrite its wires into a form in which the secrets have cancelled, which is the
   % program logic Barthe et al.\ introduce and the engine of
@@ -323,9 +321,9 @@ $r$-coordinate by $e(\rho)$ and leaves every other coordinate untouched:
 Geometrically, $\widehat{\sigma}$ is a \emph{shear} of the cube
 $\{0,1\}^{\mathcal{R}}$: it fixes every coordinate but $r$ and offsets that one
 by $e(\rho)$. Restricted to a
-fibre it is
-exactly the translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$ of the one-line
-fact above, so what measure it preserves it preserves by translation invariance.
+coordinate it is
+exactly the translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$, so it preserves the measure
+by translation invariance.
 We call any such map, one coordinate translated by a context
 depending on the others, and everything else left intact, a \emph{shear}, and use
 the word throughout.
