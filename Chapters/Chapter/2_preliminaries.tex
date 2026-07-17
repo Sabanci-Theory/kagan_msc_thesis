@@ -298,7 +298,7 @@ joint distribution of a probe of size at most $d$, taken over the uniformly
 distributed $\rho$, not move as the secrets vary.
 
 The whole argument rests on one line of $\mathbb{F}_2$ arithmetic: for any fixed
-bit $c$, the translation/shear $b \mapsto c \oplus b$ is a \textbf{bijection} of $\{0,1\}$
+bit $c$, the translation/shear $b \mapsto c \oplus b$ is a \emph{bijection} of $\{0,1\}$
 that preserves the uniform distribution (i.e. it is its own inverse and merely swaps
 the two outcomes). Everything below is this fact, applied to a single coordinate
 of $\rho$ with every other coordinate fixed.
@@ -319,7 +319,7 @@ $r$-coordinate by $e(\rho)$ and leaves every other coordinate untouched:
 \end{definition}
 
 Geometrically, $\widehat{\sigma}$ is a \emph{shear} of the cube
-$\{0,1\}^{\mathcal{R}}$: it fixes every coordinate but $r$ and offsets that one
+$\{0,1\}^{\mathcal{R}}$, simply, it fixes every coordinate but $r$ and offsets that one
 by $e(\rho)$. Restricted to a
 coordinate it is
 exactly the translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$, so it preserves the measure
@@ -331,7 +331,7 @@ the word throughout.
 We pair the two actions under one name with the lemma below. The
 syntactic rewrite $w \mapsto w\sigma$ and the reparametrisation
 $\rho \mapsto \widehat{\sigma}(\rho)$ are one operation seen from two sides, and
-$\widehat{\sigma}$ does not disturb the distribution.
+$\widehat{\sigma}$ does not disturb the uniform distribution.
 
 \begin{lemma}[Substitution]
 \label{lem:substitution}
@@ -364,8 +364,8 @@ operands' values.
 
 \begin{corollary}[Single-occurrence discharge]
 \label{cor:single-occurrence-discharge}
-Suppose $r$ occurs exactly once among a probe $\mathbf{w}$ and the wires it
-depends on, as an operand of a gate $x = e \oplus r$ with
+Suppose $r$ occurs exactly once among a probe $\mathbf{w}$, as an operand of a
+gate $x = e \oplus r$ with
 $r \notin \mathrm{vars}(e)$, and let $\sigma = (r \mapsto e \oplus r)$. Then
 $\mathbf{w}\sigma$ is identically distributed to $\mathbf{w}$ over $\rho$
 uniform, and every occurrence of $x$ in $\mathbf{w}\sigma$ has collapsed to the
@@ -376,12 +376,12 @@ bare input $r$.
 Distributional equality is Lemma~\ref{lem:substitution} applied coordinatewise
 to $\mathbf{w}$, using that $\widehat{\sigma}$ preserves the uniform
 distribution on $\{0,1\}^{\mathcal{R}}$. For the second claim,
-$x\sigma = e \oplus (e \oplus r) = r$ by $\mathbb{F}_2$-cancellation; since $r$
+$x\sigma = e \oplus (e \oplus r) = r$ by $\mathbb{F}_2$-cancellation, and since $r$
 occurs nowhere else by hypothesis, no other part of $\mathbf{w}$ is touched.
 \end{proof}
 
 \begin{remark}
-Rewriting a probe by a substitution --- whether in the general form of
+Rewriting a probe by a substitution as above --- whether in the general form of
 Lemma~\ref{lem:substitution} or the single-occurrence case of
 Corollary~\ref{cor:single-occurrence-discharge} --- leaves its distribution
 untouched. That is the key observation that derives the procedure
@@ -402,7 +402,7 @@ counting question, beacuse the measures we work with are defined on discrete spa
 The law of a probe assigns to each possible observation the
 number of randomness assignments $\rho$ that produce it, divided by
 $2^{|\mathcal{R}|}$, and independence of the secrets asks that these counts agree
-across secret settings. Chapter~\ref{chap:couplings} makes the difficulty precise,
+across different secret assignments. Chapter~\ref{chap:couplings} makes the difficulty precise,
 showing that the associated counting problem is \#P-complete, \#P being the class
 Valiant introduced for counting the accepting computations of a nondeterministic
 machine \parencite{valiant1979complexity}.
@@ -415,9 +415,9 @@ has exactly a prescribed number of accepting paths, is $\mathrm{C}_{=}\mathrm{P}
 the exact-counting counterpart of \#P studied by Wagner
 \parencite{wagner1986complexity}. Its canonical complete problem, deciding whether
 a Boolean formula has exactly a given number of satisfying assignments, is the
-equality-of-counts question in its essence, and probing security is that same
+equality-of-counts question in its essence, and probing security is essentially that
 question, but posed in the language of masked circuits. Locating the problem in
-$\mathrm{C}_{=}\mathrm{P}$ says plainly that an exact decision procedure is not
+$\mathrm{C}_{=}\mathrm{P}$ plainly says that an exact decision procedure is not
 expected to be efficient at all, and it is the reason this thesis does not count.
 It certifies security constructively instead, through the rewriting of
 Section~\ref{sec:randomness-substitution}, giving a checker that is sound but

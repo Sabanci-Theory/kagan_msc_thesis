@@ -30,8 +30,8 @@ distribution-preserving rewriting, is the largest influence of this work.
   intermediate wires is independent of the secret by rewriting. The central
   method is called optimistic sampling, where a random $r$ occurring once, as
   $e \oplus r$, is replaced by a fresh uniform variable, since $e \oplus r$ is
-  itself uniform when $r$ does not appear in $e$. When a substitution alone
-  exposes no cancellation, the expression is put into algebraic normal form so that
+  itself uniform when $r$ does not appear in $e$. When substitutions alone
+  fail to cancel all secrets, the expression is put into algebraic normal form so that
   products collapse, and independence can be declared if no secret variable occurs in that form.
   This is, in miniature, the rewrite engine of our Component~I
   (Section~\ref{sec:rewrite-engine}). The optimistic sampling substitution is
@@ -50,7 +50,7 @@ distribution-preserving rewriting, is the largest influence of this work.
   one of its subsets at once. So, the search tries to verify maximal sets and, on failure,
   splits and recurses. Our Component~II
   (Section~\ref{sec:subset-space}) is this exploration, and our contribution there
-  is to make the split's exhaustiveness a proved identity. The set-level
+  is to make the split's exhaustiveness a neatly proved identity. The set-level
   Vandermonde partition of Section~\ref{sec:vandermonde} certifies that no probe
   slips through such a recursion.
 
@@ -64,7 +64,7 @@ distribution-preserving rewriting, is the largest influence of this work.
   secret-free form after the same sequence of rewrites.
   So, one certification serves many wires. This is the direct
   ancestor of our Component~III (Section~\ref{sec:replay}). The reuse is imperfect
-  for us, because our engine factors and factoring is not a neatly replayable step. Re-running
+  for us, because our engine factors and factoring is not a trivially replayable step. Re-running
   a recorded derivation on a fresh wire misses the cancellations a factoring might have
   made possible. We therefore read the derivation not as a script to rerun but as a
   measure-preserving coupling of the randomness (Chapter~\ref{chap:couplings}), and
@@ -155,10 +155,10 @@ by reasoning about compositions of smaller gadgets.
   al.\ \parencite{barthe2016strong} introduce strong non-interference, which handle
   output and internal probes separately and composes by construction, and Cassiers
   and Standaert \parencite{cassiers2020trivially} refine this to a probe-isolating
-  non-interference, under which gadgets compose neatly. Belaïd, Goudarzi, and
+  non-interference, under which gadgets compose nicely. Belaïd, Goudarzi, and
   Rivain \parencite{belaid2018tight} verify tight probing security directly,
   characterising when a masked circuit is secure with the least refreshing. These
-  notions allow the assembly of large masked circuits from smaller components. We stay with in
+  notions allow the assembly of large masked circuits from smaller components. We stay within
   plain probing security of a single circuit (Chapter~\ref{chap:preliminaries}) and do
   not pursue composition, so they are related to our work but do not overlap it.
 
@@ -169,7 +169,7 @@ This thesis sits in the language-based lineage of Barthe et al.\
 \parencite{barthe2015verified, 10.1007/978-3-030-29959-0_15}. As they do, we decide
 a probe by rewriting it toward a secret-free form, we escape the subset enumeration
 by exploring large sets, and we reuse a certified derivation to enlarge a safe set.
-Three things set our treatment apart. First, we read a successful discharge as an
+Three things set our treatment apart. First, we view a successful discharge as an
 explicit measure-preserving coupling of the randomness
 (Chapter~\ref{chap:couplings}) and admit neighbouring wires by an exact test
 through it. Second, we prove the
@@ -182,4 +182,4 @@ tools we stay value-based and do not model glitches, and unlike the compositiona
 notions we verify a whole circuit rather than assembling it from verified parts.
 Against the exact solvers and decision-diagram engines we decline to build the
 distribution at all, since Chapter~\ref{chap:couplings} shows that to be
-intractable, and we certify constructively instead, sound but incomplete.
+intractable, and we certify constructively instead, which is sound but incomplete.

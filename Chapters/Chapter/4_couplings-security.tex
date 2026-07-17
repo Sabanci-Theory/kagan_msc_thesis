@@ -125,12 +125,13 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
   \emph{Membership.} Put
   \[
     f(C, O, \mathbf{a}, \mathbf{b}) \;=\; \sum_{o \in \{0,1\}^{k}}
-      \big(N_{\mathbf{a}}(o) - N_{\mathbf{b}}(o)\big)^2 .
+      \big(N_{\mathbf{a}}(o) - N_{\mathbf{b}}(o)\big)^2 ,
   \]
-  Each $N_{\mathbf{a}}$ is a $\#\mathrm{P}$ function, and $\mathrm{GapP}$ is closed under
+  Where $C$ is the circuit, each $N_{\mathbf{a}}$ is a $\#\mathrm{P}$ function,
+  and $\mathrm{GapP}$ is closed under
   subtraction and multiplication \parencite{fenner1994gap}. The sum ranges over
   $2^{k} \le 2^{d}$ observations, which is a constant since the order $d$ is fixed, thus $f$ is
-  a constant combination of gap functions and is itself in $\mathrm{GapP}$. Remember that a sum of
+  a constant combination of gap functions and is itself in $\mathrm{GapP}$. A sum of
   squares vanishes exactly when every term does, hence
   \[
     \mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)
@@ -328,15 +329,15 @@ witness of Theorem~\ref{thm:coupling-equiv}.
   \varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$ assembles the family of
   Section~\ref{sec:coupling-two-runs}. When the derivation ends on a secret-free
   form, this family satisfies Definition~\ref{def:coupling-function} and so, by
-  Theorem~\ref{thm:coupling-equiv}, certifies the probe.
+  Theorem~\ref{thm:coupling-equiv}, it also certifies the probe.
 
   This is the constructive certificate that we wished for.
-  It is explicit, being read straight off the recorded
+  It is explicit, constructed straight off the recorded
   substitutions, and it is checkable without ever counting a fibre. What it is not
   is \emph{complete}, since a probe can be secret-independent while no chain of
   substitutions reaches a secret-free form, in which case the search returns no
-  witness though one might exist in the abstract sense of
+  witness, though one might exist in the abstract sense of
   Theorem~\ref{thm:coupling-equiv}. How such a derivation is searched for, recorded,
   and then replayed to certify many wires at once is the subject of
-  Chapter~\ref{chap:design}, where the construction is given in full and its
+  the next chapter (Chapter~\ref{chap:design}), where the construction is given in full and its
   soundness is proved.

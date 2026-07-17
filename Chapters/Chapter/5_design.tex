@@ -52,10 +52,10 @@ Chapter~\ref{chap:implementation}.
 Given a probe $\mathbf{w} = (w_1, \dots, w_k)$, $k \le d$ --- a tuple of
 wires of the circuit --- the rewrite engine decides whether $\mathbf{w}$ is
 secret-independent. It does so constructively, rather than reasoning about
-probability distributions directly; it searches for a finite sequence of
+probability distributions directly. It searches for a finite sequence of
 applications of Lemma~\ref{lem:substitution}
 (Section~\ref{sec:randomness-substitution}) after which $\mathbf{w}$'s form is
-syntactically free of secrets --- no secret is present in the expression of
+syntactically free of secrets, so no secret is present in the expression of
 any $w_i$. Termination with a secret-free image certifies $\mathbf{w}$.
 Theorem~\ref{thm:rewrite-soundness} in Section~\ref{sec:coupling-view} makes precise
 why this certificate is sound.
@@ -75,7 +75,7 @@ randoms. This factoring \& rewriting is the second tier.
 complete fallback for the remaining case, for random variables occurring more than once. It
 substitutes a random by its context wherever the random occurs, interleaving
 factoring lazily whenever both of its own find-rules stall. Section~\ref{sec:coupling-view}
-closes the section by reading the whole derivation as an explicit, replayable
+closes the section by viewing the whole derivation as an explicit, replayable
 bijection on the randomness space. Which becomes the \gls{coupling} that Component III
 (Section~\ref{sec:extension}) later utilizes in every other wire in the circuit.
 
@@ -176,7 +176,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   Each round re-examines the current probe for an applicable substitution.
   \textproc{FindSimple} looks first for the same single-occurrence, non-root pattern
   as Section~\ref{sec:simple-rule}, since a general substitution can turn a
-  multi-occurrence random into a single-occurrence one; it prefers the shallowest
+  multi-occurrence random into a single-occurrence one; it also prefers the shallowest
   candidate. Failing that, \textproc{FindGeneral} looks for any random, not yet used
   by a previous general step, occurring at least twice with some additive parent
   $x_1$ whose other children do not themselves depend on it --- the side condition
@@ -217,7 +217,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   % TODO: the proof for the linear/affine case is not given.
 
   Termination is only argued informally, not proved. Each general substitution
-  retires its random into $\mathit{used}$ and is never repeated for it, bounding the
+  retires its random into $\mathit{used}$ and it is never repeated, bounding the
   number of general steps by $|\mathcal{R}|$; between general steps, simple
   substitutions strictly reduce the candidate pool; factoring is retried at most once
   per stall before the engine gives up on the current form. Interleaving factoring
