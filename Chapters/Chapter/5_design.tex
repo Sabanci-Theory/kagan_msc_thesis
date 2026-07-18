@@ -232,7 +232,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \label{sec:coupling-view}
 
   A discharge does more than answer \Secure{}/\Insecure{}. Read the
-  right way, it hands back the object Chapter~\ref{chap:couplings} asks for: a
+  right way, it hands back the object Chapter~\ref{chap:couplings} studies, a
   coupling for the probe. We state that object declaratively first, then show how
   the engine produces one.
 
@@ -269,7 +269,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   $\Phi_{\mathbf{b},\mathbf{c}} \circ \Phi_{\mathbf{a},\mathbf{b}} =
   \Phi_{\mathbf{a},\mathbf{c}}$, so for any secret assignment $\mathbf{a}_0$,
   $\{\Phi_{\mathbf{a}_0,\,\cdot}\}$ already generate the rest of the couplings. It is these
-  properties we care about, not any one procedure that realises them.
+  properties that we care about, not any one procedure that realises them.
 
   What the engine records is actually such a coupling. Discharging a probe amounts to
   finding a \emph{derivation} of a finite sequence of rewrites
@@ -336,7 +336,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho); \mathbf{b}\big)$ for all
   $\rho$. Each $\Phi_{\mathbf{a},\mathbf{b}}$ is a composition of
   measure-preserving bijections, so the family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$
-  is the sought after coupling of $\mathbf{w}$.
+  is the right coupling of $\mathbf{w}$.
   \end{proof}
 
   % I commented the following two paragraphs as it might be confusing at this point.
@@ -431,12 +431,12 @@ in batches as large as possible rather than one at a time.
   \If{$v = \Secure{}$} \Return \Secure{} \EndIf
   \State $\mathbf{w} \gets$ a representative of $\llbracket wl \rrbracket$ \Comment{$c_j$ wires from each $W_j$}
   \State $(v, T) \gets \Call{CheckProbe}{\mathbf{w}}$ \Comment{Component I (\S\ref{sec:rewrite-engine})}
-  \If{$v = \Insecure{}$} \Return \Insecure{}($\mathbf{w}$) \EndIf
+  \If{$v = \Insecure{}$} \Return \Insecure{} \EndIf
   \State $\mathsf{safe} \gets \Call{Extend}{\mathbf{w}, T, U}$ \Comment{Component III (\S\ref{sec:extension}); \ $\mathbf{w} \subseteq \mathsf{safe} \subseteq U$}
   \ForAll{$(i_1, \dots, i_m) \in \textstyle\prod_{j} \{0, \dots, c_j\}$ \textbf{with} $(i_j)_j \neq (c_j)_j$}
     \State $wl' \gets \big\langle\, (i_j,\ W_j \cap \mathsf{safe}),\ \ (c_j - i_j,\ W_j \setminus \mathsf{safe}) \,\big\rangle_{j=1}^{m}$ \Comment{drop zero-count parts}
     \State $r \gets \Call{CheckAll}{wl'}$
-    \If{$r \neq \Secure{}$} \Return $r$ \EndIf
+    \If{$r = \Insecure{}$} \Return \Insecure{} \EndIf
   \EndFor
   \State \Return \Secure{}
 \EndFunction
@@ -450,7 +450,7 @@ in batches as large as possible rather than one at a time.
   once. Let $U = W_1 \cup \dots \cup W_m$ be every wire the worklist can reach,
   and hand $U$ --- as a single large probe --- to the rewrite engine of Component I. If
   $U$ is certified secret-independent, so is every subset of $U$, and in
-  particular every probe in $\llbracket wl \rrbracket$; the branch is secure and
+  particular every probe in $\llbracket wl \rrbracket$, meaning that the branch is secure and
   the traversal returns without descending. On some secure circuits this one test
   does almost all of the work, some branches never split, because their union
   already discharges.
@@ -492,7 +492,7 @@ in batches as large as possible rather than one at a time.
     \binom{A \uplus B}{c} \;=\; \biguplus_{i=0}^{c}
       \Big\{\, S_A \cup S_B \;:\; S_A \in \tbinom{A}{i},\ S_B \in \tbinom{B}{\,c-i} \,\Big\},
   \]
-  a \emph{disjoint} union: each $c$-subset $S$ lies in exactly the block
+  a \emph{disjoint} union. Each $c$-subset $S \in \binom{A \uplus B}{c}$ lies in exactly the block
   $i = |S \cap A|$. Counting both sides recovers Vandermonde's identity,
   $\binom{|A|+|B|}{c} = \sum_{i=0}^{c} \binom{|A|}{i} \binom{|B|}{\,c-i}$.
   \end{lemma}
@@ -545,8 +545,8 @@ in batches as large as possible rather than one at a time.
   \emph{Soundness}, by induction along that order. \textproc{CheckAll} returns
   \Secure{} only in one of three ways. If the union $U = \bigcup_j W_j$
   discharges, every subset of $U$ (hence all of $\llbracket wl \rrbracket$)
-  is secret-independent by marginalisation. If a degenerate worklist bottoms out,
-  $\llbracket wl \rrbracket$ is empty or the lone empty probe, which is trivially secure.
+  is secret-independent by marginalisation. If a degenerate worklist occurs,
+  $\llbracket wl \rrbracket$ is empty or it is the empty probe, which is trivially secure.
   Otherwise the representative certifies and the recursive cells all return
   \Secure{}. By Lemma~\ref{lem:set-vandermonde} those cells together with the
   skipped all-safe cell partition $\llbracket wl \rrbracket$; the all-safe cell is
@@ -561,14 +561,14 @@ in batches as large as possible rather than one at a time.
 
   We close this section with two remarks. The soundness above is one-directional by design:
   a \Secure{} verdict is trustworthy, but the traversal inherits Component
-  I's incompleteness verbatim and nothing more. An \Insecure{} verdict is
+  I's incompleteness verbatim. An \Insecure{} verdict is
   raised only when Component I declines a representative
   (Section~\ref{sec:general-substitution}), never because a subset slipped through
   unexamined. Lemma~\ref{lem:set-vandermonde} guarantees the cells cover
   $\llbracket wl \rrbracket$ exactly, so the sweep is genuinely exhaustive. The
   reported witness is therefore a true counterexample precisely when Component I is
-  complete on it, as in the linear/affine case; a fuel-bounded refusal there is the
-  one place a spurious \Insecure{} can enter, and it enters through Component
+  complete on it, but in genreal Component I is not complete, so a spurious \Insecure{}
+  can happen. Crucially such an \Insecure{} answer enters through Component
   I, not through this traversal. Second, the efficiency of the whole scheme rests
   on the safe set being large: the bigger $\mathsf{safe}$, the fewer and smaller
   the surviving cells, and the closer the union prune comes to settling a branch
@@ -681,16 +681,15 @@ mechanisms from the weakest to the strongest and adopt the last.
   candidate is then incomplete. A wire the derivation genuinely blinds can fail it,
   because the cancellation that clears its secret was arranged by a factoring the
   replay never performs. That mismatch is the whole
-  reason why we take one further step, and read the derivation not as a script to rerun
-  but as a coupling function.
+  reason why we take one further step, and view the derivation as a coupling function.
 
   \subsection{Coupling-Driven Extension}
   \label{sec:coupling-extension}
 
   The mechanism we adopt keeps replay's use of the derivation and replaces its
-  final test with an exact one. Section~\ref{sec:coupling-view} already read the
+  final test with an exact one. Section~\ref{sec:coupling-view} already showed how to view the
   recorded derivation as a single measure-preserving bijection $\varphi$ of the
-  randomness space, the \gls{coupling} that certified $\mathbf{w}$. Coupling-driven
+  randomness space. Coupling-driven
   extension admits a candidate wire $u$ exactly when $u \circ \varphi$ is
   independent of the secrets, and it decides that independence semantically rather
   than by surface syntax. Every wire replay
@@ -705,6 +704,7 @@ mechanisms from the weakest to the strongest and adopt the last.
   staged. Initially, a fast probabilistic filter throws out the candidate wires
   that are incompatible with the coupling function we derived via evaluations.
 
+% TODO: Elaborating on FastReject, SurfaceFree, and AnfFree is needed. I am thinking whether FastReject should even enjoy its own algoritm block.
 \begin{algorithm}
 \caption{Coupling-driven extension (Component III)}
 \label{alg:extend}
@@ -726,16 +726,16 @@ mechanisms from the weakest to the strongest and adopt the last.
 \end{algorithmic}
 \end{algorithm}
 
-  The filter is an evaluation under two runs. Fix random values for the
-  randoms, evaluate $u \circ \varphi$ once with the secrets also drawn at random and
-  once with the secrets set to zero, and compare. If the two disagree, then $u \circ
+  The fast filter is an evaluation under two runs. It fixes random values for the
+  randoms, evaluates $u \circ \varphi$ once with the secrets also drawn at random and
+  once with the secrets set to zero, and compares. If the two outcomes disagree, then $u \circ
   \varphi$ genuinely moves with the secrets, and $u$ is dropped. Agreement proves
   nothing on its own, since a dependence can hide from any one tape, so a survivor
   is not yet admitted. Running the trial over many tapes makes a surviving
-  dependence steadily less likely but never impossible, which is why the filter is
+  dependence less likely but never impossible, which is why the filter is
   allowed to reject but never to accept.
 
-  Then the derivation is replayed on $u$, and the
+  Then the derivation is composed with $u$, and the
   result is first read by ordinary $\mathbb{F}_2$ cancellation, which is cheap and
   clears the common case. When a secret still shows, the wire is converted to its
   algebraic normal form and admitted exactly when no secret variable survives there.

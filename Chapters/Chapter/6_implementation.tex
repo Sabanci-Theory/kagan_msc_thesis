@@ -17,7 +17,7 @@ keep every expression canonical, and extended with a multiplicative factoring
 pass that reshapes products so the engine can reach randoms otherwise buried
 inside them.
 
-One point of clarification before we dive in. The circuit of
+Remember that the circuit of
 Definition~\ref{def:circuit} is strictly $2$-ary, and that is deliberate. Each
 $2$-input gate output is a distinct observable, so collapsing gates would hide
 intermediate wires the adversary is allowed to probe
@@ -48,7 +48,7 @@ DAG is the authority on what each probed wire computes.
   that table. On a hit we return the existing identifier, and on a miss we
   allocate a fresh one and record it. Two expressions that are structurally the
   same are therefore the same node, physically, however many times they are
-  written.
+  written. One can think of it as a lightweight e-graph.
 
   The second reason is equality. Because interning makes structural identity
   coincide with identifier identity, deciding whether two expressions are equal
