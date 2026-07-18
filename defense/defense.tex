@@ -19,6 +19,9 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,calc,fit,shapes.geometric}
 \usepackage{booktabs}
+\usepackage[style=authoryear, backend=biber, maxcitenames=2, uniquelist=false]{biblatex}
+\addbibresource{../Library.bib}
+\renewcommand*{\bibfont}{\scriptsize}
 
 \newcommand{\toolname}{Coppula}
 \newcommand{\Secure}{\textsf{Secure}}
@@ -127,7 +130,7 @@
   \begin{itemize}
     \item A real device leaks through power draw, timing, electromagnetic
       emanation; all of which vary with the \emph{data} it handles.
-    \item Differential power analysis [Kocher et al.~'99] correlates many power
+    \item Differential power analysis \parencite{kocher1999differential} correlates many power
       traces against a guess of an intermediate value, and may recover the key.
   \end{itemize}
   \medskip
@@ -138,7 +141,7 @@
 \end{frame}
 
 \begin{frame}{Masking --- and our running example}
-  \emph{Boolean masking} [Chari et al.~'99] splits each secret into shares,
+  \emph{Boolean masking} \parencite{chari1999towards} splits each secret into shares,
   $x = x_0 \oplus x_1$, with $x_0$ uniformly random, and computation happens on
   shares, never directly on secrets. Then, the cost of attacking grows exponentially in the number
   of shares.
@@ -149,7 +152,7 @@
       \domand{}
     \end{column}
     \begin{column}{0.44\textwidth}
-      \textbf{DOM-AND} [Groß et al.~'16]: a masked AND gate, with two shares per input,
+      \textbf{DOM-AND} \parencite{gross2016domain}: a masked AND gate, with two shares per input,
       and a fresh mask $r$.
       \medskip
       \begin{itemize}
@@ -166,7 +169,7 @@
 
 \begin{frame}{The probing model}
   Reasoning about noisy traces directly is unwieldy. Luckily we have an
-  abstraction [Ishai--Sahai--Wagner~'03]:
+  abstraction \parencite{10.1007/978-3-540-45146-4_27}:
   \begin{block}{$d$-probing security}
     An adversary picks any $d$ wires and is handed their \emph{exact} values.
     The circuit is $d$-probing secure when no such choice distinguishes one
@@ -183,7 +186,7 @@
         \item<2-> Now, security becomes a \emph{combinatorial} property of the
           circuit, algortihmically decidable in principle.
         \item<3-> And thankfully, the abstraction is faithful: probing security implies
-          noisy-leakage security [Duc--Dziembowski--Faust~'14]. We take
+          noisy-leakage security \parencite{duc2014unifying}. We take
           $d$-probing security as the target and do not revisit this bridge.
       \end{itemize}
     \end{column}
@@ -223,10 +226,11 @@
   \medskip
   \begin{enumerate}
     \item<1-> \textbf{Distributional.} \; $\law{\va}(O) = \law{\vb}(O)$ for all
-      secrets $\va, \vb$. \hfill {\small \emph{the definition}}
+      secrets $\va, \vb$. \hfill {\small \emph{(the definition)}}
     \item<2-> \textbf{Counting.} \; $N_{\va}(o) = N_{\vb}(o)$ for every
       observation $o$, i.e. two histograms of integers coincide.
-      \hfill {\small \emph{$\to$ this section}}
+      
+      {\small \emph{$\to$ this section}}
     \item<3-> \textbf{Coupling.} \; there exists a bijection
       $\varphi$ of the tapes such that $O(\rho;\va) = O(\varphi(\rho);\vb)$.
       
@@ -242,8 +246,8 @@
 \begin{frame}{Counting is intractable}
   \begin{block}{Theorem (thesis, Ch.~4)}
     Computing one tape count $N_{\va}(o)$ is $\sharpP$-complete
-    [Valiant~'79]. And deciding $\law{\va}(O) = \law{\vb}(O)$ is
-    $\CeqP$-complete [Wagner~'86].
+    \parencite{valiant1979complexity}. And deciding $\law{\va}(O) = \law{\vb}(O)$ is
+    $\CeqP$-complete \parencite{wagner1986complexity}.
   \end{block}
   \medskip
   \emph{Hardness, briefly:} for formulas $\varphi_0, \varphi_1$ over
@@ -256,8 +260,8 @@
   exactly the canonical $\CeqP$-complete question: \textsc{ExactSat}.
   \medskip
 
-  \onslide<2->{Observe that one secret bit and one probed wire already suffice; no feature
-  of masking is what makes the problem hard.}
+  \onslide<2->{One secret bit and one probed wire already suffice for the problem
+  to be intractable; no feature of masking is what makes the problem hard.}
 \end{frame}
 
 \begin{frame}{What the placement tells}
@@ -316,7 +320,7 @@
 \end{frame}
 
 \begin{frame}{Couplings}
-  The classical idea [Barthe et al.~'17 for probabilistic programs] to prove that two
+  The classical idea (\parencite{barthe2017coupling} for probabilistic programs) to prove that two
   distributions are equal without explicitly computing them is by \emph{linking their
   sources}. Our two laws are pushforwards of the \emph{same} uniform tape. So we should
   cleverly link those tapes.
@@ -476,8 +480,8 @@
 \begin{frame}{Component II: covering all probes}
   Certifying each $d$-subset in turn is infeasible. Instead the space lives as
   a \emph{worklist} of factors $\langle (c_1, W_1), \dots, (c_m, W_m) \rangle$,
-  ``draw $c_j$ wires from each $W_j$'', and we split recursively [in the manner of
-  maskVerif, Barthe et al.~'19]:
+  ``draw $c_j$ wires from each $W_j$'', and we split recursively, in the manner of
+  maskVerif \parencite{10.1007/978-3-030-29959-0_15}:
   \medskip
   \begin{itemize}
     \item<1-> Initially, try to discharge a whole batch at once: if the \emph{union} of
@@ -498,7 +502,7 @@
     they do not merely count them.
   \end{block}
   \medskip
-  \onslide<4->{The delicate point is that the split must \emph{lose nothing},
+  \onslide<3->{The delicate point is that the split must \emph{lose nothing},
   and we proved that it does not.}
 \end{frame}
 
@@ -532,7 +536,7 @@
       ($H(u \mid \vw) = 0$). Works locally, but the candidate pool deep in the
       recursion is scattered. A cheap step but weak.
     \item<2-> \textbf{Replay} --- re-run the derivation on the candidate wire
-      [after Barthe et al.~'15]. An imperfect fit for us because we \emph{factor},
+      \parencite{barthe2015verified}. An imperfect fit for us because we \emph{factor},
       and factoring is not a replayable step.
     \item<3-> \textbf{Coupling} --- apply the recorded tape bijection and test
       the ANF endpoint. Exact, and independent of how the derivation was
@@ -627,7 +631,7 @@
   \begin{itemize}
     \item<1-> \textbf{DOM-AND} (2 shares): $\Secure$ at order 1, the witness
       pair $\{c_{01}, c_{10}\}$ at order 2 --- our running example.
-    \item<2-> \textbf{Four-share $x \oplus yz$ TI} [Bilgin et al.~'15]:
+    \item<2-> \textbf{Four-share $x \oplus yz$ TI} \parencite{bilgin2015threshold}:
       certified secure at orders 1 and 2, insecure at order 3 --- the
       \emph{expected} behaviour of a first-order threshold implementation.
     \item<3-> \textbf{The factoring family} ($d{+}1$ quadratic S-boxes,
@@ -814,7 +818,7 @@
   \medskip
 
   The two genuinely insecure classes, $Q^3_3$ and $Q^4_{300}$, are exactly the
-  quadratic classes that admit no uniform three-share TI [Bilgin et al.~'15].
+  quadratic classes that admit no uniform three-share TI \parencite{bilgin2015threshold}.
 \end{frame}
 
 \begin{frame}{Backup: $\CeqP$ membership, sketch}
@@ -823,18 +827,18 @@
     f(C, O, \va, \vb) \;=\; \sum_{o} \bigl(N_{\va}(o) - N_{\vb}(o)\bigr)^2 .
   \]
   Each $N$ is a $\sharpP$ function; $\mathrm{GapP}$ is closed under subtraction
-  and multiplication [Fenner et al.~'94]; the sum has $2^k \le 2^d$ terms,
+  and multiplication \parencite{fenner1994gap}; the sum has $2^k \le 2^d$ terms,
   constant for fixed $d$. A sum of squares vanishes iff every term does, so
   \[
     \law{\va}(O) = \law{\vb}(O) \iff f = 0 ,
   \]
-  and the problem is the vanishing set of a gap function: $\CeqP$.
+  and the problem is the vanishing set of a gap function, which is exactly $\CeqP$.
 \end{frame}
 
 \begin{frame}{Backup: replay vs.\ factoring}
-  Barthe et al.'s derivations replay two rule kinds: \textsc{Opt}
+  The derivations of \textcite{barthe2015verified} replay two rule kinds: \textsc{Opt}
   (substitution) and \textsc{Conv} (ANF normalisation) --- for them, ANF is a
-  \emph{replayed rule}, not a fallback.
+  \emph{replayed rule}.
   \medskip
 
   Our derivations interleave substitutions with \emph{multiplicative
@@ -852,20 +856,21 @@
 
 \begin{frame}{Backup: positioning}
   \begin{itemize}
-    \item \textbf{maskVerif} [Barthe et al.]: language-based, the traversal's
+    \item \textbf{maskVerif} \parencite{10.1007/978-3-030-29959-0_15}:
+      language-based, the traversal's
       main inspiration; replay-style extension; no factoring.
-    \item \textbf{REBECCA / Fourier-analytic} [Bloem et al.]: correlation sets
-      over Fourier coefficients; approximate in general.
-    \item \textbf{SILVER} [Knichel et al.]: exact, BDD-based model counting;
+    \item \textbf{REBECCA / Fourier-analytic} \parencite{bloem2018formal}:
+      correlation sets over Fourier coefficients; approximate in general.
+    \item \textbf{SILVER} \parencite{knichel2020silver}: exact, BDD-based model counting;
       exhaustive per-probe distributions, different scaling profile.
-    \item \toolname: exact like SILVER, constructive like maskVerif ---
+    \item \textbf{\toolname}: exact like SILVER, constructive like maskVerif ---
       and the certificate (the coupling) is itself an object with structure
       we exploit.
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Backup: the four-share TI netlist}
-  Four-share TI of $x \oplus (y \odot z)$ [Bilgin et al.~'15]; each input
+  Four-share TI of $x \oplus (y \odot z)$ \parencite{bilgin2015threshold}; each input
   four-shared, sixteen cross products $y_i \odot z_j$:
   \[
   \begin{aligned}
@@ -878,6 +883,10 @@
   A \emph{first-order} threshold implementation --- never claimed beyond order
   one. \toolname{} certifies orders 1 and 2 and finds the order-3 witness:
   a counterexample on a gadget with a \emph{known} failure order, not a flaw.
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+  \printbibliography[heading=none]
 \end{frame}
 
 \end{document}
