@@ -55,6 +55,8 @@
   wire/.style={draw, rounded corners=2pt, minimum height=5.5mm, minimum width=11mm,
                inner sep=2pt, font=\small, fill=white},
   inwire/.style={wire, fill=black!5},
+  randin/.style={wire, draw=hlrand, fill=hlrand!10},
+  secin/.style={wire, draw=hlbad, fill=hlbad!8},
   randw/.style={wire, draw=hlrand, thick, fill=hlrand!10},
   probed/.style={draw=hlprobe, very thick, fill=hlprobe!15},
   safe/.style={draw=hlsafe, very thick, fill=hlsafe!12},
@@ -69,11 +71,11 @@
   \node[wire, below=of u0, wp01/.try] (p01) {$p_{01}$};
   \node[wire, below=13mm of p01, wp10/.try] (p10) {$p_{10}$};
   \node[wire, below=of p10, wu1/.try]  (u1)  {$u_1$};
-  % inputs (left column)
-  \node[inwire, left=9mm of u0, yshift=-2mm, wa0/.try] (a0) {$x_0$};
-  \node[inwire, below=of a0] (a1) {$x_1$};
-  \node[inwire, below=of a1, wb0/.try] (b0) {$y_0$};
-  \node[inwire, below=of b0] (b1) {$y_1$};
+  % inputs (left column); color code: blue = random, red = secret-carrying
+  \node[randin, left=9mm of u0, yshift=-2mm, wa0/.try] (a0) {$x_0$};
+  \node[secin, below=of a0, wa1/.try] (a1) {$x_1$};
+  \node[randin, below=of a1, wb0/.try] (b0) {$y_0$};
+  \node[secin, below=of b0, wb1/.try] (b1) {$y_1$};
   % masked cross terms, the shared fresh mask sits between them
   \node[wire, right=of p01, wc01/.try] (c01) {$c_{01}$};
   \node[wire, right=of p10, wc10/.try] (c10) {$c_{10}$};
@@ -105,33 +107,21 @@
 \maketitle
 
 % ---------------------------------------------------------------------
-\begin{frame}{The story}
+\begin{frame}{The story of this talk}
   \begin{enumerate}
-    \item<1-> Masked circuits defend against side-channel attacks, but masking is
-      easy to get subtly wrong. So, we want to \emph{verify} it, exactly.
-    \item<2-> Deciding even one observation is provably hard
-      ($\CeqP$-complete), so we cannot count to find an answer.
-    \item<3-> Instead, we certify security \emph{constructively}, giving a proof of
-      independence via a \emph{coupling} of the circuit's randomness.
-    \item<4-> We present \toolname, a Lean~4 verifier built on this idea, with three
-      components: a rewrite engine, a subset-space traversal, and a
-      probe-set extension.
-    \item<5-> It verifies a suite of masked gadgets exactly, and the coupling
-      view proves to be helpful.
-  \end{enumerate}
-\end{frame}
-% ---------------------------------------------------------------------
-\begin{frame}{An Alternative Story Telling}
-  \begin{enumerate}
-    \item Problem: Side-channel attacks. Solution: Masking.
-    \item Correctness: Wire outputs are indifferentable by arranging randoms (coupling function)
-    \item A hard problem (as hard as counting results of all input combinations).
-    \item Proposed solution (\toolname): A logical reasoning engine based on rewrite rules and combinatoric exploration of probe candidates.
-        \begin{itemize}
-            \item Three components: rewrite engine,  subset traversal, probe set extension/
-            \item  Implemented in Lean 4 (functional language + proof tool)
-        \end{itemize}
-    \item Result:  formal guarantees (soundness), new gadgets verified, comparable performance wrt state of the art tools.
+    \item<1-> \textbf{Problem:} real devices leak; measuring power or timing
+      can recover secret keys. \textbf{Standard fix:} masking --- compute on
+      randomized shares, never on secrets.
+    \item<2-> \textbf{The question:} was the masking done right? ``Right''
+      means no $d$ observed wires can tell two secrets apart.
+    \item<3-> \textbf{It is provably hard:} as hard as counting solutions over
+      all input combinations, so no tool can simply compute the answer.
+    \item<4-> \textbf{Our route:} prove security by re-arranging the
+      randomness until the secrets visibly cancel. \toolname{} does this in
+      Lean~4, with a rewrite engine, a combinatorial search, and reusable
+      certificates.
+    \item<5-> \textbf{Result:} soundness proofs, gadgets verified that a
+      comparable tool false-flags, and competitive performance.
   \end{enumerate}
 \end{frame}
 
@@ -146,6 +136,8 @@
       emanation; all of which vary with the \emph{data} it handles.
     \item Differential power analysis \parencite{kocher1999differential} correlates many power
       traces against a guess of an intermediate value, and may recover the key.
+    \item In practice: DPA recovered keys from deployed smartcards; timing
+      channels underlie Spectre and Meltdown.
   \end{itemize}
   \medskip
   \begin{alertblock}{}
@@ -154,42 +146,63 @@
   \end{alertblock}
 \end{frame}
 
+\begin{frame}{The setting}
+  We study \textbf{arithmetic circuits} over the two-element field $\F$, built
+  from two-input $\oplus$ (XOR) and $\odot$ (AND) gates.
+  \medskip
+  \begin{block}{Inputs are partitioned into three classes}
+    \begin{itemize}
+      \item {\color{hlbad}\textbf{secrets} $\Ss$} --- the key material we protect,
+      \item {\color{hlrand}\textbf{randoms} $\Rs$} --- fresh uniform bits (the
+        masks), drawn together as a \emph{tape} $\rho \in \{0,1\}^{\Rs}$,
+      \item {\color{black!60}\textbf{publics} $\mathcal{P}$} --- known to
+        everyone, held fixed.
+    \end{itemize}
+  \end{block}
+  \medskip
+  Leakage is \emph{value-based}: a probed wire reveals the logical value it
+  carries and nothing more --- no glitches, no transitions.
+\end{frame}
+
 \begin{frame}{Masking --- and our running example}
-  \emph{Boolean masking} \parencite{chari1999towards} splits each secret into shares,
-  $x = x_0 \oplus x_1$, with $x_0$ uniformly random, and computation happens on
-  shares, never directly on secrets. Then, the cost of attacking grows exponentially in the number
-  of shares.
+  \emph{Boolean masking} \parencite{chari1999towards}: split each secret into
+  shares, $x = x_0 \oplus x_1$ with {\color{hlrand}$x_0$ uniformly random},
+  and compute only on shares, never on secrets.
   \medskip
   \begin{columns}[c]
     \begin{column}{0.52\textwidth}
       \centering
-      \domand{}
+      \domand{}\\[1ex]
+      {\scriptsize {\color{hlrand}$\blacksquare$}~random \quad
+       {\color{hlbad}$\blacksquare$}~secret-carrying \quad
+       $\square$~computed}
     \end{column}
     \begin{column}{0.44\textwidth}
-      \textbf{DOM-AND} \parencite{gross2016domain}: a masked AND gate, with two shares per input,
-      and a fresh mask $r$.
-      \medskip
+      \textbf{DOM-AND} \parencite{gross2016domain}: a masked AND gate, two
+      shares per input, one fresh mask $r$.
       \begin{itemize}
-        \item computes a sharing $s_0 \oplus s_1 = x \odot y$,
-        \item the cross terms $p_{01}, p_{10}$ mix shares of \emph{both}
-          secrets --- the delicate part,
-        \item $r$ re-masks them before they meet an output.
+        \item outputs re-share $s_0 \oplus s_1 = x \odot y$,
+        \item cross terms $p_{01}, p_{10}$ mix shares of \emph{both} secrets,
+        \item $r$ re-masks them before the outputs.
       \end{itemize}
-      \medskip
-      This gadget accompanies us for the rest of the talk.
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}{The probing model}
+  \small
   Reasoning about noisy traces directly is unwieldy. Luckily we have an
   abstraction \parencite{10.1007/978-3-540-45146-4_27}:
   \begin{block}{$d$-probing security}
-    An adversary picks any $d$ wires and is handed their \emph{exact} values.
-    The circuit is $d$-probing secure when no such choice distinguishes one
-    secret assignment from another.
+    An adversary picks any $d$ wires $W = \{w_1, \dots, w_d\}$ and is handed
+    their \emph{exact} values. The circuit is $d$-probing secure when, for
+    every such choice and every two secret assignments $\va, \vb$, the
+    observed values are identically distributed over the tape $\rho$:
+    \[
+      \law{\va}(w_1, \dots, w_d) \;=\; \law{\vb}(w_1, \dots, w_d) .
+    \]
   \end{block}
-  \medskip
+  \vspace{-1ex}
   \begin{columns}[c]
     \begin{column}{0.5\textwidth}
       \centering
@@ -197,24 +210,23 @@
     \end{column}
     \begin{column}{0.46\textwidth}
       \begin{itemize}
-        \item<2-> Now, security becomes a \emph{combinatorial} property of the
-          circuit, algortihmically decidable in principle.
-        \item<3-> And thankfully, the abstraction is faithful: probing security implies
-          noisy-leakage security \parencite{duc2014unifying}. We take
-          $d$-probing security as the target and do not revisit this bridge.
+        \item<2-> Security becomes a \emph{combinatorial} property,
+          decidable in principle.
+        \item<3-> The abstraction is faithful: probing security implies
+          noisy-leakage security \parencite{duc2014unifying}.
       \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
 \begin{frame}{The problem}
-  \textbf{Setting.} We work with arithmetic circuits over $\F$, two-input $\oplus$ and
-  $\odot$ gates, where inputs are partitioned into secrets $\Ss$, randoms $\Rs$, publics
-  $\mathcal{P}$. We have value-based leakage, so, no glitches, and also no composition.
-  \medskip
   \begin{block}{Exact verification of $d$-probing security}
-    One should decide, for \emph{every} one of the $\sum_{i \le d} \binom{|\Ws|}{i}$
-    observation sets, whether it is independent of the secrets.
+    Decide, for \emph{every} one of the $\sum_{i \le d} \binom{|\Ws|}{i}$
+    observation sets $O$, whether it is \emph{independent of the secrets}:
+    \[
+      \law{\va}(O) \;=\; \law{\vb}(O)
+      \qquad \text{for all } \va, \vb \in \{0,1\}^{\Ss} .
+    \]
     \begin{itemize}
       \item $\Secure$ \;\;\; $\Rightarrow$ every observation set accounted for,
       \item $\Insecure$ \; $\Rightarrow$ a specific leaking observation as
@@ -225,7 +237,7 @@
   \begin{itemize}
     \item<2-> Two difficulties arise: a \emph{single} probe already asks a question
       about a distribution over all of $\{0,1\}^{\Rs}$,
-    \item<3-> and there are combinatorially many probes to settle.
+    \item<2-> and there are combinatorially many probes to settle.
   \end{itemize}
 \end{frame}
 
@@ -246,15 +258,15 @@
       
       {\small \emph{$\to$ this section}}
     \item<3-> \textbf{Coupling.} \; there exists a bijection
-      $\varphi$ of the tapes such that $O(\rho;\va) = O(\varphi(\rho);\vb)$.
+      $\Phi$ of the tapes such that $O(\rho;\va) = O(\Phi(\rho);\vb)$.
       
       {\small \emph{$\to$ next section}}
   \end{enumerate}
-  \medskip
-  \onslide<4->{
-  All three are equivalent --- but they are \emph{not} equally usable.
-  The counting view tells us what a verification procedure should not attempt
-  directly; the coupling view tells us what it might be able to acomplish.}
+  % \medskip
+  % \onslide<4->{
+  % All three are equivalent --- but they are \emph{not} equally usable.
+  % The counting view tells us what a verification procedure should not attempt
+  % directly; the coupling view tells us what it might be able to acomplish.}
 \end{frame}
 
 \begin{frame}{Counting is intractable}
@@ -264,37 +276,28 @@
     $\CeqP$-complete \parencite{wagner1986complexity}.
   \end{block}
   \medskip
-  \emph{Hardness, briefly:} for formulas $\varphi_0, \varphi_1$ over
-  randoms $x_1, \dots, x_m$ and a single secret bit $s$, the wire
-  \[
-    w \;=\; \varphi_0 \,\oplus\, \bigl(s \odot (\varphi_0 \oplus \varphi_1)\bigr)
-  \]
-  reads $\varphi_0$ when $s=0$ and $\varphi_1$ when $s=1$. Then, the one-bit probe
-  $\{w\}$ is secret-independent \emph{iff} $\#\varphi_0 = \#\varphi_1$. That is
-  exactly the canonical $\CeqP$-complete question: \textsc{ExactSat}.
-  \medskip
-
-  \onslide<2->{One secret bit and one probed wire already suffice for the problem
-  to be intractable; no feature of masking is what makes the problem hard.}
+  \begin{itemize}
+    \item<2-> Hardness: reduction from \textsc{ExactSat} --- one secret bit
+      and one probed wire already encode it.
+      \hfill {\small(construction @ the appendix slides)}
+    \item<2-> So the hardness is intrinsic; no feature of masking causes it.
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{What the placement tells}
   \begin{itemize}
-    \item<1-> Observe that $\CeqP \subseteq \mathrm{P}^{\sharpP}$, so the decision never costs
-      more than the counting. Another observation is the following: a formula is unsatisfiable
-      exactly when its count is zero, i.e. $\mathrm{coNP} \subseteq \CeqP$. Hence, no
-      polynomial exact decision exists unless $\mathrm{P} = \mathrm{NP}$.
-    \item<2-> Both classes sit \emph{above the polynomial hierarchy} (due to Toda).
+    \item Deciding never costs more than counting
+      ($\CeqP \subseteq \mathrm{P}^{\sharpP}$), and no polynomial exact
+      decision exists unless $\mathrm{P} = \mathrm{NP}$.
+    \item Both classes sit \emph{above the polynomial hierarchy} (due to Toda).
       A single probe is already there, and full verification universally
       quantifies over exponentially many such instances.
   \end{itemize}
   \medskip
   \begin{exampleblock}{Consequence}
-    We do not compute or compare the counts. We certify security
-    \emph{constructively}: by exhibiting, for each probe, a measure-preserving
-    relabelling of the randomness under which the secrets visibly cancel.
-    A witness proves independence without explicitly counting --- at the price of
-    completeness!
+    We do not compute counts. We certify \emph{constructively}: exhibit a
+    relabelling of the randomness under which the secrets visibly cancel ---
+    a witness without counting, at the price of completeness!
   \end{exampleblock}
 \end{frame}
 
@@ -322,38 +325,33 @@
       \begin{itemize}
         \item<2-> The probe is now \emph{syntactically secret-free}: it is
           uniform, whatever the secrets are.
-        \item<3-> And $\sigma$ is not just a change of variables. It induces a
-          \emph{bijection} $\widehat{\sigma}$ of the tape space
-          $\{0,1\}^{\Rs}$ by translating one coordinate --- a \emph{shear}.
+        \item<3-> And $\sigma$ induces a \emph{bijection} $\widehat{\sigma}$
+          of the tape space, translating one coordinate --- a \emph{shear}.
       \end{itemize}
     \end{column}
   \end{columns}
   \medskip
-  \onslide<4->{Key identity: \; $(\mathbf{w}\sigma)(\rho) = \mathbf{w}(\widehat{\sigma}(\rho))$
+  \onslide<3->{Key identity: \; $(\mathbf{w}\sigma)(\rho) = \mathbf{w}(\widehat{\sigma}(\rho))$
   --- the syntactic step and the semantic relabelling agree.}
 \end{frame}
 
 \begin{frame}{Couplings}
-  The classical idea (\parencite{barthe2017coupling} for probabilistic programs) to prove that two
-  distributions are equal without explicitly computing them is by \emph{linking their
-  sources}. Our two laws are pushforwards of the \emph{same} uniform tape. So we should
-  cleverly link those tapes.
+  To prove two distributions equal \emph{without computing them}, link their
+  sources (\parencite{barthe2017coupling} for probabilistic programs). Our two
+  laws arise from the \emph{same} uniform tape, so we link the tapes.
   \medskip
   \begin{block}{Definition (coupling function)}
     A \emph{coupling function} from $\va$ to $\vb$ for a probe $O$ is a
-    bijection $\varphi : \{0,1\}^{\Rs} \to \{0,1\}^{\Rs}$ with
+    bijection $\Phi : \{0,1\}^{\Rs} \to \{0,1\}^{\Rs}$ with
     \[
-      O(\rho;\va) \;=\; O\bigl(\varphi(\rho);\vb\bigr)
+      O(\rho;\va) \;=\; O\bigl(\Phi(\rho);\vb\bigr)
       \qquad \text{for every tape } \rho .
     \]
   \end{block}
   \begin{itemize}
-    \item<2-> A bijection of a finite set preserves the uniform law
-      trivially. The identity says that a run under $\va$ is
-      reproduced, observation for observation, under $\vb$. This is a
-      \emph{diagonal} coupling of the two laws. It proves that the
-      distributions on the observation set are the same for those two
-      secrets.
+    \item<1-> Bijectivity preserves the uniform law; the identity says a run
+      under $\va$ is reproduced, observation for observation, under $\vb$.
+      Hence we have equal laws.
     % \item<3-> The family $\Phi = \{\Phi_{\va,\vb}\}$ over ordered secret pairs
     %   forms a \emph{groupoid}: $\Phi_{\va,\va} = \mathrm{id}$,
     %   $\Phi_{\vb,\va} = \Phi_{\va,\vb}^{-1}$,
@@ -371,53 +369,54 @@
   \medskip
   \emph{Proof sketch.}
   \begin{itemize}
-    \item<2-> ($\Leftarrow$) Reindex by $\rho' = \varphi(\rho)$:
-      \[
-        N_{\va}(o) = \bigl|\{\rho : O(\rho;\va) = o\}\bigr|
-        = \bigl|\{\rho : O(\varphi(\rho);\vb) = o\}\bigr|
-        = N_{\vb}(o).
-      \]
-    \item<3-> ($\Rightarrow$) Sort the tapes by outcome:
-      $F_{\va}(o) = \{\rho : O(\rho;\va) = o\}$. As $o$ varies these
-      \emph{fibres} partition $\{0,1\}^{\Rs}$, and equal laws mean matching
-      fibres have equal size, $|F_{\va}(o)| = |F_{\vb}(o)|$. So pick, for each
-      $o$, any bijection $F_{\va}(o) \to F_{\vb}(o)$; their union is a
-      bijection $\varphi$ of the whole tape space, and it sends every $\rho$
-      to a tape with the \emph{same} observation, giving us a coupling function. \qed
+    \item ($\Leftarrow$) A bijection merely re-indexes the tape space, so the
+      counts behind the two laws agree.
+    \item ($\Rightarrow$) Equal laws mean the outcome-fibres
+      $\{\rho : O(\rho;\va) = o\}$ come in matching sizes; match them block
+      by block and glue. \qed
+      
+      \hfill {\small(full sketch: backup slides)}
   \end{itemize}
   \medskip
-  \onslide<4->{
+  \onslide<2->{
   \begin{alertblock}{This is an existence statement and not a procedure}
-    The ($\Rightarrow$) direction matches fibres \emph{block by block}, and
-    for that it needs the counts $N_{\va}(o)$, which are
-    $\sharpP$-hard to compute. So, the theorem guarantees a coupling, it does not find one.
+    Matching the fibres needs the counts $N_{\va}(o)$, which are
+    $\sharpP$-hard. The theorem guarantees a coupling; it does not find one.
   \end{alertblock}}
 \end{frame}
 
-\begin{frame}{From substitutions to couplings --- the constructive route}
+\begin{frame}{From substitutions to couplings}
+  \small
+  A derivation $\sigma_1, \dots, \sigma_K$ ending secret-free is a
+  \emph{recipe}: run under secrets $\va$, it becomes the tape bijection
+  $\varphi_{\va} = \widehat{\sigma_1}^{\va} \circ \cdots \circ
+  \widehat{\sigma_K}^{\va}$. Applied syntactically, it yields $\overline{O} = O\sigma_1\dots\sigma_K$.
+  \begin{center}
+  \begin{tikzpicture}[
+      exp/.style={font=\small, inner sep=3pt},
+      map/.style={-{Stealth[length=2mm]}, thick},
+      lbl/.style={font=\footnotesize}]
+    \node[exp] (Oa) at (0,0)   {$O(\,\cdot\,;\va)$};
+    \node[exp] (Ob) at (7.6,0) {$O(\,\cdot\,;\vb)$};
+    \node[exp] (nf) at (3.8,-1.6) {\alert{$\overline{O}$}};
+    \node[lbl, right=1mm of nf, text=black!60] {\;(secret-free normal form)};
+    \draw[map] (Oa) -- node[lbl, midway, left=2pt]{$\varphi_{\va}$} (nf);
+    \draw[map] (Ob) -- node[lbl, midway, right=2pt]{$\varphi_{\vb}$} (nf);
+    \draw<2->[map, dashed, hlsafe] (Oa) --
+      node[lbl, midway, above]{$\varphi_{\vb} \circ \varphi_{\va}^{-1} = \Phi$}
+      (Ob);
+  \end{tikzpicture}
+  \end{center}
   \begin{itemize}
-    \item<1-> Each substitution induces a shear, a bijection of the tapes.
-      A \emph{sequence} of substitutions composes to a bijection
-      $\varphi_{\va}$ --- one per secret assignment, since the contexts
-      $e_i$ may mention secrets.
-    \item<2-> If the sequence drives the probe to a secret-free form
-      $\overline{O}$, then \emph{both} runs agree like the following:
-      \[
-        O\bigl(\varphi_{\va}(\rho);\va\bigr) \;=\; \overline{O}(\rho)
-        \;=\; O\bigl(\varphi_{\vb}(\rho);\vb\bigr) .
-      \]
-    \item<3-> Chain through the common form as $\varphi_{\vb} \circ
-      \varphi_{\va}^{-1}$, and one gets a coupling function from $\va$ to $\vb$ --- for
-      \emph{every} pair of secrets at once, from one derivation.
-    \item<4-> So a successful rewrite derivation is not a simple $\Secure$ verdict.
-      It is an explicit, checkable, reusable \emph{certificate}.
+    \item<2-> Every run is a re-labelled view of the \emph{same} secret-free
+      experiment, so any two runs link through it: a coupling for
+      \emph{every} pair of secrets, from one derivation.
+    \item<3-> On DOM-AND the recipe is the single substitution
+      $r \mapsto x_0 \odot y_1 \oplus r$; its context $x_0 \odot y_1$ is what
+      makes $\varphi$ depend on the secrets.
+    \item<4-> So a derivation is a \textbf{reusable certificate}: the design
+    principle of \toolname.
   \end{itemize}
-  \medskip
-  \onslide<4->{
-  \begin{exampleblock}{}
-    This is the design principle of \toolname: replace intractable counting by
-    the search for a coupling, building it one substitution at a time.
-  \end{exampleblock}}
 \end{frame}
 
 % =====================================================================
@@ -464,8 +463,8 @@
   \end{itemize}
   \medskip
   \onslide<4->{
-  On the example: $c_{01} \xrightarrow{\;\;r \;\mapsto\; a_0 \odot b_1 \oplus r\;\;} r$
-  is a single step discharge, which is $\Secure$, and records a coupling.}
+  On the example: $c_{01} \xrightarrow{\;\;r \;\mapsto\; x_0 \odot y_1 \oplus r\;\;} r$
+  --- one step, $\Secure$, coupling recorded.}
 \end{frame}
 
 \begin{frame}{Component I: why factoring}
@@ -481,9 +480,8 @@
         u \odot r \,\oplus\, u \odot v \;\longmapsto\; u \odot (r \oplus v) ,
       \]
       and the hidden random surfaces as a summand again, ready to substitute.
-    \item<3-> Factoring is applied lazily, on demand, between substitution
-      attempts; the engine interleaves the two until the probe is discharged
-      or no rule applies.
+    \item<3-> Applied lazily between substitution attempts, until the probe
+      discharges or no rule applies.
   \end{itemize}
   % \medskip
   % \onslide<4->{\emph{Caveat, stated openly:} factoring itself is not a shear
@@ -491,33 +489,59 @@
   % extend probes, coming up in Component III.}
 \end{frame}
 
-\begin{frame}{Component II: covering all probes}
-  Certifying each $d$-subset in turn is infeasible. Instead the space lives as
-  a \emph{worklist} of factors $\langle (c_1, W_1), \dots, (c_m, W_m) \rangle$,
-  ``draw $c_j$ wires from each $W_j$'', and we split recursively, in the manner of
-  maskVerif \parencite{10.1007/978-3-030-29959-0_15}:
+\begin{frame}{Component II: the representation}
+  Certifying each $d$-subset in turn is infeasible. So the traversal never
+  lists probes; it holds compact descriptions of whole families, in the manner
+  of maskVerif \parencite{10.1007/978-3-030-29959-0_15}.
   \medskip
-  \begin{itemize}
-    \item<1-> Initially, try to discharge a whole batch at once: if the \emph{union} of
-      its wires is jointly secret-free, every probe inside is also settled ---
-      prune the branch.
-    \item<2-> On failure, certify one representative \emph{probe} $\mathbf{w}$ (one
-      probe of the target size, $c_j$ wires from each factor), grow it into a
-      safe set (Component III), and split every factor along
-      safe~/~unsafe regions. Recurse on the resulting cells; the all-safe cell needs
-      no visit.
-  \end{itemize}
-  \medskip
-  \begin{block}{Theorem (exhaustiveness, Ch.~5)}
-    The recursion visits every $d$-subset exactly once. The proof reads
-    Vandermonde's identity
-    $\binom{m+n}{d} = \sum_k \binom{m}{k}\binom{n}{d-k}$
-    at the level of \emph{sets}: the cells genuinely partition the probes,
-    they do not merely count them.
+  \begin{block}{Factors and worklists}
+    A \emph{factor} $(c, W)$ stands for ``choose $c$ wires from the set $W$''.
+    A \emph{worklist} $\langle (c_1, W_1), \dots, (c_m, W_m) \rangle$, the
+    $W_j$ disjoint, denotes all probes drawing $c_j$ wires from each $W_j$:
+    it holds $\prod_j \binom{|W_j|}{c_j}$ probes in a few words.
   \end{block}
   \medskip
-  \onslide<3->{The delicate point is that the split must \emph{lose nothing},
-  and we proved that it does not.}
+  On DOM-AND \emph{(order $2$, for exposition)}: the probe targets are the
+  eight computed wires
+  $\Ws = \{u_0, u_1, p_{01}, p_{10}, c_{01}, c_{10}, s_0, s_1\}$, and the
+  whole verification task is the single factor
+  \[
+    \bigl\langle (2, \Ws) \bigr\rangle ,
+    \qquad \text{denoting all } \tbinom{8}{2} = 28 \text{ pairs.}
+  \]
+  % \onslide<2->{No list of $28$ anywhere --- and the description splits as
+  % nicely as it reads.}
+\end{frame}
+
+\begin{frame}{Component II: one recursion step, on our example}
+  \small
+  \begin{columns}[c]
+    \begin{column}{0.44\textwidth}
+      \centering
+      \domand{wu0/.style={wire,safe}, wc01/.style={wire,safe},
+              ws0/.style={wire,safe}}\\[0.5ex]
+      {\scriptsize the illustrated safe set, in green}
+\end{column}
+    \begin{column}{0.52\textwidth}
+      \begin{enumerate}
+        \item<1-> \textbf{Prune?} Discharge the union of all $8$ wires at
+          once. It fails here (the gadget leaks at order $2$), so we descend.
+        \item<2-> \textbf{Certify a representative probe}, say
+          $\{u_0, c_{01}\}$, and grow it (Component III) into a safe set,
+          here $\{u_0, c_{01}, s_0\}$.
+        \item<3-> \textbf{Split} along safe / unsafe:
+          $28 = \tbinom{3}{2} + 3 \cdot 5 + \tbinom{5}{2} = 3 + 15 + 10$
+          (all-safe, mixed, all-unsafe). \emph{Skip} the all-safe cell and
+          recurse on the $25$ that remain.
+        % \item<4-> Eventually $\{c_{01}, c_{10}\}$ reaches Component I:
+        %   $\Insecure$, with the witness we know.
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+  \smallskip
+  \onslide<4->{\textbf{Theorem (exhaustiveness, Ch.~5).} Read set-wise,
+  Vandermonde's identity says the cells \emph{partition} the probes: every
+  $d$-subset is visited exactly once.}
 \end{frame}
 
 \begin{frame}{Component III: growing safe sets}
@@ -534,11 +558,10 @@
       \begin{itemize}
         \item<1-> A wire $u$ joins the safe set of coupling $\varphi$ when the
           composite $u \circ \varphi$ is secret-free.
-        \item<2-> Exact test: a function depends on a variable iff the
-          variable occurs in its \emph{ANF} --- so the endpoint test is
-          to send expressions into their normal froms.
-        \item<3-> One certificate, with more wires: the whole safe set is settled
-          by a single discharge, and Component II skips it.
+        \item<2-> Exact test via \emph{ANF}: a function depends on a variable
+          iff it occurs in its normal form.
+        \item<3-> One discharge settles the whole safe set; Component II
+          needs less traversal.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -547,8 +570,8 @@
 \begin{frame}{Component III: three mechanisms}
   \begin{itemize}
     \item<1-> \textbf{Closure} --- build-time, entropy-style deduction
-      ($H(u \mid \vw) = 0$). Works locally, but the candidate pool deep in the
-      recursion is scattered. A cheap step but weak.
+      ($H(u \mid \vw) = 0$). Local deduction on a scattered pool: cheap but
+      weak.
     \item<2-> \textbf{Replay} --- re-run the derivation on the candidate wire
       \parencite{barthe2015verified}. An imperfect fit for us because we \emph{factor},
       and factoring is not a replayable step.
@@ -566,12 +589,12 @@
 
 \begin{frame}{Component III: the test}
   \small
-  Take the certified probe $\mathbf{w}$ with coupling $\varphi$, and a candidate wire $u$ from the current pool.
-  Decide whether $u \circ \varphi$ secret-free?
+  Given the coupling $\varphi$ and a candidate wire $u$ from the pool:
+  is $u \circ \varphi$ secret-free?
   \begin{block}<1->{Phase 1 --- fast reject (probabilistic, may only \emph{reject})}
     Sample tapes; evaluate $u \circ \varphi$ twice per tape, secrets drawn at
     random vs.\ all zero. A disagreement proves $u \circ \varphi$ moves with
-    the secrets: drop $u$. Agreement proves nothing, survivors move on.
+    the secrets: drop $u$. Agreement proves nothing.
   \end{block}
   \begin{block}<2->{Phases 2--3 --- exact ($\F$ cancellation, then ANF)}
     A function depends on a variable iff the variable occurs in its unique
@@ -579,11 +602,10 @@
     the ANF of $u \circ \varphi$ (Lemma, Ch.~5).
   \end{block}
   \medskip
-  \onslide<3->{\textbf{Why blinded wires are safe to add.} For an admitted $u$,
-  $u(\varphi_{\va}(\rho); \va) = \overline{u}(\rho)$, a function of $\rho$
-  alone. Since $\varphi_{\va}$ preserves the uniform law, the \emph{joint} law
-  of all admitted wires under $\va$ is that of
-  $(\overline{u}(\rho))_{u}$, which mentions no secret (Theorem, Ch.~5).}
+  \onslide<3->{\textbf{Why blinded wires are safe to add.} For admitted $u$,
+  $u(\varphi_{\va}(\rho); \va) = \overline{u}(\rho)$ depends on $\rho$ alone;
+  as $\varphi_{\va}$ preserves the uniform law, the \emph{joint} law of the
+  safe set is the same under every secret (Theorem, Ch.~5).}
 \end{frame}
 
 % \begin{frame}{The running example: order two}
@@ -621,17 +643,17 @@
   \toolname{} is implemented in \textbf{Lean 4}.
   \medskip
   \begin{itemize}
-    \item<1-> \textbf{Hash-consed DAG} expression representation with
+    \item \textbf{Hash-consed DAG} expression representation with
       canonicalization --- structural sharing makes equality checks and
-      substitution efficient time- and memory-wise.
-    \item<2-> \textbf{Multiplicative factoring} as a normal-form pass over the
+      substitutions cheap.
+    \item \textbf{Multiplicative factoring} as a normal-form pass over the
       DAG, applied lazily.
-    \item<3-> \textbf{Bit-sliced ANF endpoint test} for the extension:
+    \item \textbf{Bit-sliced ANF endpoint test} for the extension:
       word-parallel evaluation decides secret-freeness of $u \circ \varphi$
       exactly.
   \end{itemize}
   \medskip
-  \onslide<4->{Design and proofs are implementation-agnostic; these choices
+  \onslide<2->{Design and proofs are implementation-agnostic; these choices
   simply make algorithms fast.}
 \end{frame}
 
@@ -645,18 +667,16 @@
   \begin{itemize}
     \item<1-> \textbf{DOM-AND} (2 shares): $\Secure$ at order 1, the witness
       pair $\{c_{01}, c_{10}\}$ at order 2 --- our running example.
-    \item<2-> \textbf{Four-share $x \oplus yz$ TI} \parencite{bilgin2015threshold}:
+    \item<1-> \textbf{Four-share $x \oplus yz$ TI} \parencite{bilgin2015threshold}:
       certified secure at orders 1 and 2, insecure at order 3 --- the
       \emph{expected} behaviour of a first-order threshold implementation.
-    \item<3-> \textbf{The factoring family} ($d{+}1$ quadratic S-boxes,
+    \item<2-> \textbf{The factoring family} ($d{+}1$ quadratic S-boxes,
       $Q^3\!/Q^4$): randomness-free sharings whose certification must factor
-      first. A factoring-free, maskVerif-style replay engine false-reports
-      $\Insecure$ on five of them; \toolname{} verifies every one --- and the
-      two it does report insecure are exactly the quadratic classes with no
-      uniform three-share TI.
+      first. A factoring-free, maskVerif-style engine false-reports
+      $\Insecure$ on five; \toolname{} verifies every one.
   \end{itemize}
   \medskip
-  \onslide<4->{(Full extension-comparison table @ the appendix slides.)}
+  \onslide<2->{(Full extension-comparison table @ the appendix slides.)}
 \end{frame}
 
 \begin{frame}{Evaluation: is the extension worth it?}
@@ -847,6 +867,46 @@
     \law{\va}(O) = \law{\vb}(O) \iff f = 0 ,
   \]
   and the problem is the vanishing set of a gap function, which is exactly $\CeqP$.
+\end{frame}
+
+\begin{frame}{Backup: the ExactSat reduction}
+  Reduce from the equality form of \textsc{ExactSat}: given formulas
+  $\varphi_0, \varphi_1$ over variables $x_1, \dots, x_m$, decide
+  $\#\varphi_0 = \#\varphi_1$ ($\CeqP$-complete,
+  \parencite{wagner1986complexity}).
+  \medskip
+
+  Build a circuit with one secret bit $s$, the $x_i$ as randoms, and the
+  single wire
+  \[
+    w \;=\; \varphi_0 \,\oplus\, \bigl(s \odot (\varphi_0 \oplus \varphi_1)\bigr),
+  \]
+  realising the formulas over $\oplus$ and $\odot$. Then $w$ reads $\varphi_0$
+  when $s = 0$ and $\varphi_1$ when $s = 1$, so the one-bit probe $\{w\}$ is
+  secret-independent \emph{iff} $\#\varphi_0 = \#\varphi_1$.
+  \medskip
+
+  The construction is polynomial, and one secret bit with one probed wire
+  suffices: no feature of masking is what makes the problem hard.
+\end{frame}
+
+\begin{frame}{Backup: security is a coupling, full sketch}
+  \small
+  ($\Leftarrow$) Reindex by $\rho' = \varphi(\rho)$:
+  \[
+    N_{\va}(o) = \bigl|\{\rho : O(\rho;\va) = o\}\bigr|
+    = \bigl|\{\rho : O(\varphi(\rho);\vb) = o\}\bigr|
+    = N_{\vb}(o).
+  \]
+  \medskip
+
+  ($\Rightarrow$) Sort the tapes by outcome:
+  $F_{\va}(o) = \{\rho : O(\rho;\va) = o\}$. As $o$ varies these
+  \emph{fibres} partition $\{0,1\}^{\Rs}$, and equal laws mean matching
+  fibres have equal size, $|F_{\va}(o)| = |F_{\vb}(o)|$. So pick, for each
+  $o$, any bijection $F_{\va}(o) \to F_{\vb}(o)$; their union is a bijection
+  $\varphi$ of the whole tape space, and it sends every $\rho$ to a tape with
+  the \emph{same} observation, giving us a coupling function. \qed
 \end{frame}
 
 \begin{frame}{Backup: replay vs.\ factoring}
