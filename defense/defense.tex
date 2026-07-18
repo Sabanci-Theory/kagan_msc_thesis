@@ -120,6 +120,20 @@
       view proves to be helpful.
   \end{enumerate}
 \end{frame}
+% ---------------------------------------------------------------------
+\begin{frame}{An Alternative Story Telling}
+  \begin{enumerate}
+    \item Problem: Side-channel attacks. Solution: Masking.
+    \item Correctness: Wire outputs are indifferentable by arranging randoms (coupling function)
+    \item A hard problem (as hard as counting results of all input combinations).
+    \item Proposed solution (\toolname): A logical reasoning engine based on rewrite rules and combinatoric exploration of probe candidates.
+        \begin{itemize}
+            \item Three components: rewrite engine,  subset traversal, probe set extension/
+            \item  Implemented in Lean 4 (functional language + proof tool)
+        \end{itemize}
+    \item Result:  formal guarantees (soundness), new gadgets verified, comparable performance wrt state of the art tools.
+  \end{enumerate}
+\end{frame}
 
 % =====================================================================
 \section{Motivation \& Model}
