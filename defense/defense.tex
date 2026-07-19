@@ -58,7 +58,7 @@
   randin/.style={wire, draw=hlrand, fill=hlrand!10},
   secin/.style={wire, draw=hlbad, fill=hlbad!8},
   randw/.style={wire, draw=hlrand, thick, fill=hlrand!10},
-  probed/.style={draw=hlprobe, very thick, fill=hlprobe!15},
+  probed/.style={draw=sari, very thick, fill=sari!30},
   safe/.style={draw=hlsafe, very thick, fill=hlsafe!12},
   leaky/.style={draw=hlbad, very thick, fill=hlbad!12},
   cwire/.style={-{Stealth[length=1.6mm]}, black!60},
@@ -518,10 +518,28 @@
   \begin{columns}[c]
     \begin{column}{0.44\textwidth}
       \centering
-      \domand{wu0/.style={wire,safe}, wc01/.style={wire,safe},
-              ws0/.style={wire,safe}}\\[0.5ex]
-      {\scriptsize the illustrated safe set, in green}
-\end{column}
+
+      \only<1>{
+        \domand{wu0/.style={wire,safe}, wc01/.style={wire,safe}}\\[0.5ex]
+        {\scriptsize the illustrated probe set, in green}
+      }
+
+      \only<2>{
+        \domand{wu0/.style={wire,safe}, wc01/.style={wire,safe},
+                ws0/.style={wire,safe}}\\[0.5ex]
+        {\scriptsize the illustrated safe set, in green}
+      }
+
+      \only<3>{
+        \domand{wc01/.style={wire,probed}, ws1/.style={wire,probed}}\\[0.5ex]
+        {\scriptsize a cross-term factor, in yellow}
+      }
+
+      \only<4>{
+        \domand{wc10/.style={wire,probed}, wu1/.style={wire,probed}}\\[0.5ex]
+        {\scriptsize a unsafe factor, in yellow}
+      }
+    \end{column}
     \begin{column}{0.52\textwidth}
       \begin{enumerate}
         \item<1-> \textbf{Prune?} Discharge the union of all $8$ wires at
@@ -551,16 +569,25 @@
   \begin{columns}[c]
     \begin{column}{0.5\textwidth}
       \centering
+      \only<1>{
+      \domand{wc01/.style={wire,safe}}
+      }
+
+      \only<2->{
       \domand{wc01/.style={wire,safe}, wu0/.style={wire,safe},
-              wu1/.style={wire,safe}, wp01/.style={wire,safe}}
+              ws0/.style={wire,safe}}
+      }
     \end{column}
     \begin{column}{0.46\textwidth}
       \begin{itemize}
         \item<1-> A wire $u$ joins the safe set of coupling $\varphi$ when the
           composite $u \circ \varphi$ is secret-free.
-        \item<2-> Exact test via \emph{ANF}: a function depends on a variable
+        \item<2-> Here $\varphi = (r \mapsto r \oplus x_0 \odot y_1)$ also
+          blinds $u_0$ and $s_0$, as $u_0 \circ \varphi = x_0 \odot y_0$ and
+          $s_0 \circ \varphi = x_0 \odot y_0 \oplus r$.
+        \item<3-> Exact test via \emph{ANF}: a function depends on a variable
           iff it occurs in its normal form.
-        \item<3-> One discharge settles the whole safe set; Component II
+        \item<4-> One discharge settles the whole safe set; Component II
           needs less traversal.
       \end{itemize}
     \end{column}
