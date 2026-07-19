@@ -1,9 +1,16 @@
 \documentclass[aspectratio=169,10pt]{beamer}
 
 \usetheme[progressbar=frametitle]{metropolis}
+
 \definecolor{kirmizi}{HTML}{A32638}
 \definecolor{sari}{HTML}{FDB912}
 \definecolor{mor}{HTML}{B6548F}
+% \definecolor{hlrand}{HTML}{343d46}
+\definecolor{hlprobe}{RGB}{235,129,27}   % probed wires
+\definecolor{hlsafe}{RGB}{35,138,94}     % safe / secure
+\definecolor{hlbad}{RGB}{200,50,50}      % leaking
+\definecolor{hlrand}{HTML}{022831}    % randomness
+
 \setbeamercolor{frametitle}{bg=kirmizi, fg=sari}
 \setbeamercolor{progress bar}{fg=sari, bg=kirmizi!30}
 \setbeamercolor{title separator}{fg=kirmizi}
@@ -37,11 +44,6 @@
 \newcommand{\CeqP}{\mathrm{C}_{=}\mathrm{P}}
 \newcommand{\sharpP}{\#\mathrm{P}}
 
-\definecolor{hlprobe}{RGB}{235,129,27}   % probed wires
-\definecolor{hlsafe}{RGB}{35,138,94}     % safe / secure
-\definecolor{hlbad}{RGB}{200,50,50}      % leaking
-\definecolor{hlrand}{RGB}{60,110,200}    % randomness
-
 \title{Verification of Probing Security for Masked Circuits}
 \subtitle{A Constructive Approach and Theoretical Study}
 \author{Kağan Gülsüm}
@@ -60,6 +62,7 @@
   randw/.style={wire, draw=hlrand, thick, fill=hlrand!10},
   probed/.style={draw=sari, very thick, fill=sari!30},
   safe/.style={draw=hlsafe, very thick, fill=hlsafe!12},
+  subs/.style={draw=mor, very thick, fill=mor!18},
   leaky/.style={draw=hlbad, very thick, fill=hlbad!12},
   cwire/.style={-{Stealth[length=1.6mm]}, black!60},
   gsym/.style={circle, draw=black!60, fill=white, inner sep=0.3pt, font=\tiny},
@@ -155,13 +158,13 @@
       \item {\color{hlbad}\textbf{secrets} $\Ss$} --- the key material we protect,
       \item {\color{hlrand}\textbf{randoms} $\Rs$} --- fresh uniform bits (the
         masks), drawn together as a \emph{tape} $\rho \in \{0,1\}^{\Rs}$,
-      \item {\color{black!60}\textbf{publics} $\mathcal{P}$} --- known to
+      \item {\color{blue!80}\textbf{publics} $\mathcal{P}$} --- known to
         everyone, held fixed.
     \end{itemize}
   \end{block}
   \medskip
-  Leakage is \emph{value-based}: a probed wire reveals the logical value it
-  carries and nothing more --- no glitches, no transitions.
+  % Leakage is \emph{value-based}: a probed wire reveals the logical value it
+  % carries and nothing more --- no glitches, no transitions.
 \end{frame}
 
 \begin{frame}{Masking --- and our running example}
@@ -194,7 +197,7 @@
   Reasoning about noisy traces directly is unwieldy. Luckily we have an
   abstraction \parencite{10.1007/978-3-540-45146-4_27}:
   \begin{block}{$d$-probing security}
-    An adversary picks any $d$ wires $W = \{w_1, \dots, w_d\}$ and is handed
+    An adversary picks any $d$ wires $O = \{w_1, \dots, w_d\}$ and is handed
     their \emph{exact} values. The circuit is $d$-probing secure when, for
     every such choice and every two secret assignments $\va, \vb$, the
     observed values are identically distributed over the tape $\rho$:
@@ -308,11 +311,10 @@
 \begin{frame}{One substitution, on the running example}
   \small
   Probe the masked cross term: $c_{01} = x_0 \odot y_1 \oplus r$.
-  \medskip
   \begin{columns}[c]
     \begin{column}{0.5\textwidth}
       \centering
-      \domand{wc01/.style={wire,probed}, wr/.style={wire,randw,safe}}
+      \domand{wc01/.style={wire,probed}, wr/.style={wire,subs}}
     \end{column}
     \begin{column}{0.46\textwidth}
       Apply the substitution
@@ -325,14 +327,18 @@
       \begin{itemize}
         \item<2-> The probe is now \emph{syntactically secret-free}: it is
           uniform, whatever the secrets are.
-        \item<3-> And $\sigma$ induces a \emph{bijection} $\widehat{\sigma}$
-          of the tape space, translating one coordinate --- a \emph{shear}.
+        \item<3-> And $\sigma$ induces a \emph{bijection} of the tape space,
+          translating the coordinate $r$ --- a \emph{shear}.
+        \item<4-> The context $x_0 \odot y_1$ mentions a share, so the
+          \emph{one} syntactic step induces a \emph{family} of shears ---
+          fixing the secrets $\va$ picks $\widehat{\sigma}^{\va}$.
       \end{itemize}
-    \end{column}
+\end{column}
   \end{columns}
   \medskip
-  \onslide<3->{Key identity: \; $(\mathbf{w}\sigma)(\rho) = \mathbf{w}(\widehat{\sigma}(\rho))$
-  --- the syntactic step and the semantic relabelling agree.}
+  \onslide<4->{Key identity: \;
+  $(\mathbf{w}\sigma)(\rho;\va) = \mathbf{w}(\widehat{\sigma}^{\va}(\rho);\va)$
+  --- syntax and semantics agree, for every $\va$.}
 \end{frame}
 
 \begin{frame}{Couplings}
@@ -402,7 +408,7 @@
     \node[lbl, right=1mm of nf, text=black!60] {\;(secret-free normal form)};
     \draw[map] (Oa) -- node[lbl, midway, left=2pt]{$\varphi_{\va}$} (nf);
     \draw[map] (Ob) -- node[lbl, midway, right=2pt]{$\varphi_{\vb}$} (nf);
-    \draw<2->[map, dashed, hlsafe] (Oa) --
+    \draw<2->[map, dashed, kirmizi] (Oa) --
       node[lbl, midway, above]{$\varphi_{\vb} \circ \varphi_{\va}^{-1} = \Phi$}
       (Ob);
   \end{tikzpicture}
