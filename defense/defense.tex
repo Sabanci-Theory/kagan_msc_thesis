@@ -9,7 +9,7 @@
 \definecolor{hlprobe}{RGB}{235,129,27}   % probed wires
 \definecolor{hlsafe}{RGB}{35,138,94}     % safe / secure
 \definecolor{hlbad}{RGB}{200,50,50}      % leaking
-\definecolor{hlrand}{HTML}{022831}    % randomness
+\definecolor{hlrand}{HTML}{1F6FBE}    % randomness (blue)
 
 \setbeamercolor{frametitle}{bg=kirmizi, fg=sari}
 \setbeamercolor{progress bar}{fg=sari, bg=kirmizi!30}
@@ -57,8 +57,8 @@
   wire/.style={draw, rounded corners=2pt, minimum height=5.5mm, minimum width=11mm,
                inner sep=2pt, font=\small, fill=white},
   inwire/.style={wire, fill=black!5},
-  randin/.style={wire, draw=hlrand, fill=hlrand!10},
-  secin/.style={wire, draw=hlbad, fill=hlbad!8},
+  randin/.style={wire, draw=hlrand, fill=hlrand!31},
+  secin/.style={wire, draw=hlbad, fill=hlbad!30},
   randw/.style={wire, draw=hlrand, thick, fill=hlrand!10},
   probed/.style={draw=sari, very thick, fill=sari!30},
   safe/.style={draw=hlsafe, very thick, fill=hlsafe!12},
@@ -115,7 +115,7 @@
     \item<1-> \textbf{Problem:} real devices leak; measuring power or timing
       can recover secret keys. \textbf{Standard fix:} masking; compute on
       randomized shares, never on secrets.
-    \item<2-> \textbf{The question:} was the masking done right? ``Right''
+    \item<2-> \textbf{The question:} was the masking done correcly? ``Correct''
       means no $d$ observed wires can tell two secrets apart.
     \item<3-> \textbf{It is provably hard:} as hard as counting solutions over
       all input combinations, so no tool can simply compute the answer.
@@ -139,14 +139,22 @@
       emanation; all of which vary with the \emph{data} it handles.
     \item Differential power analysis \parencite{kocher1999differential} correlates many power
       traces against a guess of an intermediate value, and may recover the key.
-    \item In practice: DPA recovered keys from deployed smartcards; timing
-      channels underlie Spectre and Meltdown.
   \end{itemize}
   \medskip
   \begin{alertblock}{}
     So, the insecurity lies not in the mathematics behind the cipher, but in the way
     the hardware computes it.
   \end{alertblock}
+\end{frame}
+
+\begin{frame}{Side channels, in the real world}
+  This is not a theoretical worry. DPA has recovered keys from deployed
+  smartcards, and timing side channels underlie the Spectre and Meltdown
+  attacks against modern processors.
+  \medskip
+  \begin{center}
+    \includegraphics[width=0.92\textwidth]{../Figures/spectre.png}
+  \end{center}
 \end{frame}
 
 \begin{frame}{The setting}
@@ -158,7 +166,7 @@
       \item {\color{hlbad}\textbf{secrets} $\Ss$} --- the key material we protect,
       \item {\color{hlrand}\textbf{randoms} $\Rs$} --- fresh uniform bits (the
         masks), drawn together as a \emph{tape} $\rho \in \{0,1\}^{\Rs}$,
-      \item {\color{blue!80}\textbf{publics} $\mathcal{P}$} --- known to
+      \item {\color{black!60}\textbf{publics} $\mathcal{P}$} --- known to
         everyone, held fixed.
     \end{itemize}
   \end{block}
@@ -197,7 +205,7 @@
   Reasoning about noisy traces directly is unwieldy. Luckily we have an
   abstraction \parencite{10.1007/978-3-540-45146-4_27}:
   \begin{block}{$d$-probing security}
-    An adversary picks any $d$ wires $O = \{w_1, \dots, w_d\}$ and is handed
+    An adversary picks any $d$ wires (probe; observation set) $O = \{w_1, \dots, w_d\}$ and is handed
     their \emph{exact} values. The circuit is $d$-probing secure when, for
     every such choice and every two secret assignments $\va, \vb$, the
     observed values are identically distributed over the tape $\rho$:
@@ -257,7 +265,7 @@
     \item<1-> \textbf{Distributional.} \; $\law{\va}(O) = \law{\vb}(O)$ for all
       secrets $\va, \vb$. \hfill {\small \emph{(the definition)}}
     \item<2-> \textbf{Counting.} \; $N_{\va}(o) = N_{\vb}(o)$ for every
-      observation $o$, i.e. two histograms of integers coincide.
+      observation $o$, i.e., two histograms of integers coincide.
       
       {\small \emph{$\to$ this section}}
     \item<3-> \textbf{Coupling.} \; there exists a bijection
@@ -289,17 +297,17 @@
 
 \begin{frame}{What the placement tells}
   \begin{itemize}
-    \item Deciding never costs more than counting
-      ($\CeqP \subseteq \mathrm{P}^{\sharpP}$), and no polynomial exact
-      decision exists unless $\mathrm{P} = \mathrm{NP}$.
-    \item Both classes sit \emph{above the polynomial hierarchy} (due to Toda).
-      A single probe is already there, and full verification universally
-      quantifies over exponentially many such instances.
+    \item A polynomial time exact decision would collapse the \emph{entire} polynomial
+      hierarchy to $\mathrm{P}$ \\ \hfill \begin{small}(Toda: $\mathrm{PH} \subseteq \mathrm{P}^{\sharpP}
+      = \mathrm{P}^{\CeqP}$).\end{small}
+    \item Deciding never costs more than counting, i.e., $\CeqP \subseteq \mathrm{P}^{\sharpP}$.
+    \item A single probe is already in $\CeqP$, and full verification universally
+    quantifies over exponentially many such instances.
   \end{itemize}
   \medskip
   \begin{exampleblock}{Consequence}
-    We do not compute counts. We certify \emph{constructively}: exhibit a
-    relabelling of the randomness under which the secrets visibly cancel ---
+    We do not compute counts. We certify \emph{constructively}: exhibiting a
+    relabelling of the randomness under which the secrets visibly cancel, giving
     a witness without counting, at the price of completeness!
   \end{exampleblock}
 \end{frame}
@@ -329,9 +337,9 @@
           uniform, whatever the secrets are.
         \item<3-> And $\sigma$ induces a \emph{bijection} of the tape space,
           translating the coordinate $r$, a \emph{shear}.
-        \item<4-> The context $x_0 \odot y_1$ mentions a share, so the
-          \emph{one} syntactic step induces a \emph{family} of shears ---
-          fixing the secrets $\va$ picks $\widehat{\sigma}^{\va}$.
+        \item<4-> But, the context $x_0 \odot y_1$ mentions a share, so the
+          \emph{one} syntactic step induces a \emph{family} of shears.
+          Fixing the secrets $\va$ picks $\widehat{\sigma}^{\va}$.
       \end{itemize}
 \end{column}
   \end{columns}
@@ -381,7 +389,7 @@
       $\{\rho : O(\rho;\va) = o\}$ come in matching sizes; match them block
       by block and glue. \qed
       
-      \hfill {\small(full sketch: backup slides)}
+      \hfill {\small(full proof @ the appendix slides)}
   \end{itemize}
   \medskip
   \onslide<2->{
@@ -404,7 +412,7 @@
       lbl/.style={font=\footnotesize}]
     \node[exp] (Oa) at (0,0)   {$O(\,\cdot\,;\va)$};
     \node[exp] (Ob) at (7.6,0) {$O(\,\cdot\,;\vb)$};
-    \node[exp] (nf) at (3.8,-1.6) {\alert{$\overline{O}$}};
+    \node[exp] (nf) at (3.8,-1.6) {\alert{$\overline{O}(\,\cdot\,)$}};
     \node[lbl, right=1mm of nf, text=black!60] {\;(secret-free normal form)};
     \draw[map] (Oa) -- node[lbl, midway, left=2pt]{$\varphi_{\va}$} (nf);
     \draw[map] (Ob) -- node[lbl, midway, right=2pt]{$\varphi_{\vb}$} (nf);
@@ -415,12 +423,11 @@
   \end{center}
   \begin{itemize}
     \item<2-> Every run is a re-labelled view of the \emph{same} secret-free
-      experiment, so any two runs link through it: a coupling for
-      \emph{every} pair of secrets, from one derivation.
-    \item<3-> On DOM-AND the recipe is the single substitution
-      $r \mapsto x_0 \odot y_1 \oplus r$; its context $x_0 \odot y_1$ is what
-      makes $\varphi$ depend on the secrets.
-    \item<4-> So a derivation is a \textbf{reusable certificate}: the design
+      experiment, so any two runs factor through it.
+    % \item<3-> On DOM-AND the recipe is the single substitution
+    %   $r \mapsto x_0 \odot y_1 \oplus r$; its context $x_0 \odot y_1$ is what
+    %   makes $\varphi$ depend on the secrets.
+    \item<3-> So a derivation is a \textbf{reusable certificate}: the design
     principle of \toolname.
   \end{itemize}
 \end{frame}
@@ -445,8 +452,8 @@
   \end{tikzpicture}
   \medskip
   \begin{itemize}
-    \item<2-> \textbf{I} decides a \emph{single} probe, by construction.
-    \item<3-> \textbf{II} sweeps \emph{every} $d$-subset without explicitly enumerating
+    \item<3-> \textbf{I} decides a \emph{single} probe, by construction.
+    \item<2-> \textbf{II} sweeps \emph{every} $d$-subset without explicitly enumerating
       them.
     \item<4-> \textbf{III} amplifies one certificate into a whole \emph{safe
       set}, shrinking the space \textbf{II} must sweep.
@@ -496,24 +503,25 @@
 \end{frame}
 
 \begin{frame}{Component II: the representation}
-  Certifying each $d$-subset in turn is infeasible. So the traversal never
-  lists probes; it holds compact descriptions of whole families, in the manner
-  of maskVerif \parencite{10.1007/978-3-030-29959-0_15}.
+  Listing all $\sum_{i \le d} \binom{|\Ws|}{i}$ probes is hopeless. So we never
+  list them; we describe whole families compactly, as maskVerif does
+  \parencite{10.1007/978-3-030-29959-0_15}.
   \medskip
   \begin{block}{Factors and worklists}
-    A \emph{factor} $(c, W)$ stands for ``choose $c$ wires from the set $W$''.
-    A \emph{worklist} $\langle (c_1, W_1), \dots, (c_m, W_m) \rangle$, the
-    $W_j$ disjoint, denotes all probes drawing $c_j$ wires from each $W_j$:
-    it holds $\prod_j \binom{|W_j|}{c_j}$ probes in a few words.
+    \begin{itemize}
+      \item \emph{factor} $(c, W)$ --- choose $c$ wires from $W$.
+      \item \emph{worklist} $\langle (c_1, W_1), \dots, (c_m, W_m) \rangle$,
+        the $W_j$ disjoint --- all probes taking $c_j$ from each $W_j$,
+        $\prod_j \binom{|W_j|}{c_j}$ of them.
+    \end{itemize}
   \end{block}
   \medskip
-  On DOM-AND \emph{(order $2$, for exposition)}: the probe targets are the
-  eight computed wires
-  $\Ws = \{u_0, u_1, p_{01}, p_{10}, c_{01}, c_{10}, s_0, s_1\}$, and the
-  whole verification task is the single factor
+  \textbf{DOM-AND, order 2.} The eight computed wires
+  $\Ws = \{u_0, u_1, p_{01}, p_{10}, c_{01}, c_{10}, s_0, s_1\}$, and the whole
+  verification task is the single factor
   \[
-    \bigl\langle (2, \Ws) \bigr\rangle ,
-    \qquad \text{denoting all } \tbinom{8}{2} = 28 \text{ pairs.}
+    \bigl\langle (2, \Ws) \bigr\rangle
+    \;=\; \text{all } \tbinom{8}{2} = 28 \text{ pairs, in one line.}
   \]
   % \onslide<2->{No list of $28$ anywhere --- and the description splits as
   % nicely as it reads.}
@@ -543,7 +551,7 @@
 
       \only<4>{
         \domand{wc10/.style={wire,probed}, wu1/.style={wire,probed}}\\[0.5ex]
-        {\scriptsize a unsafe factor, in yellow}
+        {\scriptsize an unsafe factor, in yellow}
       }
     \end{column}
     \begin{column}{0.52\textwidth}
@@ -760,7 +768,7 @@
 \begin{frame}{Contributions}
   \begin{enumerate}
     \item<1-> \textbf{Placement.} We show that: counting is
-      $\sharpP$-complete, deciding is $\CeqP$-complete, i.e. they sit above the
+      $\sharpP$-complete, deciding is $\CeqP$-complete, i.e., they sit above the
       polynomial hierarchy, ruling out the counting route.
     \item<2-> \textbf{A rigorous coupling account of probing security.}
       Security \emph{is} the existence of a family of coupling functions, the
@@ -923,23 +931,53 @@
   suffices: no feature of masking is what makes the problem hard.
 \end{frame}
 
-\begin{frame}{Backup: security is a coupling, full sketch}
+% \begin{frame}{Backup: security is a coupling, full sketch}
+%   \small
+%   ($\Leftarrow$) Reindex by $\rho' = \varphi(\rho)$:
+%   \[
+%     N_{\va}(o) = \bigl|\{\rho : O(\rho;\va) = o\}\bigr|
+%     = \bigl|\{\rho : O(\varphi(\rho);\vb) = o\}\bigr|
+%     = N_{\vb}(o).
+%   \]
+%   \medskip
+
+%   ($\Rightarrow$) Sort the tapes by outcome:
+%   $F_{\va}(o) = \{\rho : O(\rho;\va) = o\}$. As $o$ varies these
+%   \emph{fibres} partition $\{0,1\}^{\Rs}$, and equal laws mean matching
+%   fibres have equal size, $|F_{\va}(o)| = |F_{\vb}(o)|$. So pick, for each
+%   $o$, any bijection $F_{\va}(o) \to F_{\vb}(o)$; their union is a bijection
+%   $\varphi$ of the whole tape space, and it sends every $\rho$ to a tape with
+%   the \emph{same} observation, giving us a coupling function. \qed
+% \end{frame}
+
+\begin{frame}{Backup: security is a coupling, full proof}
   \small
-  ($\Leftarrow$) Reindex by $\rho' = \varphi(\rho)$:
-  \[
-    N_{\va}(o) = \bigl|\{\rho : O(\rho;\va) = o\}\bigr|
-    = \bigl|\{\rho : O(\varphi(\rho);\vb) = o\}\bigr|
-    = N_{\vb}(o).
-  \]
+  Write $N_{\va}(o) = \bigl|\{\rho : O(\rho;\va) = o\}\bigr|$ for the tape counts.
   \medskip
 
-  ($\Rightarrow$) Sort the tapes by outcome:
-  $F_{\va}(o) = \{\rho : O(\rho;\va) = o\}$. As $o$ varies these
-  \emph{fibres} partition $\{0,1\}^{\Rs}$, and equal laws mean matching
-  fibres have equal size, $|F_{\va}(o)| = |F_{\vb}(o)|$. So pick, for each
-  $o$, any bijection $F_{\va}(o) \to F_{\vb}(o)$; their union is a bijection
-  $\varphi$ of the whole tape space, and it sends every $\rho$ to a tape with
-  the \emph{same} observation, giving us a coupling function. \qed
+  \textbf{($\Leftarrow$)} \; Let $\varphi$ be a coupling function from $\va$ to
+  $\vb$. For any observation $o$, the identity $O(\rho;\va) = O(\varphi(\rho);\vb)$
+  and the bijectivity of $\varphi$ give, reindexing by $\rho' = \varphi(\rho)$,
+  \[
+    N_{\va}(o)
+    = \bigl|\{\rho : O(\rho;\va) = o\}\bigr|
+    = \bigl|\{\rho : O(\varphi(\rho);\vb) = o\}\bigr|
+    = \bigl|\{\rho' : O(\rho';\vb) = o\}\bigr|
+    = N_{\vb}(o) .
+  \]
+  Hence $\law{\va}(O) = \law{\vb}(O)$; if this holds for every pair, $O$ is
+  secret-independent by definition.
+  \medskip
+
+  \textbf{($\Rightarrow$)} \; Suppose $\law{\va}(O) = \law{\vb}(O)$, i.e.\
+  $N_{\va}(o) = N_{\vb}(o)$ for every $o$. The fibres
+  $F_{\va}(o) = \{\rho \mid O(\rho;\va) = o\}$ partition $\{0,1\}^{\Rs}$ as $o$
+  ranges over the observations, and likewise the $F_{\vb}(o)$. Corresponding blocks
+  have equal size, so pick a bijection $F_{\va}(o) \to F_{\vb}(o)$ for each $o$ and
+  take their union $\varphi$. It is a bijection of $\{0,1\}^{\Rs}$, and by
+  construction carries each $\rho \in F_{\va}(o)$ to some $\rho' \in F_{\vb}(o)$, so
+  $O(\varphi(\rho);\vb) = o = O(\rho;\va)$. Thus $\varphi$ is a coupling function
+  from $\va$ to $\vb$. \qed
 \end{frame}
 
 \begin{frame}{Backup: replay vs.\ factoring}
