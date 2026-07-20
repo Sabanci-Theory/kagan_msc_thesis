@@ -113,7 +113,7 @@
 \begin{frame}{The story of this talk}
   \begin{enumerate}
     \item<1-> \textbf{Problem:} real devices leak; measuring power or timing
-      can recover secret keys. \textbf{Standard fix:} masking --- compute on
+      can recover secret keys. \textbf{Standard fix:} masking; compute on
       randomized shares, never on secrets.
     \item<2-> \textbf{The question:} was the masking done right? ``Right''
       means no $d$ observed wires can tell two secrets apart.
@@ -167,7 +167,7 @@
   % carries and nothing more --- no glitches, no transitions.
 \end{frame}
 
-\begin{frame}{Masking --- and our running example}
+\begin{frame}{Masking, and our running example}
   \emph{Boolean masking} \parencite{chari1999towards}: split each secret into
   shares, $x = x_0 \oplus x_1$ with {\color{hlrand}$x_0$ uniformly random},
   and compute only on shares, never on secrets.
@@ -280,8 +280,8 @@
   \end{block}
   \medskip
   \begin{itemize}
-    \item<2-> Hardness: reduction from \textsc{ExactSat} --- one secret bit
-      and one probed wire already encode it.
+    \item<2-> Hardness: reduction from \textsc{ExactSat}. One secret bit
+      and one probed wire already encodes it.
       \hfill {\small(construction @ the appendix slides)}
     \item<2-> So the hardness is intrinsic; no feature of masking causes it.
   \end{itemize}
@@ -328,7 +328,7 @@
         \item<2-> The probe is now \emph{syntactically secret-free}: it is
           uniform, whatever the secrets are.
         \item<3-> And $\sigma$ induces a \emph{bijection} of the tape space,
-          translating the coordinate $r$ --- a \emph{shear}.
+          translating the coordinate $r$, a \emph{shear}.
         \item<4-> The context $x_0 \odot y_1$ mentions a share, so the
           \emph{one} syntactic step induces a \emph{family} of shears ---
           fixing the secrets $\va$ picks $\widehat{\sigma}^{\va}$.
@@ -337,8 +337,8 @@
   \end{columns}
   \medskip
   \onslide<4->{Key identity: \;
-  $(\mathbf{w}\sigma)(\rho;\va) = \mathbf{w}(\widehat{\sigma}^{\va}(\rho);\va)$
-  --- syntax and semantics agree, for every $\va$.}
+  $(\mathbf{w}\sigma)(\rho;\va) = \mathbf{w}(\widehat{\sigma}^{\va}(\rho);\va)$,
+  syntax and semantics agree, for every $\va$.}
 \end{frame}
 
 \begin{frame}{Couplings}
@@ -464,13 +464,13 @@
     \item<2-> \textbf{Sound.} Every step is a shear, so any $\Secure$ verdict
       carries a genuine coupling (Theorem, Ch.~5).
     \item<3-> \textbf{Incomplete, knowingly.} A probe can be independent for
-      reasons no relabelling of this kind captures --- this is the price of the
+      reasons no relabelling of this kind captures. This is the price of the
       hardness result.
   \end{itemize}
   \medskip
   \onslide<4->{
-  On the example: $c_{01} \xrightarrow{\;\;r \;\mapsto\; x_0 \odot y_1 \oplus r\;\;} r$
-  --- one step, $\Secure$, coupling recorded.}
+  On the example: $c_{01} \xrightarrow{\;\;r \;\mapsto\; x_0 \odot y_1 \oplus r\;\;} r$,
+  one step, $\Secure$, coupling recorded.}
 \end{frame}
 
 \begin{frame}{Component I: why factoring}
@@ -569,7 +569,7 @@
 \end{frame}
 
 \begin{frame}{Component III: growing safe sets}
-  A discharged probe is a coupling --- but can the \emph{same} coupling cover more
+  A discharged probe is a coupling, but can the \emph{same} coupling cover more
   wires?
   \medskip
   \begin{columns}[c]
@@ -677,7 +677,7 @@
   \medskip
   \begin{itemize}
     \item \textbf{Hash-consed DAG} expression representation with
-      canonicalization --- structural sharing makes equality checks and
+      canonicalization, where structural sharing makes equality checks and
       substitutions cheap.
     \item \textbf{Multiplicative factoring} as a normal-form pass over the
       DAG, applied lazily.
@@ -699,9 +699,9 @@
   \medskip
   \begin{itemize}
     \item<1-> \textbf{DOM-AND} (2 shares): $\Secure$ at order 1, the witness
-      pair $\{c_{01}, c_{10}\}$ at order 2 --- our running example.
+      pair $\{c_{01}, c_{10}\}$ at order 2 (our running example).
     \item<1-> \textbf{Four-share $x \oplus yz$ TI} \parencite{bilgin2015threshold}:
-      certified secure at orders 1 and 2, insecure at order 3 --- the
+      certified secure at orders 1 and 2, insecure at order 3. The
       \emph{expected} behaviour of a first-order threshold implementation.
     \item<2-> \textbf{The factoring family} ($d{+}1$ quadratic S-boxes,
       $Q^3\!/Q^4$): randomness-free sharings whose certification must factor
@@ -724,11 +724,11 @@
       \begin{itemize}
         \item<1-> Coupling matches replay's yield \emph{to the digit} wherever
           replay is right (five-share ISW: $4735$ discharges, $8078$ free
-          wires on both) --- and keeps the correct verdict on the five rows
+          wires on both), and keeps the correct verdict on the five rows
           where replay false-reports $\Insecure$.
         \item<2-> Closures keep the verdicts but lose the yield: $14$ vs.\
           $537$ free wires on Fides, $632{,}834$ vs.\ $4735$ discharges on
-          five-share ISW --- the split degrades toward enumeration.
+          five-share ISW, because the split degrades toward enumeration.
         \item<3-> The extension pays for itself: Fides certifies $537$ wires
           from $55$ discharges; five-share ISW falls from ${\sim}609$\,s
           (no extension) to under $2$\,s.
@@ -746,7 +746,7 @@
     \item<1-> \textbf{Model.} Our model is value-based leakage only: glitches and
       transitions are out of scope; so is composition. So we show single-circuit, exact
       probing security.
-    \item<2-> \textbf{Larger fields.} The core --- shears, couplings, ANF ---
+    \item<2-> \textbf{Larger fields.} The core (shears, couplings, ANF)
       is already field-agnostic; lifting the implementation beyond $\F$ is
       engineering plus a normal-form choice. (Also, the power of Schwartz--Zippel
       can come into picture here.)
@@ -760,7 +760,7 @@
 \begin{frame}{Contributions}
   \begin{enumerate}
     \item<1-> \textbf{Placement.} We show that: counting is
-      $\sharpP$-complete, deciding is $\CeqP$-complete --- above the
+      $\sharpP$-complete, deciding is $\CeqP$-complete, i.e. they sit above the
       polynomial hierarchy, ruling out the counting route.
     \item<2-> \textbf{A rigorous coupling account of probing security.}
       Security \emph{is} the existence of a family of coupling functions, the
