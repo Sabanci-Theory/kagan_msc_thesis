@@ -30,6 +30,7 @@ extension (Section~\ref{sec:extension}), is the amplifier. It turns the
 certificate for one probe into a certificate for a strictly larger safe set of
 wires, so that a single discharge settles many probes at once.
 
+% We need a less poetic explanation in this part. Be precise and accurate on what these components do!
 All three components use couplings. When Component~II reaches a batch of
 probes it cannot dismiss as a whole, it asks Component~I to certify a
 representative; a successful discharge returns not just a secure verdict but a
@@ -48,7 +49,7 @@ Chapter~\ref{chap:implementation}.
 
 \section{Component I: The Rewrite Engine}
 \label{sec:rewrite-engine}
-
+% Are we clearly defining what a wire is somewhere? I believe that in the algorithm they are arithmetic expressions.
 Given a probe $\mathbf{w} = (w_1, \dots, w_k)$, $k \le d$ --- a tuple of
 wires of the circuit --- the rewrite engine decides whether $\mathbf{w}$ is
 secret-independent. It does so constructively, rather than reasoning about
@@ -60,6 +61,7 @@ any $w_i$. Termination with a secret-free image certifies $\mathbf{w}$.
 Theorem~\ref{thm:rewrite-soundness} in Section~\ref{sec:coupling-view} makes precise
 why this certificate is sound.
 
+% Again, here we need to precisely define what T is. From Line 19, I think it is a stack of pairs. Also, an intuitive meaning of a derivation must be given here.
 The engine has three tiers of rewriting rules, increasing in generality and cost,
 summarized in
 Algorithm~\ref{alg:rewrite-engine} and mirrored in the structure of this section.
