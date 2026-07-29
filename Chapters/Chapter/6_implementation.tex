@@ -17,18 +17,19 @@ keep every expression canonical, and extended with a multiplicative factoring
 pass that reshapes products so the engine can reach randoms otherwise buried
 inside them.
 
-Remember that the circuit of
-Definition~\ref{def:circuit} is strictly $2$-ary, and that is deliberate. Each
+Remember that the circuit of Definition~\ref{def:circuit}, once the gate set is
+fixed to $\{\oplus, \odot\}$ (Section~\ref{sec:bool-circuits}), is strictly
+$2$-ary, and that is deliberate. Each
 $2$-input gate output is a distinct observable, so collapsing gates would hide
 intermediate wires the adversary is allowed to probe
-(Section~\ref{sec:d-probing}). The representation here is not the circuit, and this important.
+(Section~\ref{sec:d-probing}). The representation here is not the circuit, and this is important.
 It is how we store the expression $\wexpr{w}$ of a wire
 (Definition~\ref{def:wire-expr}) for the algebra, and there flattening a
 chain of same-typed gates into one $n$-ary node loses nothing, since only the
 wire's function matters and not its gate-by-gate history. So the two structures
-(one faitfhul to the topology and one keeping the expressions) live side
+(one faithful to the graph and one keeping the expressions) live side
 by side, exactly as the layering of Section~\ref{sec:bool-circuits} prescribes.
-The $2$-ary netlist stays the authority on what may be probed, and the
+The $2$-ary circuit graph stays the authority on what may be probed, and the
 DAG is the authority on what each probed wire computes.
 
   \subsection{A Hash-Consed \NoCaseChange{$n$}-ary Circuit DAG}
@@ -37,7 +38,10 @@ DAG is the authority on what each probed wire computes.
   An expression is a node of one of four kinds. It is a \emph{leaf} carrying an
   input variable (secret, random, or public), a \emph{constant} $0$ or $1$, an
   $n$-ary sum $\oplus$ over a list of operand nodes, or an $n$-ary product
-  $\odot$ over a list of operand nodes. A wire's value is the node its expression
+  $\odot$ over a list of operand nodes. This is the expression grammar of
+  Section~\ref{sec:bool-circuits} with the two operators taken $n$-ary rather than
+  binary, as flattening (Section~\ref{sec:canonicalization}) kills the
+  binary form. A wire is stored as the node its expression
   builds, and the whole circuit is a single DAG in which wires that
   share sub-structure share nodes. Building it is the recursion of
   Definition~\ref{def:wire-expr} run once, in topological order, with the sharing
@@ -86,7 +90,7 @@ DAG is the authority on what each probed wire computes.
   Three normalisations do the work. The first is \emph{flattening}.
   Associativity lets a sum of sums be one flat sum, and likewise a product of
   products be one flat product. This is where the $n$-ary shape earns itself, as
-  a chain of $2$-ary XOR gates from the netlist collapses into a single sum node
+  a chain of $2$-ary XOR gates from the circuit graph collapses into a single sum node
   holding all the leaves, and any nesting is quotiented away. The second is
   \emph{ordering}. Commutativity lets us keep each operand list sorted by
   identifier, so the order of writing is irrelevant to identity and $a \oplus b$
@@ -116,16 +120,10 @@ DAG is the authority on what each probed wire computes.
   \label{sec:factoring}
 
   Canonicalisation normalises the additive structure of an expression, but it
-  leaves products opaque. The find-rules of Component~I
-  (Sections~\ref{sec:simple-rule} and \ref{sec:general-substitution}) look for a
-  random in \emph{additive} position, as an operand of a sum, because that is the
-  shape Lemma~\ref{lem:substitution} rewrites. A random that occurs only inside
-  products is invisible to them, even when the expression could in fact be
-  discharged. Multiplicative factoring is the pass that reshapes such an
-  expression. It pulls a shared factor out of a sum of products so that a trapped
-  random surfaces additively, where a substitution can reach it. It is the second
-  tier of the engine and is interleaved into the third
-  (Chapter~\ref{chap:design}).
+  leaves products opaque, and Section~\ref{sec:factoring-step} discussed why that
+  matters. The find-rules see a random only in additive position, so one buried
+  inside products is beyond their reach. Multiplicative factoring is the pass that
+  surfaces it. Here we give the details regarding that transformation.
 
     \subsubsection{The Factoring Transformation}
     \label{sec:factoring-transformation}
@@ -139,8 +137,9 @@ DAG is the authority on what each probed wire computes.
       \big(f \odot (a \oplus b)\big) \;\oplus\; \mathit{rest},
     \]
     where $\mathit{rest}$ are the summands not carrying $f$, and $a, b$ are what
-    remains of the two products once $f$ is removed. Over $\mathbb{F}_2$ this is an
-    identity, so the wire's value is untouched and only its form changes.
+    remains of the two products once $f$ is removed. The identity holds over
+    $\mathbb{F}_2$, so only the form changes and not the function denoted
+    (Lemma~\ref{lem:factor-sound}).
 
     What we pull out is chosen greedily. Over the operands of a sum we count, for
     each candidate factor, in how many of the product summands it appears, and take
@@ -159,7 +158,7 @@ DAG is the authority on what each probed wire computes.
     $a_1 = a \oplus r_0$, $b_1 = b \oplus r_1$, $c_1 = c \oplus r_2$ together with
     the mask shares $b_2 = r_1$ and $c_2 = r_2$, where $a, b, c$ are secret and
     $r_0, r_1, r_2$ are fresh randoms. One of the gadget's recombination wires
-    gathers five product and share terms, and after canonicalisation its value is
+    gathers five product and share terms, and after canonicalisation its expression is
     \[
       w \;=\; (a \oplus r_0)\odot(b \oplus r_1) \;\oplus\; (a \oplus r_0)\odot(c \oplus r_2)
           \;\oplus\; (c \oplus r_2) \;\oplus\; (a \oplus r_0)\odot r_1
@@ -189,8 +188,8 @@ DAG is the authority on what each probed wire computes.
     \subsubsection{Enlarging the Class of Verifiable Circuits}
     \label{sec:enlarging-verifiable}
 
-    Factoring is sound by construction, being an $\mathbb{F}_2$ identity, so it
-    never lets an insecure probe pass. What it changes is completeness, and it
+    Factoring is sound by Lemma~\ref{lem:factor-sound}, so it never lets an
+    insecure probe pass. What it changes is completeness, and it
     strictly enlarges the class of probes the engine can certify. Every probe the
     engine discharges without factoring it still discharges, since
     Algorithm~\ref{alg:rewrite-engine} tries the unfactored form first and factors
@@ -220,11 +219,11 @@ Algorithm~\ref{alg:rewrite-engine} presents Component~I as a single tiered
 procedure, but the tool realises its rule set twice, and the reason for the two
 is worth an explanation. One is a cheap, verdict-only path that answers
 secret-independence without ever rewriting the DAG, and the other is a complete
-path that rewrites for real and hands back the coupling. The tiering of
-\textproc{CheckProbe} threads them together. It tries the cheap path first on the
+path that rewrites for real and hands back the coupling. The complete path tries
+the cheap rewrites first on the
 unfactored probe, then once more after factoring, and only then falls through to
-the complete loop. The two paths
-answer different callers. Component~II's large-set pruning
+the general rewrite loop. The two paths
+have different callers. Component~II's large-set pruning
 (Section~\ref{sec:large-set-pruning}) throws the big union at the engine and wants
 only a yes or no, as fast as possible, whereas a certified representative must
 come back with the coupling that Component~III will use
@@ -234,25 +233,39 @@ in turn.
   \subsection{Reference-Counted Single-Occurrence Discharge}
   \label{sec:refcount-impl}
 
-  The cheap path applies the simple rule (Section~\ref{sec:simple-rule}) to a
-  fixpoint without ever building a new node. It relies on the observation that the
-  simple rule needs to know very little about a random. It needs how many times
-  the random occurs and whether that single occurrence is additive, and it needs
-  the parent to splice away. So instead of rewriting the expression the path keeps
-  that bookkeeping and updates it in place.
+  This path serves the call for the large-set prune of
+  Section~\ref{sec:large-set-pruning}, which hands the engine the union
+  $U = W_1 \cup \dots \cup W_m$ of the current worklist and wants nothing back but
+  a verdict. The union is typically far larger than $d$, it is discharged on many
+  branches, and its answer is never extended, so the whole cost of building a
+  derivation would be wasted on it. Representatives of a worklist do not come here;
+  they are sent straight to the complete loop of
+  Section~\ref{sec:findrule-impl}.
 
-  A single depth-first pass over the probe's sub-DAG records, for every node, how
-  many parents it has and how many of them are sums, together with its
-  multiplicative depth. A random is a simple-rule candidate exactly when it has
-  one parent and that parent is a sum, and it is not itself a probe root; the
-  candidates are held in a todo list ordered by increasing multiplicative depth, so
-  the shallowest gets rewritten first. Firing the rule on a random is then a local edit to
-  the counts and not to the DAG. We mark its additive parent as freshly random,
-  drop the random, and decrement the parent counts of the parent's other children.
-  A sibling whose total count thereby falls to a single additive occurrence
-  cascades back into the worklist as a new candidate, and it is this cascade that
-  carries the fixpoint forward. The probe is secure once no secret is reachable
-  from any root.
+  What is being implemented is \textproc{SimpleRewrite} of
+  Algorithm~\ref{alg:rewrite-engine}. Recall its shape. It collects into
+  $\mathit{todo}$ the randoms of $\mathrm{vars}(\mathbf{w})$ that occur exactly
+  once, additively, and are not probe roots; it orders them by multiplicative
+  depth; and it repeatedly pops one such $r$, takes its unique
+  additive parent $x = e \oplus r$, marks $x$ as a fresh random leaf, records the
+  step, and drops $r$ --- which may expose a new single-occurrence random and so
+  refill $\mathit{todo}$. It stops when the probe is secret-free or no candidate is
+  left.
+
+  The observation the implementation exploits is that this rule needs very little
+  about a random: how many times it occurs, whether that occurrence is additive,
+  and which parent to splice away. None of that requires rewriting anything. So a
+  single depth-first pass over the probe's sub-DAG records, for every node, how
+  many parents it has, how many of those are sums, and its multiplicative depth,
+  and the rule is then run against those counts. A random is a candidate exactly
+  when it has one parent, that parent is a sum, and it is not a probe root, which
+  is $\mathit{todo}$ read off the counts. Firing the rule is a local edit to the
+  counts and not to the DAG: mark the additive parent as freshly random, drop the
+  random, and decrement the parent counts of the parent's other children. A sibling
+  whose count thereby falls to a single additive occurrence re-enters the
+  $\mathit{todo}$ list. The probe is
+  secure once no secret is reachable from any root, which is the
+  \textproc{SecretFree} test.
 
   Keeping observed wires out of the todo list is an important soundness condition.
   A random that is itself a probe root must never be relabelled,
@@ -260,13 +273,15 @@ in turn.
   while conditioning on it would be mathematically unsound. The
   cascade re-inserts a candidate only after the same root check.
 
-  What this path cannot do is produce a coupling. Its cascade steps fire on
+  The one thing the path drops is the record. Its cascade steps fire on
   already-relabelled parents rather than on tape variables, so they are not the
   leaf relabels that Section~\ref{sec:coupling-view} assembles a coupling from, and
   replaying them against another wire would diverge from the certified derivation.
-  This costs nothing where the path is used. The large-set prune only needs the
-  verdict, and a probe that must yield a coupling is sent to the complete loop
-  instead anyways.
+  There is therefore no $T$ here and no coupling. This does not contradict
+  Lemma~\ref{lem:simple-sound}, which speaks of \textproc{SimpleRewrite} as
+  Algorithm~\ref{alg:rewrite-engine} states it, pushing every step onto $T$; what
+  this path implements is that rule's verdict alone. Anyways a verdict is all the
+  caller needs.
 
   \subsection{Recomputing the Find-Rules per Round}
   \label{sec:findrule-impl}
@@ -278,8 +293,8 @@ in turn.
   Section~\ref{sec:canonicalization}, which is what makes the chosen occurrence
   collapse to a bare $r$ while every other absorbs $e$. Because the substitution
   genuinely reshapes the expression, the incremental counts of
-  Section~\ref{sec:refcount-impl} cannot be carried across it. So the loop takes
-  the opposite stance and recomputes. Each round runs one fresh depth-first pass
+  Section~\ref{sec:refcount-impl} cannot be carried across it. So the loop recomputes them.
+  Each round runs one fresh depth-first pass
   over the current form, and that single pass does double duty. It answers whether
   any secret still survives, which is the loop's success test, and it produces the
   parent counts and depths the find-rules need. The pass is restricted to the
@@ -297,18 +312,18 @@ in turn.
   loop factors once and retries (Section~\ref{sec:factoring}), and a fuel counter
   backstops the whole thing, as Section~\ref{sec:general-substitution} discussed.
 
-  The point of paying this recomputation is the record it leaves. Every
-  substitution the loop commits is a leaf relabel $(r,\, e \oplus r)$, and appended
-  in order these are exactly the shears $\sigma_1, \dots, \sigma_K$ of
-  Section~\ref{sec:coupling-view}. The loop hands that list back alongside its
-  verdict, and it becomes the coupling Component~III replays.
+  Every
+  substitution the loop commits is pushed as a pair $(r,\, e \oplus r)$, so what
+  accumulates is exactly the record $T$ of Section~\ref{sec:record-T}. The loop
+  hands it back alongside its verdict, and it is the derivation Component~III
+  replays.
 
 \section{Evaluating the Coupling}
 \label{sec:coupling-impl}
 
 Component~III decides, for each candidate wire $u$, whether $u \circ \varphi$ is
-free of secrets, where $\varphi$ is the coupling the engine just recorded
-(Section~\ref{sec:coupling-extension}). Algorithm~\ref{alg:extend} gives that
+free of secrets, where $\varphi$ is the coupling the engine just recorded and
+$u \circ \varphi$ is read as in Section~\ref{sec:extension}. Algorithm~\ref{alg:extend} gives that
 decision, together with a probabilistic filter first and an exact test after. Both stages
 need to evaluate a wire through the coupling, and this section describes how that
 evaluation is done cheaply.
@@ -332,10 +347,11 @@ evaluation is done cheaply.
   its net image under the whole list and then evaluate $u$ against it. Since a
   relabel's image may mention randoms that later relabels move, the environment is
   built by folding the list from right to left, so that by the time a random is
-  bound, every relabel acting on its image is already computed. The identity we get
-  is $\mathrm{eval}(u,\ \mathit{env}) = \mathrm{eval}(u \circ \varphi)$, so the two
-  environments, secrets-as-random and secrets-as-zeros, are each built once and then
-  reused for every candidate, with their evaluation caches shared across.
+  bound, every relabel acting on its image is already computed. Evaluating $u$ against
+  that environment then agrees with evaluating $u \circ \varphi$ against the
+  original one, so the two environments, secrets-as-random and secrets-as-zeros,
+  are each built once and reused for every candidate, with their evaluation caches
+  shared across.
 
   % This felt like it was unnecessarily detailed, so I'll comment it out.
   % One subtlety decides whether the filter rejects anything at all. The lane values
