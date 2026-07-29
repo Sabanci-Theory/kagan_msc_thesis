@@ -230,7 +230,7 @@ come back with the coupling that Component~III will use
 (Section~\ref{sec:coupling-extension}). The next two subsections take the paths
 in turn.
 
-  \subsection{Reference-Counted Single-Occurrence Discharge}
+  \subsection{Single-Occurrence Discharge}
   \label{sec:refcount-impl}
 
   This path serves the call for the large-set prune of
@@ -283,7 +283,7 @@ in turn.
   this path implements is that rule's verdict alone. Anyways a verdict is all the
   caller needs.
 
-  \subsection{Recomputing the Find-Rules per Round}
+  \subsection{The General Discharge}
   \label{sec:findrule-impl}
 
   The complete loop (\textproc{GeneralRewrite}, Section~\ref{sec:general-substitution})
