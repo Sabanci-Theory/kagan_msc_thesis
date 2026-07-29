@@ -194,25 +194,38 @@ $\mathbf{w}(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
 \section{Couplings of Probabilistic Programs}
 \label{sec:couplings-prob}
 
-The hardness of Section~\ref{sec:hardness} rules out counting, so we need a
-different way of certifying that two laws agree. Couplings are exactly such a way.
-The idea, classical in probability theory, is to prove that two distributions are equal
-not by computing them but by ``linking'' their sources. Given distributions $\mu$ and
-$\nu$ on a finite set $X$, a \emph{coupling} is a distribution $\gamma$ on
-$X \times X$ whose two marginals are $\mu$ and $\nu$. A coupling is a witness one
-can exhibit and check locally, and it says something the marginals alone do not capture.
-In particular, if some coupling is supported on the diagonal, giving equal
-coordinates with probability one, then $\mu = \nu$. This is the case we will use,
-and it is the core idea of coupling proofs for probabilistic programs given in
-\parencite{barthe2017coupling}.
+The hardness of Section~\ref{sec:hardness} rules out counting, so we need another
+way of certifying that two laws agree. The workaround idea comes from the fact that 
+our two laws are not two unrelated distributions. They come from the same uniform
+random source.
 
-Our two distributions are the laws of one probe under two secrets, and they are
-not arbitrary. Both arise as pushforwards of the same uniform source, the
-draw of a tape $\rho \in \{0,1\}^{\mathcal{R}}$, along the maps
-$\rho \mapsto \mathbf{w}(\rho; \mathbf{a})$ and $\rho \mapsto \mathbf{w}(\rho; \mathbf{b})$. When two
-distributions share a source in this way, a coupling becomes
-available. So, we look for a relabelling of the source that turns one run into the
-other.
+Fix a probe $\mathbf{w}$ and two secret assignments $\mathbf{a}$ and $\mathbf{b}$.
+Both $\mathcal{L}_{\mathbf{a}}(\mathbf{w})$ and
+$\mathcal{L}_{\mathbf{b}}(\mathbf{w})$ are produced the same way, by drawing one
+uniform tape $\rho \in \{0,1\}^{\mathcal{R}}$ and reading the probe; the only
+difference between them is which secret is plugged in. So rather than computing the
+two distributions and comparing them, we can try to match up the tapes that produce
+them.
+
+Suppose we can pair each tape $\rho$ with a tape $\rho'$ so that the run under
+$\mathbf{a}$ on $\rho$ and the run under $\mathbf{b}$ on $\rho'$ read exactly the
+same values,
+\[
+  \mathbf{w}(\rho; \mathbf{a}) \;=\; \mathbf{w}(\rho'; \mathbf{b}) ,
+\]
+and suppose the pairing $\rho \mapsto \rho'$ is a bijection of the tape space. Then
+the two laws are equal. Because, the bijection matches
+the tapes producing an observation $o$ under $\mathbf{a}$ one-for-one with the tapes
+producing $o$ under $\mathbf{b}$, so the counts $N_{\mathbf{a}}(o)$ and
+$N_{\mathbf{b}}(o)$ of Section~\ref{sec:indep-to-counting} agree without either
+being computed explicitly. A relabelling of the randomness has replaced counting, which is
+exactly the trade we were looking for. Such a bijection is what we call a coupling.
+
+The name is borrowed from probability theory, where a \emph{coupling} of two
+distributions $\mu$ and $\nu$ on a set $X$ is a joint distribution on
+$X \times X$ whose marginals are $\mu$ and $\nu$, and where a coupling supported on
+the diagonal forces $\mu = \nu$. This general notion is what underlies the coupling-based
+program logics of Barthe et al.\ \parencite{barthe2017coupling}.
 
   \subsection{Coupling Two Runs Under Different Secrets}
   \label{sec:coupling-two-runs}
@@ -313,33 +326,120 @@ building blocks of an explicit coupling. Recall that a substitution
 $\sigma = (r \mapsto e \oplus r)$ induces a bijection
 $\widehat{\sigma}$ of $\{0,1\}^{\mathcal{R}}$, with
 $(w\sigma)(\rho) = w(\widehat{\sigma}(\rho))$ for every wire
-(Lemma~\ref{lem:substitution}). Each such $\widehat{\sigma}$ is a coupling function
-in a small scale, a single relabelling of the tape, and couplings of
-this shape luckly compose. A finite chain of substitutions therefore composes into a
-bijection of the randomness, and it is this composite that we will exhibit as the
-witness of Theorem~\ref{thm:coupling-equiv}.
+(Lemma~\ref{lem:substitution}). Each such $\widehat{\sigma}$ is a single relabelling
+of the tape, and relabellings of this shape
+compose. A finite chain of substitutions therefore composes into a bijection of the
+randomness, and it is this composite that we will exhibit as the witness of
+Theorem~\ref{thm:coupling-equiv}.
 
   \subsection{The Derivation of an Explicit Coupling Witness}
   \label{sec:derivation-witness}
 
-  A \emph{derivation} for a probe is a finite sequence of substitutions
-  $\sigma_1, \dots, \sigma_K$ that rewrites the probe, one randomness relabelling
-  at a time, until no secret remains in its expression. Composing the induced maps
-  under a fixed secret $\mathbf{a}$ gives a single bijection
-  $\varphi_{\mathbf{a}} = \widehat{\sigma_1} \circ \dots \circ \widehat{\sigma_K}$
-  of $\{0,1\}^{\mathcal{R}}$, and setting $\Phi_{\mathbf{a},\mathbf{b}} =
-  \varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$ assembles the family of
-  Section~\ref{sec:coupling-two-runs}. When the derivation ends on a secret-free
-  form, this family satisfies Definition~\ref{def:coupling-function} and so, by
-  Theorem~\ref{thm:coupling-equiv}, it also certifies the probe.
+  \begin{definition}[Derivation]
+  \label{def:derivation}
+  A \emph{derivation} for a probe $\mathbf{w}$ is a finite sequence of
+  substitutions
+  \[
+    \sigma_1 = (r_1 \mapsto e_1 \oplus r_1), \ \dots, \
+    \sigma_K = (r_K \mapsto e_K \oplus r_K),
+    \qquad r_i \notin \mathrm{vars}(e_i) ,
+  \]
+  applied in order. It \emph{ends secret-free} when the resulting expression
+  \[
+    \overline{\mathbf{w}} \;=\; \mathbf{w}\sigma_1 \sigma_2 \cdots \sigma_K
+  \]
+  is secret-free in the sense of Notation~\ref{not:fv-vars}, i.e.\ no secret
+  variable occurs in it.
+  \end{definition}
+
+  Before we construct our coupling from the derivation we mention two small details.
+  First, Lemma~\ref{lem:substitution} was stated with the secrets held fixed, however now
+  we let them vary, and we must record how the pieces depend on them. Second, the
+  context $e_i$ of a substitution may itself mention secret variables, so the shift
+  it applies to the $r_i$-coordinate is not one map but one map per secret
+  assignment. We write $\widehat{\sigma_i}^{\,\mathbf{a}}$ for the bijection
+  induced by $\sigma_i$ under the secret assignment $\mathbf{a}$, the one that
+  shifts the $r_i$-coordinate by $e_i(\rho; \mathbf{a})$.
+
+  Composing these under one secret assignment $\mathbf{a}$, let
+  \[
+    \varphi_{\mathbf{a}} \;=\; \widehat{\sigma_1}^{\,\mathbf{a}} \circ
+      \widehat{\sigma_2}^{\,\mathbf{a}} \circ \cdots \circ
+      \widehat{\sigma_K}^{\,\mathbf{a}} ,
+  \]
+  a bijection of $\{0,1\}^{\mathcal{R}}$, being a composition of bijections. The
+  derivation is thus a purely syntactic list of rewrite steps,
+  which yields an actual tape bijection only once a secret assignment is supplied.
+  The theorem below says that these bijections fit together into a coupling.
+
+  \begin{theorem}[Derivations yield couplings]
+  \label{thm:derivation-coupling}
+  Let $\sigma_1, \dots, \sigma_K$ be a derivation for a probe $\mathbf{w}$ that
+  ends secret-free, and let $\varphi_{\mathbf{a}}$ be as above. Then for every
+  ordered pair of secret assignments
+  \[
+    \Phi_{\mathbf{a},\mathbf{b}} \;=\; \varphi_{\mathbf{b}} \circ
+      \varphi_{\mathbf{a}}^{-1}
+  \]
+  is a coupling function from $\mathbf{a}$ to $\mathbf{b}$ for $\mathbf{w}$ in the
+  sense of Definition~\ref{def:coupling-function}. Consequently $\mathbf{w}$ is
+  secret-independent.
+  \end{theorem}
+
+  \begin{proof}
+  Fix a secret assignment $\mathbf{a}$ for the moment. Lemma~\ref{lem:substitution}
+  says that rewriting the expression by one substitution is the same as moving the
+  tape by the bijection it induces. Doing this once per step and composing gives
+  \[
+    \mathbf{w}\big(\varphi_{\mathbf{a}}(\rho);\, \mathbf{a}\big)
+      \;=\; \overline{\mathbf{w}}(\rho;\, \mathbf{a})
+    \qquad \text{for every tape } \rho .
+  \]
+  This can be shown formally with an induction on $K$.
+  % and the order is worth noting: the step
+  % applied last to the expression is the one applied first to the tape, which is why
+  % $\varphi_{\mathbf{a}}$ composes the shears in that order.
+
+  Since $\overline{\mathbf{w}}$ is secret-free, evaluating
+  it never reads the secret assignment, so we may write $\overline{\mathbf{w}}(\rho)$
+  and read the identity above at $\mathbf{a}$ and at $\mathbf{b}$, as follows:
+  \[
+    \mathbf{w}\big(\varphi_{\mathbf{a}}(\rho);\, \mathbf{a}\big)
+      \;=\; \overline{\mathbf{w}}(\rho) \;=\;
+    \mathbf{w}\big(\varphi_{\mathbf{b}}(\rho);\, \mathbf{b}\big) .
+  \]
+  Both runs are relabelled views of the same secret-free expression, and it only
+  remains to link them to each other. As $\varphi_{\mathbf{a}}$ is a bijection we may
+  put $\varphi_{\mathbf{a}}^{-1}(\rho)$ in place of $\rho$, which leaves
+  $\mathbf{w}(\rho; \mathbf{a})$ on the left and gives
+  \[
+    \mathbf{w}(\rho; \mathbf{a}) \;=\;
+    \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho);\, \mathbf{b}\big)
+    \qquad \text{for every } \rho ,
+  \]
+  with $\Phi_{\mathbf{a},\mathbf{b}} = \varphi_{\mathbf{b}} \circ
+  \varphi_{\mathbf{a}}^{-1}$ being a bijection, as a composition of two. This is
+  exactly Definition~\ref{def:coupling-function}. The pair $\mathbf{a}, \mathbf{b}$
+  was arbitrary, so Theorem~\ref{thm:coupling-equiv} applies and $\mathbf{w}$ is
+  secret-independent.
+  \end{proof}
+
+  The family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$ built this way satisfies the
+  groupoid identities of Section~\ref{sec:coupling-two-runs} for free, since
+  $\Phi_{\mathbf{a},\mathbf{a}} = \mathrm{id}$,
+  $\Phi_{\mathbf{b},\mathbf{a}} = \Phi_{\mathbf{a},\mathbf{b}}^{-1}$ and
+  $\Phi_{\mathbf{b},\mathbf{c}} \circ \Phi_{\mathbf{a},\mathbf{b}} =
+  \Phi_{\mathbf{a},\mathbf{c}}$ all follow from the shape of
+  $\varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$.
 
   This is the constructive certificate that we wished for.
   It is explicit, constructed straight off the recorded
-  substitutions, and it is checkable without ever counting a fibre. What it is not
-  is \emph{complete}, since a probe can be secret-independent while no chain of
-  substitutions reaches a secret-free form, in which case the search returns no
-  witness, though one might exist in the abstract sense of
-  Theorem~\ref{thm:coupling-equiv}. How such a derivation is searched for, recorded,
-  and then replayed to certify many wires at once is the subject of
-  the next chapter (Chapter~\ref{chap:design}), where the construction is given in full and its
-  soundness is proved.
+  substitutions, and it is checkable without ever counting a fibre.
+  % What it is not
+  % is \emph{complete}, since a probe can be secret-independent while no chain of
+  % substitutions reaches a secret-free form, in which case the search returns no
+  % witness, though one might exist in the abstract sense of
+  % Theorem~\ref{thm:coupling-equiv}.
+  How such a derivation is searched for, recorded,
+  and then reused to certify many wires at once is the subject of
+  the next chapter (Chapter~\ref{chap:design}).
