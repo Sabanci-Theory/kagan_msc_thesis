@@ -1,8 +1,7 @@
 \newglossaryentry{fieldtwo}{
   name={\ensuremath{\mathbb{F}_2}},
   text={\ensuremath{\mathbb{F}_2}},
-  description={The two-element field $\{0,1\}$, with addition $\oplus$ and
-    multiplication $\odot$},
+  description={The two-element field $\{0,1\}$},
   sort={010},
   type=symbols
 }
@@ -47,18 +46,53 @@
   type=symbols
 }
 
+\newglossaryentry{inputvars}{
+  name={\ensuremath{\mathcal{V}}},
+  text={\ensuremath{\mathcal{V}}},
+  description={The input wires of a circuit,
+    $\mathcal{V} = \mathcal{S} \uplus \mathcal{R} \uplus \mathcal{P}$},
+  sort={062},
+  type=symbols
+}
+
 \newglossaryentry{wires}{
   name={\ensuremath{\mathcal{W}}},
   text={\ensuremath{\mathcal{W}}},
-  description={Set of all wires of a circuit},
+  description={Set of all wires (vertices) of a circuit},
   sort={070},
+  type=symbols
+}
+
+\newglossaryentry{wireexpr}{
+  name={\ensuremath{\mathrm{expr}(w)}},
+  text={\ensuremath{\mathrm{expr}(w)}},
+  description={The $\mathbb{F}_2$ polynomial in the
+    input variables obtained by reading the circuit graph at $w$},
+  sort={072},
+  type=symbols
+}
+
+\newglossaryentry{sembrackets}{
+  name={\ensuremath{[\![\cdot]\!]}},
+  text={\ensuremath{[\![\cdot]\!]}},
+  description={Denotation of an expression},
+  sort={074},
+  type=symbols
+}
+
+\newglossaryentry{fv}{
+  name={\ensuremath{\mathrm{fv}(e)}},
+  text={\ensuremath{\mathrm{fv}(e)}},
+  description={The input variables an expression $e$ mentions},
+  sort={078},
   type=symbols
 }
 
 \newglossaryentry{vars}{
   name={\ensuremath{\mathrm{vars}(w)}},
   text={\ensuremath{\mathrm{vars}(w)}},
-  description={The random inputs a wire $w$ depends on, $\mathrm{vars}(w) \subseteq \mathcal{R}$},
+  description={The random inputs a wire $w$ mentions,
+    $\mathrm{vars}(w) = \mathrm{fv}(w) \cap \mathcal{R}$},
   sort={080},
   type=symbols
 }
@@ -66,8 +100,7 @@
 \newglossaryentry{tape}{
   name={\ensuremath{\rho}},
   text={\ensuremath{\rho}},
-  description={A randomness assignment, or tape, $\rho : \mathcal{R} \to \{0,1\}$;
-    the randoms are sampled uniformly from the randomness space $\{0,1\}^{\mathcal{R}}$},
+  description={A randomness assignment, or tape, $\rho : \mathcal{R} \to \{0,1\}$},
   sort={090},
   type=symbols
 }
@@ -83,24 +116,25 @@
 \newglossaryentry{probe}{
   name={\ensuremath{\mathbf{w}}},
   text={\ensuremath{\mathbf{w}}},
-  description={A probe set of at most $d$ wires, listed as a tuple $\mathbf{w} = (w_1, \dots, w_k)$},
+  description={A probe, which is a tuple $\mathbf{w} = (w_1, \dots, w_k)$ of at most $d$
+    wires},
   sort={110},
   type=symbols
 }
 
-\newglossaryentry{observationset}{
-  name={\ensuremath{O}},
-  text={\ensuremath{O}},
-  description={An observation set (a probe viewed as an unordered set of wires)},
+\newglossaryentry{observation}{
+  name={\ensuremath{o}},
+  text={\ensuremath{o}},
+  description={An observation $o \in \{0,1\}^{k}$ that a probe can take},
   sort={120},
   type=symbols
 }
 
 \newglossaryentry{law}{
-  name={\ensuremath{\mathcal{L}_{\mathbf{a}}(O)}},
-  text={\ensuremath{\mathcal{L}_{\mathbf{a}}(O)}},
-  description={The law (distribution) of a probe $O$ under secret assignment
-    $\mathbf{a}$, taken over uniform $\rho$},
+  name={\ensuremath{\mathcal{L}_{\mathbf{a}}(\mathbf{w})}},
+  text={\ensuremath{\mathcal{L}_{\mathbf{a}}(\mathbf{w})}},
+  description={The law of a probe $\mathbf{w}$ under secret
+    assignment $\mathbf{a}$, taken over uniform $\rho$},
   sort={130},
   type=symbols
 }
@@ -124,7 +158,7 @@
 \newglossaryentry{substitutionhat}{
   name={\ensuremath{\widehat\sigma}},
   text={\ensuremath{\widehat\sigma}},
-  description={The induced measure-preserving map of the random space from $\sigma$},
+  description={The bijection of the randomness space induced by $\sigma$},
   sort={151},
   type=symbols
 }
@@ -133,8 +167,7 @@
   name={\ensuremath{\varphi_{\mathbf{a}}}},
   text={\ensuremath{\varphi_{\mathbf{a}}}},
   description={The composite tape map under a single secret
-    assignment $\mathbf{a}$; the coupling is $\Phi_{\mathbf{a},\mathbf{b}} =
-    \varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$},
+    assignment $\mathbf{a}$},
   sort={160},
   type=symbols
 }
@@ -142,7 +175,7 @@
 \newglossaryentry{coupling}{
   name={\ensuremath{\pmb{\Phi}}},
   text={\ensuremath{\Phi}},
-  description={A family of measure-preserving bijections of the random space},
+  description={A family of bijections of the random space},
   sort={170},
   type=symbols
 }
@@ -180,6 +213,14 @@
   description={The class of decision problems whose complements lie in
     $\mathrm{NP}$},
   sort={174},
+  type=symbols
+}
+
+\newglossaryentry{classPH}{
+  name={\ensuremath{\mathrm{PH}}},
+  text={\ensuremath{\mathrm{PH}}},
+  description={The polynomial hierarchy},
+  sort={175},
   type=symbols
 }
 

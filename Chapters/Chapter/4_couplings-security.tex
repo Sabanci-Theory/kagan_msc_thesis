@@ -19,10 +19,10 @@ security constructively without explicit counting.
 
 Throughout, fix a circuit over $\mathbb{F}_2$ with secret inputs $\mathcal{S}$,
 random inputs $\mathcal{R}$, and public inputs $\mathcal{P}$, as usual, together with a probe
-$O = \{w_1, \dots, w_k\}$ of size $k \le d$. Under a secret assignment
+$\mathbf{w} = (w_1, \dots, w_k)$ of size $k \le d$. Under a secret assignment
 $\mathbf{a} \in \{0,1\}^{\mathcal{S}}$ and a tape
 $\rho \in \{0,1\}^{\mathcal{R}}$, the probe takes the joint value
-$O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
+$\mathbf{w}(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
 
   \subsection{From Independence to Distribution Counting}
   \label{sec:indep-to-counting}
@@ -30,15 +30,15 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
   The law of a probe is assembled from integer counts. For an observation
   $o \in \{0,1\}^{k}$ write
   \[
-    N_{\mathbf{a}}(o) \;=\; \big|\{\, \rho \in \{0,1\}^{\mathcal{R}} : O(\rho; \mathbf{a}) = o \,\}\big| ,
+    N_{\mathbf{a}}(o) \;=\; \big|\{\, \rho \in \{0,1\}^{\mathcal{R}} : \mathbf{w}(\rho; \mathbf{a}) = o \,\}\big| ,
   \]
   the number of tapes on which the probe reads $o$ under the secret $\mathbf{a}$.
   Since $\rho$ is uniform, the law is
-  $\mathcal{L}_{\mathbf{a}}(O)(o) = N_{\mathbf{a}}(o) / 2^{|\mathcal{R}|}$, so the
+  $\mathcal{L}_{\mathbf{a}}(\mathbf{w})(o) = N_{\mathbf{a}}(o) / 2^{|\mathcal{R}|}$, so the
   law is nothing but a histogram of these counts. Two laws coincide
   exactly when their counts do,
   \[
-    \mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)
+    \mathcal{L}_{\mathbf{a}}(\mathbf{w}) = \mathcal{L}_{\mathbf{b}}(\mathbf{w})
     \quad\Longleftrightarrow\quad
     N_{\mathbf{a}}(o) = N_{\mathbf{b}}(o) \ \text{ for every } o \in \{0,1\}^{k} .
   \]
@@ -50,11 +50,11 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
 
   \begin{definition}[The counting and distinguishing problems]
   \label{def:count-distinguish}
-  \textsc{Count} takes a circuit, a probe $O$, a secret $\mathbf{a}$, and an
+  \textsc{Count} takes a circuit, a probe $\mathbf{w}$, a secret $\mathbf{a}$, and an
   observation $o$, and returns the integer $N_{\mathbf{a}}(o)$.
-  \textsc{Distinguish} takes a circuit, a probe $O$, and two secret assignments
+  \textsc{Distinguish} takes a circuit, a probe $\mathbf{w}$, and two secret assignments
   $\mathbf{a}, \mathbf{b}$, and accepts exactly when
-  $\mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)$.
+  $\mathcal{L}_{\mathbf{a}}(\mathbf{w}) = \mathcal{L}_{\mathbf{b}}(\mathbf{w})$.
   \end{definition}
 
   \subsection{Counting the Law is \NoCaseChange{\#P}-Complete}
@@ -72,7 +72,7 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
 
   \begin{proof}
   \emph{Membership.} Fix $\mathbf{a}$, the publics, and $o$. The predicate
-  $\rho \mapsto [\, O(\rho; \mathbf{a}) = o \,]$ evaluates the circuit on the tape
+  $\rho \mapsto [\, \mathbf{w}(\rho; \mathbf{a}) = o \,]$ evaluates the circuit on the tape
   $\rho$ and compares $k$ output bits against $o$, all in time polynomial in the
   circuit size. Hence $N_{\mathbf{a}}(o)$ counts the tapes satisfying a
   polynomial-time predicate, so it is a $\#\mathrm{P}$ function.
@@ -81,9 +81,10 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
   assignments of a Boolean formula, which is $\#\mathrm{P}$-complete
   \parencite{valiant1979complexity}. Given $\varphi(x_1, \dots, x_m)$, build the
   circuit that reads $x_1, \dots, x_m$ as random inputs, has no secrets, and
-  computes $\varphi$ on a single wire $w$, realising the connectives of $\varphi$
+  computes $\varphi$ gate by gate, ending in a wire $w$ with $\wexpr{w} = \varphi$;
+  the connectives of $\varphi$ are realised
   through $\oplus$ and $\odot$, which is possible because the two are universal over
-  $\mathbb{F}_2$ (Section~\ref{sec:bool-circuits}). The probe $\{w\}$ then has
+  $\mathbb{F}_2$ (Section~\ref{sec:bool-circuits}). The one-wire probe $(w)$ then has
   $N(1) = |\{ x : \varphi(x) = 1 \}| = \#\varphi$, so any procedure for
   \textsc{Count} computes $\#\varphi$. The reduction is polynomial, hence
   \textsc{Count} is $\#\mathrm{P}$-hard.
@@ -124,7 +125,7 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
   \begin{proof}
   \emph{Membership.} Put
   \[
-    f(C, O, \mathbf{a}, \mathbf{b}) \;=\; \sum_{o \in \{0,1\}^{k}}
+    f(C, \mathbf{w}, \mathbf{a}, \mathbf{b}) \;=\; \sum_{o \in \{0,1\}^{k}}
       \big(N_{\mathbf{a}}(o) - N_{\mathbf{b}}(o)\big)^2 ,
   \]
   Where $C$ is the circuit, each $N_{\mathbf{a}}$ is a $\#\mathrm{P}$ function,
@@ -134,9 +135,9 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
   a constant combination of gap functions and is itself in $\mathrm{GapP}$. A sum of
   squares vanishes exactly when every term does, hence
   \[
-    \mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)
+    \mathcal{L}_{\mathbf{a}}(\mathbf{w}) = \mathcal{L}_{\mathbf{b}}(\mathbf{w})
     \iff N_{\mathbf{a}}(o) = N_{\mathbf{b}}(o) \ \forall o
-    \iff f(C, O, \mathbf{a}, \mathbf{b}) = 0 ,
+    \iff f(C, \mathbf{w}, \mathbf{a}, \mathbf{b}) = 0 ,
   \]
   and \textsc{Distinguish} is the vanishing set of the gap function $f$, so it lies in
   $\mathrm{C}_{=}\mathrm{P}$.
@@ -145,14 +146,14 @@ $O(\rho; \mathbf{a}) \in \{0,1\}^{k}$, with the publics held fixed.
   formulas $\varphi_0, \varphi_1$ over $x_1, \dots, x_m$, decide whether
   $\#\varphi_0 = \#\varphi_1$, which is $\mathrm{C}_{=}\mathrm{P}$-complete
   \parencite{wagner1986complexity}. Build a circuit with a single secret bit $s$,
-  the $x_i$ as randoms, and one wire
+  the $x_i$ as randoms, and a final wire $w$ with
   \[
-    w \;=\; \varphi_0 \,\oplus\, \big(s \odot (\varphi_0 \oplus \varphi_1)\big) ,
+    \wexpr{w} \;=\; \varphi_0 \,\oplus\, \big(s \odot (\varphi_0 \oplus \varphi_1)\big) ,
   \]
   again realising the formulas over $\oplus$ and $\odot$. Then $w$ reads
   $\varphi_0$ when $s = 0$ and $\varphi_1$ when $s = 1$, so
   $N_{s=0}(1) = \#\varphi_0$ and $N_{s=1}(1) = \#\varphi_1$. The one-bit probe
-  $\{w\}$ satisfies $\mathcal{L}_{0} = \mathcal{L}_{1}$ if and only if
+  $(w)$ satisfies $\mathcal{L}_{0} = \mathcal{L}_{1}$ if and only if
   $\#\varphi_0 = \#\varphi_1$, so \textsc{Distinguish} on this circuit with
   $\mathbf{a} = 0$, $\mathbf{b} = 1$ decides the equality. The construction is
   polynomial, so \textsc{Distinguish} is $\mathrm{C}_{=}\mathrm{P}$-hard. One secret
@@ -208,7 +209,7 @@ and it is the core idea of coupling proofs for probabilistic programs given in
 Our two distributions are the laws of one probe under two secrets, and they are
 not arbitrary. Both arise as pushforwards of the same uniform source, the
 draw of a tape $\rho \in \{0,1\}^{\mathcal{R}}$, along the maps
-$\rho \mapsto O(\rho; \mathbf{a})$ and $\rho \mapsto O(\rho; \mathbf{b})$. When two
+$\rho \mapsto \mathbf{w}(\rho; \mathbf{a})$ and $\rho \mapsto \mathbf{w}(\rho; \mathbf{b})$. When two
 distributions share a source in this way, a coupling becomes
 available. So, we look for a relabelling of the source that turns one run into the
 other.
@@ -218,23 +219,24 @@ other.
 
   \begin{definition}[Coupling function]
   \label{def:coupling-function}
-  Let $O$ be a probe and $\mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}}$ two
+  Let $\mathbf{w}$ be a probe and $\mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}}$ two
   secret assignments. A \emph{coupling function} from $\mathbf{a}$ to $\mathbf{b}$
-  for $O$ is a bijection $\varphi : \{0,1\}^{\mathcal{R}} \to \{0,1\}^{\mathcal{R}}$
+  for $\mathbf{w}$ is a bijection $\varphi : \{0,1\}^{\mathcal{R}} \to \{0,1\}^{\mathcal{R}}$
   with
   \[
-    O(\rho; \mathbf{a}) \;=\; O\big(\varphi(\rho); \mathbf{b}\big)
+    \mathbf{w}(\rho; \mathbf{a}) \;=\; \mathbf{w}\big(\varphi(\rho); \mathbf{b}\big)
     \qquad \text{for every } \rho \in \{0,1\}^{\mathcal{R}} .
   \]
   \end{definition}
 
   A bijection of the finite set $\{0,1\}^{\mathcal{R}}$ automatically preserves its
-  uniform law, so ``measure-preserving'' actually just means bijectivity here. What
+  uniform law, so ``measure-preserving'' actually just means bijectivity here, as
+  Section~\ref{sec:prob-independence} already noted. What
   the identity demands is the key point. It says $\varphi$ relabels the tapes so
   that a run under $\mathbf{a}$ is reproduced, observation for observation, by a
   run under $\mathbf{b}$. Such a $\varphi$ is precisely a diagonal coupling of the
-  two laws, realised by the map $\rho \mapsto \big(O(\rho; \mathbf{a}),\,
-  O(\varphi(\rho); \mathbf{b})\big)$, whose image lies on the diagonal.
+  two laws, realised by the map $\rho \mapsto \big(\mathbf{w}(\rho; \mathbf{a}),\,
+  \mathbf{w}(\varphi(\rho); \mathbf{b})\big)$, whose image lies on the diagonal.
 
   Collecting one function per ordered pair of secrets gives a family
   $\Phi = \{\, \Phi_{\mathbf{a},\mathbf{b}} \,\}_{\mathbf{a},\mathbf{b}}$ of coupling
@@ -252,36 +254,36 @@ and the same statement.
 
 \begin{theorem}[Security is a coupling]
 \label{thm:coupling-equiv}
-A probe $O$ is secret-independent if and only if for every ordered pair of secret
+A probe $\mathbf{w}$ is secret-independent if and only if for every ordered pair of secret
 assignments $\mathbf{a}, \mathbf{b}$ there is a coupling function from $\mathbf{a}$
-to $\mathbf{b}$ for $O$.
+to $\mathbf{b}$ for $\mathbf{w}$.
 \end{theorem}
 
 \begin{proof}
 Suppose $\varphi$ is a coupling function from
 $\mathbf{a}$ to $\mathbf{b}$. For any observation $o$, the identity
-$O(\rho; \mathbf{a}) = O(\varphi(\rho); \mathbf{b})$ and the bijectivity of
+$\mathbf{w}(\rho; \mathbf{a}) = \mathbf{w}(\varphi(\rho); \mathbf{b})$ and the bijectivity of
 $\varphi$ give
 \[
-  N_{\mathbf{a}}(o) = \big|\{\rho : O(\rho; \mathbf{a}) = o\}\big|
-  = \big|\{\rho : O(\varphi(\rho); \mathbf{b}) = o\}\big|
-  = \big|\{\rho' : O(\rho'; \mathbf{b}) = o\}\big| = N_{\mathbf{b}}(o) ,
+  N_{\mathbf{a}}(o) = \big|\{\rho : \mathbf{w}(\rho; \mathbf{a}) = o\}\big|
+  = \big|\{\rho : \mathbf{w}(\varphi(\rho); \mathbf{b}) = o\}\big|
+  = \big|\{\rho' : \mathbf{w}(\rho'; \mathbf{b}) = o\}\big| = N_{\mathbf{b}}(o) ,
 \]
 reindexing by $\rho' = \varphi(\rho)$. Hence
-$\mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)$, and if this holds for
-every pair then $O$ is secret-independent by definition.
+$\mathcal{L}_{\mathbf{a}}(\mathbf{w}) = \mathcal{L}_{\mathbf{b}}(\mathbf{w})$, and if this holds for
+every pair then $\mathbf{w}$ is secret-independent by definition.
 
 For the other way, suppose
-$\mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)$, i.e.\
+$\mathcal{L}_{\mathbf{a}}(\mathbf{w}) = \mathcal{L}_{\mathbf{b}}(\mathbf{w})$, i.e.\
 $N_{\mathbf{a}}(o) = N_{\mathbf{b}}(o)$ for every $o$. The sets
-$F_{\mathbf{a}}(o) = \{\rho \mid O(\rho; \mathbf{a}) = o\}$ partition
+$F_{\mathbf{a}}(o) = \{\rho \mid \mathbf{w}(\rho; \mathbf{a}) = o\}$ partition
 $\{0,1\}^{\mathcal{R}}$ as $o$ ranges over the observations, and likewise the
 $F_{\mathbf{b}}(o)$. Corresponding blocks have equal size, so we may pick a
 bijection $F_{\mathbf{a}}(o) \to F_{\mathbf{b}}(o)$ for each $o$ and take their
 union $\varphi$. It is a bijection of $\{0,1\}^{\mathcal{R}}$, and by construction
 it carries each $\rho \in F_{\mathbf{a}}(o)$ to some
-$\rho' \in F_{\mathbf{b}}(o)$, so $O(\varphi(\rho); \mathbf{b}) = o =
-O(\rho; \mathbf{a})$. So, $\varphi$ is a coupling function from $\mathbf{a}$ to
+$\rho' \in F_{\mathbf{b}}(o)$, so $\mathbf{w}(\varphi(\rho); \mathbf{b}) = o =
+\mathbf{w}(\rho; \mathbf{a})$. So, $\varphi$ is a coupling function from $\mathbf{a}$ to
 $\mathbf{b}$.
 \end{proof}
 
@@ -291,8 +293,8 @@ $\mathbf{b}$.
   Applying Theorem~\ref{thm:coupling-equiv} to every probe lifts the equivalence
   to the whole circuit. It is $d$-probing secure exactly when every probe of size
   at most $d$ admits a family of coupling functions, one per ordered pair of
-  secrets. The two runs with differing secrets are indistinguishable through any
-  $d$ wires precisely because a coupling can relabel the randomness of one into the
+  secrets. Two runs with differing secrets give any $d$ wires the same law
+  precisely because a coupling can relabel the randomness of one into the
   randomness of the other, wire for wire.
 
   The construction of such a coupling, assuming that the probe does not leak, turns
@@ -308,11 +310,11 @@ $\mathbf{b}$.
 
 The randomness substitutions of Section~\ref{sec:randomness-substitution} can become the
 building blocks of an explicit coupling. Recall that a substitution
-$\sigma = (r \mapsto e \oplus r)$ induces a measure-preserving map
+$\sigma = (r \mapsto e \oplus r)$ induces a bijection
 $\widehat{\sigma}$ of $\{0,1\}^{\mathcal{R}}$, with
 $(w\sigma)(\rho) = w(\widehat{\sigma}(\rho))$ for every wire
 (Lemma~\ref{lem:substitution}). Each such $\widehat{\sigma}$ is a coupling function
-in a small scale, a single measure-preserving relabelling of the tape, and couplings of
+in a small scale, a single relabelling of the tape, and couplings of
 this shape luckly compose. A finite chain of substitutions therefore composes into a
 bijection of the randomness, and it is this composite that we will exhibit as the
 witness of Theorem~\ref{thm:coupling-equiv}.
@@ -323,7 +325,7 @@ witness of Theorem~\ref{thm:coupling-equiv}.
   A \emph{derivation} for a probe is a finite sequence of substitutions
   $\sigma_1, \dots, \sigma_K$ that rewrites the probe, one randomness relabelling
   at a time, until no secret remains in its expression. Composing the induced maps
-  under a fixed secret $\mathbf{a}$ gives a single measure-preserving bijection
+  under a fixed secret $\mathbf{a}$ gives a single bijection
   $\varphi_{\mathbf{a}} = \widehat{\sigma_1} \circ \dots \circ \widehat{\sigma_K}$
   of $\{0,1\}^{\mathcal{R}}$, and setting $\Phi_{\mathbf{a},\mathbf{b}} =
   \varphi_{\mathbf{b}} \circ \varphi_{\mathbf{a}}^{-1}$ assembles the family of

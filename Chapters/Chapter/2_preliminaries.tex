@@ -36,53 +36,114 @@ where it appears.
   variable $x_i$ (meaning that flipping $x_i$ can change the output) if and only if
   some monomial of the ANF contains $x_i$.
 
-  \subsection{Probability Distributions and Statistical Independence}
+  \subsection{Distributions, Laws, and Independence}
   \label{sec:prob-independence}
 
-  Probing security is a statement about distributions, so we fix the little we
-  need. A \emph{distribution} on a finite set $X$ is a function $\mu : X \to [0,1]$
-  with $\sum_{x \in X} \mu(x) = 1$, and the \emph{uniform} distribution assigns
-  $\mu(x) = 1/|X|$ to every $x$. A random variable $Z$ into a finite set induces
-  the distribution $x \mapsto \Pr[Z = x]$, its \emph{law}, and two random variables
-  are \emph{identically distributed} when their laws agree on every value.
+  Probing security is a statement about distributions, so we fix the little background 
+  we need here.
+
+  A \emph{distribution} on a finite set $X$ is
+  a function $\mu : X \to [0,1]$ with $\sum_{x \in X} \mu(x) = 1$. It extends to
+  subsets by summing, $\mu(A) = \sum_{x \in A} \mu(x)$ for $A \subseteq X$, and in
+  that form it is called a \emph{measure}, so a distribution is a measure of total weight
+  $1$, and we use the two words interchangeably. The \emph{uniform} distribution
+  assigns $\mu(x) = 1/|X|$ to every point, hence $\mu(A) = |A|/|X|$ to every
+  subset. On a cube $X = \{0,1\}^{n}$ the uniform distribution
+  is the \emph{product} of the uniform distribution on each of the $n$ coordinates,
+  giving $\mu(x) = 2^{-n}$ for every $x \in X$.
+
+  A random variable $Z$ into a finite set $X$ induces
+  the distribution $x \mapsto \Pr[Z = x]$, its \emph{law}. Two random variables are
+  \emph{identically distributed} when their laws agree on every value.
 
   The security notion we are after is the independence of a family of laws from a
-  parameter. Suppose a random variable $Z$ depends on a parameter $s$, so that each
-  value of $s$ gives a law $\mu_s$. We say $Z$ is \emph{independent of} $s$ when
-  $\mu_s$ is one and the same distribution for every value of $s$. For probing
-  security the parameter is the secret assignment and the law is that of a probe,
-  as Section~\ref{sec:d-probing} makes precise.
-  One way to prove that two laws are equal is through a measure-preserving
-  bijection: if $\pi$ carries the uniform distribution on $X$ to itself, then for
-  any function $g$ the variables $g(Z)$ and $g(\pi(Z))$ are identically distributed
-  when $Z$ is uniform.
+  parameter, which we state below.
+
+  \begin{definition}[Independence of a parameter]
+  \label{def:independence}
+  Let $Z$ be a random variable into $X$ whose distribution depends on a parameter
+  $s$ ranging over a set $\Sigma$. Write $Z_s$ for $Z$ under the value $s$ and
+  $\mu_s$ for the law of $Z_s$, that is $\mu_s(z) = \Pr[Z_s = z]$, so that $s$
+  selects one distribution out of the family $(\mu_s)_{s \in \Sigma}$. We say $Z$ is
+  \emph{independent of} $s$ when
+  \[
+    \mu_s \;=\; \mu_{s'} \qquad \text{for all } s, s' \in \Sigma.
+  \]
+  \end{definition}
+
+  We prove that two laws are equal by carrying one onto the other
+  with a map that does not disturb the distribution.
+
+  \begin{definition}[Measure-preserving map]
+  \label{def:measure-preserving}
+  A map $\pi : X \to X$ on a finite set is \emph{measure-preserving} for a
+  distribution $\mu$ when
+  \[
+    \mu\big(\pi^{-1}(A)\big) \;=\; \mu(A) \qquad \text{for every } A \subseteq X .
+  \]
+  \end{definition}
+
+  If $Z$ has law $\mu$, then $\pi(Z)$, the random variable obtained by applying
+  $\pi$ to each outcome, has law $A \mapsto \mu(\pi^{-1}(A))$, which is called the
+  \emph{pushforward} of $\mu$ along $\pi$. The condition in the above definition says exactly that
+  the pushforward is $\mu$ again.
+
+  For the uniform distribution the condition becomes bijectivity. As $|\pi^{-1}(A)| = |A|$
+  for every $A$ forces $\pi$ to be injective, and an injection of a finite set into
+  itself is onto. Every measure-preserving map in this thesis is of this kind, so
+  the phrase may be read as ``bijective'' throughout. The technique we use
+  simply states that if $\pi$ preserves the uniform distribution on $X$ and $Z$ is
+  uniform, then for any function $g$ the variables $g(Z)$ and $g(\pi(Z))$ are
+  identically distributed.
 
   \subsection{Boolean Circuits and Gates}
   \label{sec:bool-circuits}
 
 We now introduce the object the rest of the thesis is built on.
 The definition is the standard digraph formulation of a circuit, specialised to
-arithmetic over the two-element field.
+arithmetic over the two-element field. On top of that graph we then read off, for
+each wire, the $\mathbb{F}_2$ polynomial it computes. So, the graph is the circuit,
+the polynomial on the wire is the
+\emph{syntax} our checker rewrites, and the function that polynomial denotes is
+the \emph{semantics} every claim in the thesis is ultimately about.
 
 \begin{definition}[Arithmetic circuit over $\mathbb{F}_2$]
 \label{def:circuit}
 Fix the field $\mathbb{F}_2 = \{0,1\}$ and a set $S = \{s_i\}$ of \emph{gate
 functions}, each of some arity $a_i \in \mathbb{N}_{\geq 1}$, i.e.\ each $s_i$
-maps $\mathbb{F}_2^{\,a_i}$ to $\mathbb{F}_2$. A \emph{circuit} $C$ is a finite
-directed graph (a \emph{digraph}) containing no directed cycle, such that:
+maps $\mathbb{F}_2^{\,a_i}$ to $\mathbb{F}_2$. A \emph{circuit} is a triple
+$C = (\mathcal{W}, \lambda, \mathrm{op})$ in which
 \begin{itemize}
-  \item Every vertex of indegree $0$ is labelled either by an
-  \emph{indeterminate}, in which case it is an \emph{input gate}, or by an
-  element of $\mathbb{F}_2$, in which case it is a \emph{constant gate}. The
-  input gates are partitioned into \emph{secret} inputs $\mathcal{S}$,
-  \emph{random} inputs $\mathcal{R}$, and \emph{public} inputs $\mathcal{P}$.
-  \item Every remaining vertex is a \emph{computation gate}, labelled by a
-  function $s_i \in S$ whose arity $a_i$ coincides with the vertex's indegree.
-  A computation gate of outdegree $0$ is an \emph{output gate}.
+  \item $\mathcal{W}$ is a finite set whose elements we call the \emph{wires},
+  the vertices of the graph, partitioned as
+  \[
+    \mathcal{W} \;=\;
+      \underbrace{\mathcal{S} \uplus \mathcal{R} \uplus \mathcal{P}}_{\text{input wires } \mathcal{V}}
+      \;\uplus\; \mathcal{G}
+  \]
+  into \emph{secret}, \emph{random} and \emph{public} inputs (jointly constituting the
+  input wires $\mathcal{V}$, and each carrying a variable) together with the
+  \emph{computation gates} $\mathcal{G}$,
+  \item $\lambda$ labels each computation gate $w$ with a gate function
+  $\lambda(w) \in S$,
+  \item $\mathrm{op}$ assigns to each computation gate $w$ its \emph{operand
+  tuple} $\mathrm{op}(w) = (u_1, \dots, u_a) \in \mathcal{W}^{a}$, where $a$ is
+  the arity of $\lambda(w)$.
 \end{itemize}
-We call the vertices \emph{wires}, and for a computation gate we speak
+subject to the requirement that the digraph $(\mathcal{W}, E)$ with edge set
+\[
+  E \;=\; \big\{\, (u, w) \mid w \in \mathcal{G}, \ u \in \mathrm{op}(w) \,\big\}
+\]
+contain no directed cycle. The input wires $\mathcal{V}$ have
+indegree $0$; a computation gate has indegree the arity of its label, and a vertex of
+outdegree $0$ is an \emph{output gate}. For a computation gate we speak
 interchangeably of the gate and the wire carrying its output.
 \end{definition}
+
+% Recording the operands as a tuple, rather than reading them off the incoming
+% edges, is deliberate. It orders them, which a non-commutative gate function would
+% need, and it lets a gate take the same wire twice, as in $w = u \odot u$; the edge
+% set $E$ forgets both and is used only to state acyclicity.
 
 Over $\mathbb{F}_2$ there is no difference between the Boolean and the arithmetic
 view of such a circuit: exclusive-or is addition, logical-and is
@@ -92,7 +153,8 @@ $\mathbb{F}_2^{\,n} \to \mathbb{F}_2$, i.e. they are universal. So we fix
   S = \{\,\oplus,\ \odot\,\},
 \]
 addition and multiplication in $\mathbb{F}_2$ (Section~\ref{sec:field-f2}), both
-of arity $2$. Every computation gate then has indegree exactly $2$ and reads
+of arity $2$. Every computation gate then has indegree exactly $2$, with
+$\mathrm{op}(w_i) = (w_j, w_k)$, and reads
 \[
   w_i = w_j \oplus w_k \qquad \text{or} \qquad w_i = w_j \odot w_k .
 \]
@@ -101,19 +163,138 @@ might sometimes use $\cdot$ for the same operation.
 
 Acyclicity is what makes a circuit computable. It lets us list the wires in a
 topological order $w_1, \dots, w_m$ in which the two operands of every gate
-appear before the gate itself, so that $j, k < i$. Fixing a value in
-$\mathbb{F}_2$ for every input gate --- a constant gate carries its own label
---- then determines the value of every wire by induction along this order. When
-the inputs are clear from context we write simply $w_i$ for this value.
+appear before the gate itself, so that $j, k < i$.
+
+  \subsubsection{The Syntax of a Wire}
+
+  Reading the graph along that order turns each wire into a polynomial over
+  $\mathbb{F}_2$ in the input variables. The polynomials in question are the
+  \emph{expressions}
+  \[
+    e \;::=\; 0 \;\mid\; 1 \;\mid\; v \;\mid\; e_1 \oplus e_2 \;\mid\; e_1 \odot e_2,
+    \qquad v \in \mathcal{V} = \mathcal{S} \uplus \mathcal{R} \uplus \mathcal{P},
+  \]
+  written as they are built in the graph.
+
+  \begin{definition}[The expression of a wire]
+  \label{def:wire-expr}
+  For $w \in \mathcal{W}$ the expression $\wexpr{w}$ is defined by recursion along
+  the topological order:
+  \[
+    \wexpr{w} =
+    \begin{cases}
+      v & \text{if } w \in \mathcal{V} \text{ denotes the variable } v, \\
+      \wexpr{w_j} \star \wexpr{w_k}
+        & \text{if } w \in \mathcal{G} \text{ and } \mathrm{op}(w) = (w_j, w_k),\ \star = \lambda(w).
+    \end{cases}
+  \]
+  \end{definition}
+
+  The recursion is well founded exactly because the graph is acyclic. So, the
+  operands of $w_i$ are $w_j, w_k$ with $j, k < i$, hence the second clause always
+  descends. What it produces mentions no wire and only the inputs. The sharing
+  present in the graph is unfolded away.
+
+  \subsubsection{The Semantics of a Wire}
+
+  Take as an \emph{input assignment} a map $\eta : \mathcal{V} \to \mathbb{F}_2$. Since
+  $\mathcal{V}$ is a disjoint union, we write it as a triple
+  $\eta = (\mathbf{a}, \rho, \pi)$ with a secret assignment
+  $\mathbf{a} \in \{0,1\}^{\mathcal{S}}$, a \emph{tape}
+  $\rho \in \{0,1\}^{\mathcal{R}}$, and a public assignment
+  $\pi \in \{0,1\}^{\mathcal{P}}$. The expression of a wire denotes a bit value under
+  such an assignment, by structural recursion on the grammar:
+  \[
+    \sem{0}\eta = 0, \qquad
+    \sem{1}\eta = 1, \qquad
+    \sem{v}\eta = \eta(v),
+  \]
+  \[
+    \sem{e_1 \oplus e_2}\eta = \sem{e_1}\eta \oplus \sem{e_2}\eta, \qquad
+    \sem{e_1 \odot e_2}\eta = \sem{e_1}\eta \odot \sem{e_2}\eta ,
+  \]
+  where the two operators on the left of each of the last two clauses are syntax
+  and the ones on the right are the field operations of
+  Section~\ref{sec:field-f2}. This is the usual reading of a polynomial as the
+  function it computes.
+
+  \begin{definition}[The wire function]
+  \label{def:wire-function}
+  The \emph{wire function} of $w \in \mathcal{W}$ in the circuit $C$ is
+  \[
+    \sem{w}_C \;=\; \sem{\wexpr{w}} \;:\;
+      \{0,1\}^{\mathcal{S}} \times \{0,1\}^{\mathcal{R}} \times \{0,1\}^{\mathcal{P}}
+      \;\longrightarrow\; \mathbb{F}_2 .
+  \]
+  \end{definition}
+
+  So a wire \emph{is}, semantically a Boolean function, and equivalently,
+  by Section~\ref{sec:field-f2}, a multilinear $\mathbb{F}_2$ polynomial function,
+  which eats a secret, a random and a public assignment and returns one bit.
+  The wire functions are built on top of one another over the shared variables of $\mathcal{V}$,
+  since a gate's function is its two operands' functions combined by $\oplus$ or
+  $\odot$, with the input wires supplying the variables everything else is built
+  from. Fixing $\eta$ and evaluating gate by gate along the topological order
+  computes exactly $\sem{w}_C(\eta)$ for every $w$, so the polynomial reading and
+  the operational one are essentially the same.
+
+  For example, a gate $c = p \oplus r$ whose operand $p$ is itself the gate
+  $s \odot m$ has $\wexpr{c} = (s \odot m) \oplus r$, a polynomial in the secret
+  $s$ and the randoms $m, r$, denoting the function
+  $(\mathbf{a}, \rho) \mapsto \big(\mathbf{a}(s) \odot \rho(m)\big) \oplus \rho(r)$.
+
+  Since the publics are held fixed throughout the thesis we suppress $\pi$, and we
+  follow the usual abuse of notation to denote with $w$ both for the wire and for
+  the function it denotes (i.e., $w(\rho; \mathbf{a}) = \sem{w}_C(\mathbf{a}, \rho, \pi)$).
+  When the secrets are fixed as well we simply write $w(\rho)$. And a tuple of wires is made up
+  componentwise.
 
 \begin{notation}
-For a wire $w_i$, $\mathrm{vars}(w_i) \subseteq \mathcal{R}$ is the set of
-random inputs its defining sub-circuit depends on: $\mathrm{vars}(w_i) = \{w_i\}$
-if $w_i \in \mathcal{R}$, $\mathrm{vars}(w_i) = \emptyset$ if
-$w_i \in \mathcal{S} \cup \mathcal{P}$ or $w_i$ is a constant gate, and
-$\mathrm{vars}(w_i) = \mathrm{vars}(w_j) \cup \mathrm{vars}(w_k)$ for a gate
-with operands $w_j, w_k$.
+\label{not:fv-vars}
+The \emph{free variables} $\mathrm{fv}(e) \subseteq \mathcal{V}$ of an expression
+are those it mentions, defined by structural recursion:
+$\mathrm{fv}(0) = \mathrm{fv}(1) = \emptyset$, $\mathrm{fv}(v) = \{v\}$, and
+$\mathrm{fv}(e_1 \star e_2) = \mathrm{fv}(e_1) \cup \mathrm{fv}(e_2)$. For a wire
+we write $\mathrm{fv}(w) = \mathrm{fv}(\wexpr{w})$, so that
+$\mathrm{fv}(w) = \{w\}$ for an input wire and
+$\mathrm{fv}(w_j) \cup \mathrm{fv}(w_k)$ for a gate with operands $w_j, w_k$. We
+set
+\[
+  \mathrm{vars}(e) \;=\; \mathrm{fv}(e) \cap \mathcal{R} \;\subseteq\; \mathcal{R}
+\]
+for the random inputs $e$ mentions, extended to a tuple of wires trivially by
+$\mathrm{vars}(\mathbf{w}) = \bigcup_i \mathrm{vars}(w_i)$, and we call $e$
+\emph{secret-free} when $\mathrm{fv}(e) \cap \mathcal{S} = \emptyset$.
 \end{notation}
+
+% Both notions are syntactic, defined by reading off an expression without evaluating it, which
+% is what makes them cheap. The price is that they over-approximate genuine
+% dependence --- $r \oplus r$ mentions $r$ but denotes $0$ --- and the following
+% one-directional lemma is all we ever need of them.
+
+% \begin{lemma}[Mentioning over-approximates dependence]
+% \label{lem:fv-dependence}
+% Let $e$ be an expression and $v \in \mathcal{V}$ with $v \notin \mathrm{fv}(e)$.
+% Then $\sem{e}\eta = \sem{e}\big(\eta[v \mapsto b]\big)$ for every input assignment
+% $\eta$ and every $b \in \mathbb{F}_2$.
+% \end{lemma}
+
+% \begin{proof}
+% Structural induction on $e$. A constant does not read $\eta$. An input variable
+% $u$ satisfies $u \neq v$, since $v \notin \mathrm{fv}(e) = \{u\}$, so it evaluates
+% to $\eta(u)$ either way. For $e_1 \star e_2$ the free variables of both operands
+% are contained in $\mathrm{fv}(e)$ and so also omit $v$, and the hypothesis applies
+% to each.
+% \end{proof}
+
+% A secret-free expression is therefore independent of the secrets in the sense of
+% Section~\ref{sec:prob-independence}. That implication is what the whole method
+% runs on: the checker rewrites a probe until it is syntactically secret-free and
+% concludes that it is semantically secret-independent. The converse fails for the
+% syntactic test, and where an exact answer is needed we appeal instead to the
+% uniqueness of the algebraic normal form (Section~\ref{sec:field-f2}), under which
+% absence of a variable from the multilinear form is equivalent to independence of
+% it.
 
 % Two conventions, fixed here once, are used throughout. First, a topological
 % order realises the circuit as a \emph{straight-line program}: each wire is
@@ -142,14 +323,26 @@ about the secret.
   \label{sec:boolean-masking}
 
   We use \emph{Boolean} masking, where shares combine by exclusive-or. An
-  \emph{$n$-sharing} of a bit $x \in \mathbb{F}_2$ is a tuple
+  \emph{$n$-sharing} of a bit $x$ is a tuple
   $(x_0, \dots, x_{n-1})$ with $x_0 \oplus \cdots \oplus x_{n-1} = x$. To draw one,
   sample $x_1, \dots, x_{n-1}$ uniformly and independently and set
-  $x_0 = x \oplus x_1 \oplus \cdots \oplus x_{n-1}$. The construction is built so
-  that any $n-1$ of the shares are then uniform and independent, hence reveal
-  nothing about $x$; only the full set of $n$ shares determines it. This is the
-  same statement, for one bit, that Section~\ref{sec:prob-independence} calls
-  independence of the secret.
+  $x_0 = x \oplus x_1 \oplus \cdots \oplus x_{n-1}$.
+
+  Placing this in the circuit of Definition~\ref{def:circuit} fixes each variable's
+  role. The shared bit is a secret input, $x \in \mathcal{S}$. The $n-1$ freshly
+  sampled shares are random inputs, $x_1, \dots, x_{n-1} \in \mathcal{R}$, and are
+  exactly the coordinates a tape $\rho$ assigns. The remaining share $x_0$ is not
+  an input but a computation gate, the $\oplus$ of $x$ with the others, so
+  $x_0 \in \mathcal{G}$ with $\mathrm{fv}(x_0) = \{x, x_1, \dots, x_{n-1}\}$ and
+  $\mathrm{vars}(x_0) = \{x_1, \dots, x_{n-1}\}$.
+
+  Leaving out any one share destroys all information about $x$. Drop $x_j$ for any
+  $j$ and let $Z$ be the tuple of the remaining $n-1$ shares, indicating a random variable.
+  Whatever the value of
+  $x$, that tuple is uniform on $\mathbb{F}_2^{\,n-1}$, so the law of $Z$ is the
+  same for $x = 0$ and for $x = 1$. That is, it is independent of $x$ in the sense of
+  Definition~\ref{def:independence}. The full tuple is not, since its sum is
+  $x$ itself.
 
   A masked circuit carries every value in shared form and replaces each operation
   by a \emph{gadget}, a sub-circuit computing a sharing of the result from sharings
@@ -179,87 +372,76 @@ are not exposited in this thesis.
   \label{sec:t-threshold}
 
   Fix a circuit with secret inputs $\mathcal{S}$, random inputs $\mathcal{R}$, and
-  public inputs $\mathcal{P}$ as in Section~\ref{sec:bool-circuits}. A
-  \emph{threshold} adversary of order $d$ chooses an \emph{observation set} of at
-  most $d$ wires and learns their joint values. The public inputs are known and the secrets
-  are held fixed, so the only randomness in play is the internal randomness
-  $\mathcal{R}$, sampled uniformly. An observation set therefore carries a joint
-  distribution over the draw of $\rho \in \{0,1\}^{\mathcal{R}}$. We call such a set
-  a \emph{probe}, and we read each of its wires as a function of $\rho$.
+  public inputs $\mathcal{P}$ as in Section~\ref{sec:bool-circuits}. An
+  adversary of order $d$ selects at most $d$ wires and learns
+  their joint values. That selection is the object the whole thesis reasons about,
+  so we name it and give its notation.
+
+  \begin{definition}[Probe]
+  \label{def:probe}
+  A \emph{probe} of order $d$ is a tuple
+  $\mathbf{w} = (w_1, \dots, w_k)$ of $k \le d$ distinct wires of the circuit. Under
+  a secret assignment $\mathbf{a} \in \{0,1\}^{\mathcal{S}}$ and a tape
+  $\rho \in \{0,1\}^{\mathcal{R}}$ it takes the joint value
+  \[
+    \mathbf{w}(\rho; \mathbf{a}) \;=\;
+      \big(w_1(\rho; \mathbf{a}), \dots, w_k(\rho; \mathbf{a})\big)
+      \;\in\; \{0,1\}^{k} ,
+  \]
+  each component being the wire function of Definition~\ref{def:wire-function}
+  with the publics held fixed. We write $\mathcal{L}_{\mathbf{a}}(\mathbf{w})$ for
+  the \emph{law} of the probe under $\mathbf{a}$, i.e., the distribution of
+  $\mathbf{w}(\rho; \mathbf{a})$ over a uniform pick of $\rho$.
+  \end{definition}
+
+  We follow the convention of Section~\ref{sec:notation} in setting the tuple in
+  boldface, and we use $\mathbf{w}$ for a probe throughout the thesis. The
+  literature also calls a probe an \emph{observation set}, and calls a value
+  $o \in \{0,1\}^{k}$ that the probe can take an \emph{observation}. We use the
+  word observation as well, and say ``probe'' for the tuple.
+
+  % Listing the wires as a tuple rather than a set is a convenience, not a
+  % commitment: the components are distinct and reordering them merely permutes the
+  % coordinates of $\mathbf{w}(\rho; \mathbf{a})$, so it does not change whether the
+  % law depends on the secrets. We therefore pass freely between the two readings,
+  % writing $w \in \mathbf{w}$ for membership and $|\mathbf{w}| = k$ for the size. The
+  % public inputs are known and the secrets are held fixed, so the only randomness in
+  % play is the internal randomness $\mathcal{R}$, sampled uniformly, and every wire
+  % of a probe is read as a function of $\rho$ alone.
 
   \subsection{\NoCaseChange{$d$}-Probing Security}
   \label{sec:d-probing}
 
   \begin{definition}[$d$-probing security]
   \label{def:d-probing}
-  A circuit is \emph{$d$-probing secure} if for every observation set of at most
-  $d$ wires the joint distribution of that set, taken over uniform
-  $\rho \in \{0,1\}^{\mathcal{R}}$, is independent of the secret inputs in the sense
-  of Section~\ref{sec:prob-independence}. Equivalently, the law of the set is one
-  and the same for every assignment to $\mathcal{S}$.
+  A circuit is \emph{$d$-probing secure} if every probe $\mathbf{w}$ of order $d$
+  is \emph{secret-independent}. So, its law, taken over uniform
+  $\rho \in \{0,1\}^{\mathcal{R}}$, is independent of the secret assignment in the
+  sense of Definition~\ref{def:independence},
+  \[
+    \mathcal{L}_{\mathbf{a}}(\mathbf{w}) = \mathcal{L}_{\mathbf{b}}(\mathbf{w})
+    \qquad \text{for all } \mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}} .
+  \]
   \end{definition}
 
-  The order $d$ counts the probes the adversary is granted, and an $n$-share
+  The order $d$ counts the wires the adversary is granted, and an $n$-share
   masking is usually meant to withstand $d = n-1$ of them. The definition
-  quantifies over sets of wires read from a single run of the circuit, rather than single indivdual wires,
+  quantifies over tuples of wires read from a single run of the circuit, rather than single indivdual wires,
   since a masking leaks only jointly. And it is a worst-case statement over all
-  $\sum_{i \le d} \binom{|\mathcal{W}|}{i}$ observation sets of the circuit's wires
-  $\mathcal{W}$. Verifying this definition for the circuits we defined is the task
-  of the whole thesis.
+  $\sum_{i \le d} \binom{|\mathcal{W}|}{i}$ probes on the circuit's wires
+  $\mathcal{W}$. Verifying this definition for the circuits we defined is our main
+  task.
 
-  \subsection{Probabilistic Non-Interference}
-  \label{sec:pni}
+  % The displayed condition is Definition~\ref{def:independence} with the secret
+  % assignment as the parameter and $\mathcal{L}_{\mathbf{a}}(\mathbf{w})$ as the
+  % family of laws, so the law of a probe is one and the same whatever the secrets
+  % are and we cannot deduce anything about them from the values on the probe. The
+  % verification literature calls this condition \emph{probabilistic
+  % non-interference} \parencite{barthe2015verified}; we note the name for the reader
+  % who meets it elsewhere, but we keep to the equality of laws above, which is the
+  % only form of the condition the thesis uses. Every statement we prove is an
+  % equality of two laws, and every proof establishes one.
 
-  The distributional condition of Definition~\ref{def:d-probing} has an equivalent
-  phrasing the verification literature prefers, \emph{probabilistic
-  non-interference} \parencite{barthe2015verified}. It helps to study it and understand 
-  in different views, so below we give three perspectives that realize the same notion. Fix a
-  probe $O$ with $|O| \le d$. Under a secret assignment $\mathbf{a} \in
-  \{0,1\}^{\mathcal{S}}$ and uniform randomness $\rho$, the probe takes the joint
-  value $O(\rho; \mathbf{a}) = \big(w(\rho; \mathbf{a})\big)_{w \in O}$ and we
-  write $\mathcal{L}_{\mathbf{a}}(O)$ for its law --- the distribution of that value
-  over the draw of $\rho$.
-
-  The first reading is an equality of laws. Definition~\ref{def:d-probing} says of
-  a $d$-probing secure circuit that
-  \[
-    \mathcal{L}_{\mathbf{a}}(O) = \mathcal{L}_{\mathbf{b}}(O)
-    \qquad \text{for all } \mathbf{a}, \mathbf{b} \in \{0,1\}^{\mathcal{S}}
-    \text{ and every } O \text{ with } |O| \le d ,
-  \]
-  so the law of a probe is one and the same whatever the secrets are, hence we cannot
-  deduce information about the secrets by looking at the values on the probe.
-
-  The second reading is \emph{simulability}, and it is the one that names
-  non-interference. A probe $O$ is non-interfering when some randomised algorithm
-  $\mathsf{Sim}(O)$, given the probe and the public inputs but never the secrets,
-  has output law equal to $\mathcal{L}_{\mathbf{a}}(O)$ for every $\mathbf{a}$. Such
-  a probe shows the adversary nothing it could not have produced on its own without
-  the secret. Simulability and
-  equality of laws are the same property. If the laws agree, their common value is a
-  distribution the simulator samples outright, and conversely a single simulator
-  that matches every $\mathbf{a}$ forces all the $\mathcal{L}_{\mathbf{a}}(O)$ to
-  coincide with its output, hence with one another.
-
-  The third reading is a game, and it is the sharpest picture of what security
-  entails for the adversary. The adversary names a probe $O$ of size at most $d$ together
-  with two secret assignments $\mathbf{a}_0$ and $\mathbf{a}_1$. A challenger draws
-  a hidden bit $c \in \{0,1\}$ and fresh randomness $\rho$, runs the circuit under
-  $\mathbf{a}_c$, and hands back the transcript $O(\rho; \mathbf{a}_c)$. The
-  adversary guesses $c$, and its advantage $\big|\Pr[\text{guess} = c] -
-  \tfrac{1}{2}\big|$ is at most the statistical distance
-  \[
-    \tfrac{1}{2} \sum_{o} \big| \mathcal{L}_{\mathbf{a}_0}(O)(o)
-      - \mathcal{L}_{\mathbf{a}_1}(O)(o) \big|
-  \]
-  between the two laws, with equality for the optimal guess. The circuit is
-  $d$-probing secure exactly when this distance is zero for every $O$,
-  $\mathbf{a}_0$, and $\mathbf{a}_1$, so that the two secret worlds are perfectly
-  indistinguishable through any $d$ wires. We call this
-  \emph{secret-indistinguishability}.
-
-  The three are one condition seen from three sides, equal laws, a secret-free
-  simulator, and a game no adversary wins.
   % To show that a probe is non-interfering, it is enough to
   % rewrite its wires into a form in which the secrets have cancelled, which is the
   % program logic Barthe et al.\ introduce and the engine of
@@ -288,27 +470,49 @@ are not exposited in this thesis.
 
 This section isolates, as a single reusable fact, the probabilistic argument
 our checker automates. Fix a circuit as in Section~\ref{sec:bool-circuits},
-with random inputs $\mathcal{R}$, and let a \emph{randomness assignment}, or
-\emph{tape}, be a function $\rho : \mathcal{R} \to \{0,1\}$. The secrets and public
+with random inputs $\mathcal{R}$, and recall that a \emph{randomness assignment},
+or \emph{tape}, is a function $\rho : \mathcal{R} \to \{0,1\}$. The secrets and public
 inputs are held fixed throughout, so every wire $w$ denotes a function $w(\rho)$ of
-$\rho$ alone. A \emph{probe} is an observation set of Section~\ref{sec:d-probing},
-which we list as a tuple $\mathbf{w}$ of wires; its order does not affect the joint
-distribution. That section phrases $d$-probing security as the demand that the
-joint distribution of a probe of size at most $d$, taken over the uniformly
-distributed $\rho$, not move as the secrets vary.
+$\rho$ alone (Definition~\ref{def:wire-function}). A probe $\mathbf{w}$ is as in
+Definition~\ref{def:probe}, a tuple of at most $d$ wires whose order does not
+affect the joint distribution, and Definition~\ref{def:d-probing} asks that this
+joint distribution, taken over the uniformly distributed $\rho$, not move as the
+secrets vary.
 
 The whole argument rests on one line of $\mathbb{F}_2$ arithmetic: for any fixed
 bit $c$, the translation/shear $b \mapsto c \oplus b$ is a \emph{bijection} of $\{0,1\}$
-that preserves the uniform distribution (i.e. it is its own inverse and merely swaps
+that preserves the uniform distribution (i.e., it is its own inverse and merely swaps
 the two outcomes). Everything below is this fact, applied to a single coordinate
 of $\rho$ with every other coordinate fixed.
 
+Substitution is the syntactic half of that fact, and we mention that first. For
+$r \in \mathcal{R}$ and an expression $t$, write $r \mapsto t$ for the
+\emph{substitution} sending $r$ to $t$, and $e[r \mapsto t]$ for its application
+to an expression $e$, which replaces every occurrence of $r$ in $e$ by $t$. The
+brackets mark the application and the arrow names the substitution being applied.
+Application is by structural recursion on the grammar of
+Section~\ref{sec:bool-circuits}:
+\[
+  r[r \mapsto t] = t, \qquad
+  u[r \mapsto t] = u \quad (u \in \mathcal{V} \cup \{0,1\},\ u \neq r),
+\]
+\[
+  (e_1 \star e_2)[r \mapsto t] = e_1[r \mapsto t] \star e_2[r \mapsto t]
+  \qquad (\star \in \{\oplus, \odot\}) .
+\]
+The grammar has no binders, so the recursion needs no side conditions.
+
 \begin{definition}[Randomness substitution]
 \label{def:substitution}
-Let $r \in \mathcal{R}$ and let $e$ be a wire with $r \notin \mathrm{vars}(e)$.
-The \emph{substitution} $\sigma = (r \mapsto e \oplus r)$ acts on a wire $w$ by
-replacing every occurrence of the input $r$ with the wire $e \oplus r$; we write
-the resulting wire as $w\sigma$. The same $\sigma$ acts on randomness assignments,
+Let $r \in \mathcal{R}$ and let $e$ be an expression with
+$r \notin \mathrm{vars}(e)$. The \emph{substitution}
+$\sigma = (r \mapsto e \oplus r)$ acts on any expression $e'$ by
+$e'\sigma = e'[\,r \mapsto e \oplus r\,]$, hence on a wire $w$ through its expression,
+\[
+  w\sigma \;=\; \wexpr{w}\,[\,r \mapsto e \oplus r\,] ,
+\]
+and on a probe componentwise. A chain of substitutions is applied in turn, each to
+the expression the previous one produced. The same $\sigma$ acts on randomness assignments,
 through the map $\widehat{\sigma} : \{0,1\}^{\mathcal{R}} \to
 \{0,1\}^{\mathcal{R}}$ whose image $\rho' = \widehat{\sigma}(\rho)$ shifts the
 $r$-coordinate by $e(\rho)$ and leaves every other coordinate untouched:
@@ -320,11 +524,10 @@ $r$-coordinate by $e(\rho)$ and leaves every other coordinate untouched:
 
 Geometrically, $\widehat{\sigma}$ is a \emph{shear} of the cube
 $\{0,1\}^{\mathcal{R}}$, simply, it fixes every coordinate but $r$ and offsets that one
-by $e(\rho)$. Restricted to a
-coordinate it is
-exactly the translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$, so it preserves the measure
-by translation invariance.
-We call any such map, one coordinate translated by a context
+by $e(\rho)$. On the $r$-coordinate alone it is the translation
+$\rho(r) \mapsto e(\rho) \oplus \rho(r)$, which merely swaps the two outcomes when
+$e(\rho) = 1$ and does nothing when $e(\rho) = 0$, so it leaves that coordinate
+uniform. We call any such map, one coordinate translated by a context
 depending on the others, and everything else left intact, a \emph{shear}, and use
 the word throughout.
 
@@ -336,9 +539,9 @@ $\widehat{\sigma}$ does not disturb the uniform distribution.
 \begin{lemma}[Substitution]
 \label{lem:substitution}
 For a substitution $\sigma = (r \mapsto e \oplus r)$ as in
-Definition~\ref{def:substitution}, the map $\widehat{\sigma}$ is a
-measure-preserving involution of the uniform distribution on
-$\{0,1\}^{\mathcal{R}}$, and for every wire $w$,
+Definition~\ref{def:substitution}, the map $\widehat{\sigma}$ is an involution of
+$\{0,1\}^{\mathcal{R}}$ preserving the uniform distribution
+(Definition~\ref{def:measure-preserving}), and for every wire $w$,
 \[
   (w\sigma)(\rho) \;=\; w\big(\widehat{\sigma}(\rho)\big)
   \qquad \text{for every randomness assignment } \rho .
@@ -347,25 +550,35 @@ $\{0,1\}^{\mathcal{R}}$, and for every wire $w$,
 
 \begin{proof}
 Fix every coordinate of $\rho$ other than $r$. Since $r \notin \mathrm{vars}(e)$,
-the value $e(\rho)$ depends only on these fixed coordinates, so it is constant
-as $\rho(r)$ ranges over $\{0,1\}$. On this fibre $\widehat{\sigma}$ acts by the
-translation $\rho(r) \mapsto e(\rho) \oplus \rho(r)$, which is measure-preserving.
-Hence $\widehat{\sigma}$ is a measure-preserving involution of $\{0,1\}^{\mathcal{R}}$
-preserving the uniform measure coordinatewise, and so preserving the product
-measure.
+no leaf of $e$ is $r$, so evaluating $e$ never reads the $r$-coordinate and
+$e(\rho)$ is a function of these fixed
+coordinates alone; it is therefore constant as $\rho(r)$ ranges over $\{0,1\}$. On this
+fibre $\widehat{\sigma}$ acts by the translation
+$\rho(r) \mapsto e(\rho) \oplus \rho(r)$, which is its own inverse, so
+$\widehat{\sigma}$ is an involution and in particular a bijection of
+$\{0,1\}^{\mathcal{R}}$ --- hence measure-preserving for the uniform distribution.
+Concretely, it leaves each coordinate uniform, and the uniform distribution on the
+cube is the product of those, so the cube stays uniform.
 
-To prove the stated identity, do a structural induction on $w$. For $w = r$ both sides equal
-$e(\rho) \oplus \rho(r)$. For an input $w \neq r$ both sides equal $w(\rho)$,
-since $\widehat{\sigma}$ fixes every coordinate but $r$, they are also equal. For a gate
-$w_i = w_j \oplus w_k$ or $w_i = w_j \odot w_k$, just apply the hypothesis to $w_j$
-and $w_k$ and use that $\oplus$ and $\odot$ are computed pointwise from their
-operands' values.
+For the stated identity, replace $w$ by its expression $\wexpr{w}$
+(Definition~\ref{def:wire-expr}), which mentions only input variables, and argue
+by structural induction on it. For a constant both sides are trivially equal. For
+$\wexpr{w} = r$ both sides equal $e(\rho) \oplus \rho(r)$, on the left by the
+clause $r[r \mapsto e \oplus r] = e \oplus r$, and on the right by the definition of
+$\widehat{\sigma}$. For an input variable $u \neq r$ both sides equal $u(\rho)$,
+since substitution leaves $u$ alone and $\widehat{\sigma}$ fixes every coordinate
+but $r$. For $\wexpr{w} = e_1 \oplus e_2$ or $e_1 \odot e_2$, apply the hypothesis
+to $e_1$ and $e_2$ and use that substitution distributes over both operators while
+$\oplus$ and $\odot$ are computed pointwise from their operands' values.
 \end{proof}
+
+As a small remark, realize that the above lemma generalizes exactly as expected to a
+tuple of wires $\mathbf{w}$ by coordinatewise application.
 
 \begin{corollary}[Single-occurrence discharge]
 \label{cor:single-occurrence-discharge}
-Suppose $r$ occurs exactly once among a probe $\mathbf{w}$, as an operand of a
-gate $x = e \oplus r$ with
+Suppose $r$ occurs exactly once in the expression of a probe $\mathbf{w}$, as an
+operand of a sum $x = e \oplus r$ with
 $r \notin \mathrm{vars}(e)$, and let $\sigma = (r \mapsto e \oplus r)$. Then
 $\mathbf{w}\sigma$ is identically distributed to $\mathbf{w}$ over $\rho$
 uniform, and every occurrence of $x$ in $\mathbf{w}\sigma$ has collapsed to the
@@ -393,32 +606,52 @@ derivation is nothing more than such substitutions chained together; how that
 chain is searched for is taken up in the later chapters.
 \end{remark}
 
-\section{Computational Hardness Preview}
+\section{Counting Complexity Classes}
 \label{sec:hardness-preview}
 
-Definition~\ref{def:d-probing} asks, for each observation set, whether a
-distribution stays fixed as the secrets vary, and read literally this is a
-counting question, beacuse the measures we work with are defined on discrete spaces endowed with the counting measure.
-The law of a probe assigns to each possible observation the
-number of randomness assignments $\rho$ that produce it, divided by
-$2^{|\mathcal{R}|}$, and independence of the secrets asks that these counts agree
-across different secret assignments. Chapter~\ref{chap:couplings} makes the difficulty precise,
-showing that the associated counting problem is \#P-complete, \#P being the class
-Valiant introduced for counting the accepting computations of a nondeterministic
-machine \parencite{valiant1979complexity}.
 
-The verification question of $d$-probing security, however, is a \emph{decision} problem rather than
-a counting one, so it cannot be a member of \#P. Deciding whether one probe is
-independent of the secrets compares two counts and asks whether they are equal, and
-the class of decision problems of this shape, i.e. whether a nondeterministic machine
-has exactly a prescribed number of accepting paths, is $\mathrm{C}_{=}\mathrm{P}$,
-the exact-counting counterpart of \#P studied by Wagner
-\parencite{wagner1986complexity}. Its canonical complete problem, deciding whether
-a Boolean formula has exactly a given number of satisfying assignments, is the
-equality-of-counts question in its essence, and probing security is essentially that
-question, but posed in the language of masked circuits. Locating the problem in
-$\mathrm{C}_{=}\mathrm{P}$ plainly says that an exact decision procedure is not
-expected to be efficient at all, and it is the reason this thesis does not count.
-It certifies security constructively instead, through the rewriting of
-Section~\ref{sec:randomness-substitution}, giving a checker that is sound but
-necessarily incomplete.
+Before closing off this chapter, we mention two specific complexity classes that
+will come up later in the thesis. Let $M$ be a nondeterministic polynomial-time
+Turing machine and write $\#M(x)$ for the number of accepting computation paths of $M$
+on input $x$; where $\mathrm{NP}$ asks only whether $\#M(x) > 0$, the classes we are
+concerned with look at the number itself.
+
+\begin{itemize}
+  \item $\#\mathrm{P}$, introduced by Valiant \parencite{valiant1979complexity},
+  is the class of \emph{functions} of the form $x \mapsto \#M(x)$. It is a class
+  of counting problems rather than decision problems. Its canonical member is
+  $\#\textsc{Sat}$, the number of satisfying assignments of a Boolean formula.
+
+  \item $\mathrm{C}_{=}\mathrm{P}$, studied by Wagner
+  \parencite{wagner1986complexity}, is the class of \emph{languages}
+  $\{\, x \mid \#M(x) = g(x) \,\}$ for a polynomial-time computable $g$, specifying if the
+  machine have \emph{exactly} a prescribed number of accepting paths. This is a
+  decision class, and it is the natural class of a yes-or-no question whose answer
+  rests on a comparison of two counts. Its canonical complete problem is
+  \textsc{ExactSat}, deciding whether a formula has exactly a given number of
+  satisfying assignments.
+\end{itemize}
+
+Neither class is known to sit inside the polynomial hierarchy $\mathrm{PH}$. Actually, both
+sit at least above it. Writing $\mathrm{P}^{\#\mathrm{P}}$ for the decision
+problems solvable in polynomial time with an oracle for a counting function, two
+observations place these classes. A formula is unsatisfiable exactly when its count is $0$,
+which is an instance of exact counting, so $\mathrm{coNP} \subseteq
+\mathrm{C}_{=}\mathrm{P}$; and two oracle calls, a subtraction and a test against
+zero settle any exact-counting question, so $\mathrm{C}_{=}\mathrm{P} \subseteq
+\mathrm{P}^{\#\mathrm{P}}$. Now, Toda's theorem states that $\mathrm{PH}
+\subseteq \mathrm{P}^{\#\mathrm{P}}$ \parencite{toda1991pp}, so a single counting
+oracle already decides every level of the hierarchy. In short,
+\[
+  \mathrm{P} \;\subseteq\; \mathrm{NP},\ \mathrm{coNP}
+  \;\subseteq\; \mathrm{PH} \;\subseteq\; \mathrm{P}^{\#\mathrm{P}},
+  \qquad
+  \mathrm{coNP} \;\subseteq\; \mathrm{C}_{=}\mathrm{P}
+  \;\subseteq\; \mathrm{P}^{\#\mathrm{P}} ,
+\]
+hence a problem complete for either class is well beyond anything we should expect to
+solve exactly and efficiently.
+
+Chapter~\ref{chap:couplings} shows that the two problems underlying $d$-probing
+security (computing the law of one probe, and deciding whether two secrets
+leave it unchanged) fall into exactly these two classes.

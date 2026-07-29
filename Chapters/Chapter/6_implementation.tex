@@ -22,11 +22,13 @@ Definition~\ref{def:circuit} is strictly $2$-ary, and that is deliberate. Each
 $2$-input gate output is a distinct observable, so collapsing gates would hide
 intermediate wires the adversary is allowed to probe
 (Section~\ref{sec:d-probing}). The representation here is not the circuit, and this important.
-It is how we store the \emph{value} of a wire for the algebra, and there flattening a
+It is how we store the expression $\wexpr{w}$ of a wire
+(Definition~\ref{def:wire-expr}) for the algebra, and there flattening a
 chain of same-typed gates into one $n$-ary node loses nothing, since only the
 wire's function matters and not its gate-by-gate history. So the two structures
 (one faitfhul to the topology and one keeping the expressions) live side
-by side. The $2$-ary netlist stays the authority on what may be probed, and the
+by side, exactly as the layering of Section~\ref{sec:bool-circuits} prescribes.
+The $2$-ary netlist stays the authority on what may be probed, and the
 DAG is the authority on what each probed wire computes.
 
   \subsection{A Hash-Consed \NoCaseChange{$n$}-ary Circuit DAG}
@@ -35,9 +37,11 @@ DAG is the authority on what each probed wire computes.
   An expression is a node of one of four kinds. It is a \emph{leaf} carrying an
   input variable (secret, random, or public), a \emph{constant} $0$ or $1$, an
   $n$-ary sum $\oplus$ over a list of operand nodes, or an $n$-ary product
-  $\odot$ over a list of operand nodes. A wire's value is the node its defining
-  sub-circuit builds, and the whole circuit is a single DAG in which wires that
-  share sub-structure share nodes.
+  $\odot$ over a list of operand nodes. A wire's value is the node its expression
+  builds, and the whole circuit is a single DAG in which wires that
+  share sub-structure share nodes. Building it is the recursion of
+  Definition~\ref{def:wire-expr} run once, in topological order, with the sharing
+  described next keeping it from unfolding into a tree.
 
   Sharing is the first reason for the design, and it is not incidental. A masked
   gadget reuses the same handful of masks and shares across many gates, so the

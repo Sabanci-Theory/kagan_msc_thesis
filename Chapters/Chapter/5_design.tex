@@ -34,7 +34,7 @@ wires, so that a single discharge settles many probes at once.
 All three components use couplings. When Component~II reaches a batch of
 probes it cannot dismiss as a whole, it asks Component~I to certify a
 representative; a successful discharge returns not just a secure verdict but a
-measure-preserving relabelling of the randomness space (a coupling function) that
+bijective relabelling of the randomness space (a coupling function) that
 witnesses it. Component~III substitutes that coupling in the circuit's other
 wires and gathers those that are blinded (rid of secrets) into the safe set. Component~II then
 splits the batch about that safe set and recurses, with the safe part already
@@ -49,15 +49,20 @@ Chapter~\ref{chap:implementation}.
 
 \section{Component I: The Rewrite Engine}
 \label{sec:rewrite-engine}
-% Are we clearly defining what a wire is somewhere? I believe that in the algorithm they are arithmetic expressions.
 Given a probe $\mathbf{w} = (w_1, \dots, w_k)$, $k \le d$ --- a tuple of
 wires of the circuit --- the rewrite engine decides whether $\mathbf{w}$ is
-secret-independent. It does so constructively, rather than reasoning about
+secret-independent. Throughout this chapter a wire is handled as the
+$\mathbb{F}_2$ polynomial that defines it, its expression $\wexpr{w_i}$ read off
+the circuit graph (Definition~\ref{def:wire-expr}); the engine only ever inspects
+and rewrites that syntax, while the wire functions of
+Definition~\ref{def:wire-function} are what the soundness proofs appeal to. It
+works constructively, rather than reasoning about
 probability distributions directly. It searches for a finite sequence of
 applications of Lemma~\ref{lem:substitution}
 (Section~\ref{sec:randomness-substitution}) after which $\mathbf{w}$'s form is
-syntactically free of secrets, so no secret is present in the expression of
-any $w_i$. Termination with a secret-free image certifies $\mathbf{w}$.
+secret-free in the sense of Notation~\ref{not:fv-vars}, so no secret variable
+occurs in the expression of any $w_i$. Termination with a secret-free image
+certifies $\mathbf{w}$.
 Theorem~\ref{thm:rewrite-soundness} in Section~\ref{sec:coupling-view} makes precise
 why this certificate is sound.
 
@@ -248,7 +253,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \label{def:probe-coupling}
   A \emph{coupling} of a probe $\mathbf{w}$ is a family
   $\{\,\Phi_{\mathbf{a},\mathbf{b}}\,\}_{\mathbf{a},\mathbf{b} \in \{0,1\}^{\mathcal{S}}}$
-  of measure-preserving bijections of $\{0,1\}^{\mathcal{R}}$, one per ordered
+  of bijections of $\{0,1\}^{\mathcal{R}}$, one per ordered
   pair of secret assignments, satisfying
   \[
     \mathbf{w}(\rho; \mathbf{a}) \;=\; \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho);\, \mathbf{b}\big)
@@ -259,8 +264,9 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   Definition~\ref{def:probe-coupling} says precisely where to send the randomness
   so that a run under $\mathbf{a}$ is reproduced, observation for observation, by
   a run under $\mathbf{b}$. Each $\Phi_{\mathbf{a},\mathbf{b}}$ dictates the
-  relabelling of the random variables that absorb the change of secrets. Since it is
-  measure-preserving, pushing the uniform randoms through it turns this pointwise
+  relabelling of the random variables that absorb the change of secrets. Since a
+  bijection preserves the uniform law (Section~\ref{sec:prob-independence}),
+  pushing the uniform randoms through it turns this pointwise
   identity into an equality of laws, so the distribution of
   $\mathbf{w}(\cdot;\mathbf{a})$ matches that of $\mathbf{w}(\cdot;\mathbf{b})$. A
   coupling existing for \emph{every} pair $(\mathbf{a},\mathbf{b})$ is thus the
@@ -281,7 +287,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   where $r_i \notin \mathrm{vars}(e_i)$. And after the rewrites no secret variable
   remain. It does not matter which rule proposed it, and whether the random it retires
   occurred once or many times, each $\sigma_i$ is a substitution in the sense of
-  Definition~\ref{def:substitution}, hence also a measure-preserving shear
+  Definition~\ref{def:substitution}, hence also a shear
   $\widehat{\sigma_i}$ (Lemma~\ref{lem:substitution}). The coupling is assembled
   from these shears and from nothing else, so the construction below never needs
   to know how any individual rewrite was found.
@@ -305,7 +311,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
     \varphi_{\mathbf{a}} \;=\; \widehat{\sigma_1}^{\,\mathbf{a}} \circ
     \widehat{\sigma_2}^{\,\mathbf{a}} \circ \cdots \circ \widehat{\sigma_K}^{\,\mathbf{a}},
   \]
-  which is a measure-preserving bijection of $\{0,1\}^{\mathcal{R}}$. It is the ``rewrite recipe''
+  which is a bijection of $\{0,1\}^{\mathcal{R}}$. It is the ``rewrite recipe''
   instantiated at $\mathbf{a}$.
 
   Also let $\overline{\mathbf{w}} = \mathbf{w}\sigma_1 \cdots
@@ -337,7 +343,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   \varphi_{\mathbf{a}}^{-1}$ yields $\mathbf{w}(\rho; \mathbf{a}) =
   \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho); \mathbf{b}\big)$ for all
   $\rho$. Each $\Phi_{\mathbf{a},\mathbf{b}}$ is a composition of
-  measure-preserving bijections, so the family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$
+  bijections, so the family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$
   is the right coupling of $\mathbf{w}$.
   \end{proof}
 
@@ -471,7 +477,7 @@ in batches as large as possible rather than one at a time.
     \text{every subset of which is secret-independent.}
   \]
   This will be further explained in Component III. Put briefly,
-  one measure-preserving coupling
+  one coupling
   blinds every wire of $\mathsf{safe}$ simultaneously, so any subset of
   $\mathsf{safe}$, of any size, is secret-independent. Because the
   representative draws at least one wire from every factor, $\mathsf{safe}$ meets
@@ -521,7 +527,7 @@ in batches as large as possible rather than one at a time.
   \mathsf{safe}$ and every one of
   those is secret-independent by the guarantee of Component III. The algorithm
   skips it and recurses on the rest. Skipping that particular cell means, with each
-  recursion we are strictly decreasing the amount of probe sets we have to consider,
+  recursion we are strictly decreasing the number of probes we have to consider,
   which gives us our termination guarantee.
 
   \begin{theorem}[Soundness of the traversal]
@@ -553,8 +559,8 @@ in batches as large as possible rather than one at a time.
   \Secure{}. By Lemma~\ref{lem:set-vandermonde} those cells together with the
   skipped all-safe cell partition $\llbracket wl \rrbracket$; the all-safe cell is
   secret-independent by Component III, and each recursive cell is
-  $\llbracket wl_{(i_j)} \rrbracket$ of strictly smaller measure, hence secret-independent
-  by the induction hypothesis. Every probe of $\llbracket wl \rrbracket$ lies in
+  $\llbracket wl_{(i_j)} \rrbracket$ for a worklist strictly smaller in the multiset
+  order above, hence secret-independent by the induction hypothesis. Every probe of $\llbracket wl \rrbracket$ lies in
   exactly one part, so all are secret-independent. Finally, since
   $\llbracket \langle (d, \mathcal{W}) \rangle \rrbracket = \binom{\mathcal{W}}{d}$,
   a \Secure{} verdict on $\langle (d, \mathcal{W}) \rangle$ certifies that every $d$-subset
@@ -596,13 +602,13 @@ of the circuit that are not yet in the safe set and decides, for a candidate $u$
 whether the set stays jointly secret-independent once $u$ is added. What separates
 them is the certificate they reuse and the test they run on it. Their soundness
 rests on a single fact which is the following: suppose $\varphi$
-is a measure-preserving bijection of the randomness space, and suppose that for
+is a bijection of the randomness space, and suppose that for
 every wire $u$ in a set $U$ the composite $u \circ \varphi$ is independent of the secrets.
 Since $\varphi$ preserves the uniform law, the joint distribution of the wires of
 $U$ agrees with the joint distribution of the composites $u \circ \varphi$, and the
 latter does not move with the secrets.
 So the joint law of $U$ does not vary with the secrets, and by marginalisation neither
-does the law of any subset of $U$. A single measure-preserving map that blinds
+does the law of any subset of $U$. A single bijection that blinds
 every wire of $U$ at once thus certifies the entire set. We should add that the
 certified probe $\mathbf{w}$ is always kept in the safe set without a fresh test of course;
 the per-wire tests below are run only on the other candidates. We present the three
@@ -690,7 +696,7 @@ mechanisms from the weakest to the strongest and adopt the last.
 
   The mechanism we adopt keeps replay's use of the derivation and replaces its
   final test with an exact one. Section~\ref{sec:coupling-view} already showed how to view the
-  recorded derivation as a single measure-preserving bijection $\varphi$ of the
+  recorded derivation as a single bijection $\varphi$ of the
   randomness space. Coupling-driven
   extension admits a candidate wire $u$ exactly when $u \circ \varphi$ is
   independent of the secrets, and it decides that independence semantically rather
@@ -786,7 +792,7 @@ mechanisms from the weakest to the strongest and adopt the last.
   function of the randomness alone; so simply write its value as $\overline{u}(\rho)$.
 
   Fix a secret assignment $\mathbf{a}$ and let $\varphi_{\mathbf{a}}$ be the induced
-  measure-preserving bijection of the randomness space
+  bijection of the randomness space
   (Section~\ref{sec:coupling-view}). Chaining Lemma~\ref{lem:substitution} through
   the recorded steps gives, for every $u \in \mathsf{safe}$ and every $\rho$,
   \[
