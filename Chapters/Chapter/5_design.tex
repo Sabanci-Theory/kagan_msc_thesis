@@ -11,10 +11,10 @@ are partitioned into secret, random, and public inputs
 (Chapter~\ref{chap:preliminaries}), together with a probing order $d$, and
 returns a verdict: the circuit is $d$-probing secure, or it is not and a
 witnessing probe is handed back. Underneath sits the single question of
-Section~\ref{sec:d-probing}, is every set of at most $d$ wires
+Section~\ref{sec:d-probing}, is every probe (Definition~\ref{def:probe})
 secret-independent, and two difficulties have to be resolved for an answer.
-Deciding one single probe is already non-trivial --- it is a statement
-about a distribution over the randomness space --- and there are combinatorially many
+Deciding one single probe is already non-trivial, it is a statement
+about a distribution over the randomness space and there are combinatorially many
 probes to decide. The design addresses both difficulties.
 
 Three components divide the labour. \emph{Component~I}, the rewrite engine
@@ -39,7 +39,7 @@ witnesses it. Component~III substitutes that coupling in the circuit's other
 wires and gathers those that are blinded (rid of secrets) into the safe set. Component~II then
 splits the batch about that safe set and recurses, with the safe part already
 certified. Soundness of the whole rests on Component~I alone
-(Theorem~\ref{thm:rewrite-soundness}); Components~II and III only utilize its
+(Corollary~\ref{thm:rewrite-soundness}); Components~II and III only utilize its
 verdicts, adding neither unsoundness nor any incompleteness of their own.
 
 The rest of the chapter takes the three components in turn, asking
@@ -52,10 +52,10 @@ Chapter~\ref{chap:implementation}.
 Given a probe $\mathbf{w} = (w_1, \dots, w_k)$, $k \le d$ --- a tuple of
 wires of the circuit --- the rewrite engine decides whether $\mathbf{w}$ is
 secret-independent. Throughout this chapter a wire is handled as the
-$\mathbb{F}_2$ polynomial that defines it, its expression $\wexpr{w_i}$ read off
+$\mathbb{F}_2$ polynomial that defines it, its expression $\wexpr{w_i}$ is read off from
 the circuit graph (Definition~\ref{def:wire-expr}); the engine only ever inspects
 and rewrites that syntax, while the wire functions of
-Definition~\ref{def:wire-function} are what the soundness proofs appeal to. It
+Definition~\ref{def:wire-function} are what the soundness proofs appeal to. The engine
 works constructively, rather than reasoning about
 probability distributions directly. It searches for a finite sequence of
 applications of Lemma~\ref{lem:substitution}
@@ -63,10 +63,9 @@ applications of Lemma~\ref{lem:substitution}
 secret-free in the sense of Notation~\ref{not:fv-vars}, so no secret variable
 occurs in the expression of any $w_i$. Termination with a secret-free image
 certifies $\mathbf{w}$.
-Theorem~\ref{thm:rewrite-soundness} in Section~\ref{sec:coupling-view} makes precise
+Corollary~\ref{thm:rewrite-soundness} in Section~\ref{sec:coupling-view} makes precise
 why this certificate is sound.
 
-% Again, here we need to precisely define what T is. From Line 19, I think it is a stack of pairs. Also, an intuitive meaning of a derivation must be given here.
 The engine has three tiers of rewriting rules, increasing in generality and cost,
 summarized in
 Algorithm~\ref{alg:rewrite-engine} and mirrored in the structure of this section.
@@ -93,7 +92,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
 \begin{minipage}{\linewidth}
 \begin{algorithmic}[1]
 \Function{CheckProbe}{$\mathbf{w}$}
-  \Require probe $\mathbf{w}$, a tuple of wires of the circuit
+  \Require probe $\mathbf{w}$ (Definition~\ref{def:probe}), handled as the tuple of expressions $\wexpr{w_i}$
   \Ensure a verdict, \Secure{} or \Insecure{}, with the recorded derivation $T$ (the shears of \S\ref{sec:coupling-view})
   \State $(\mathit{ok}, T) \gets \Call{SimpleRewrite}{\mathbf{w}, \langle\rangle}$ \Comment{Tier 1: unfactored}
   \If{$\mathit{ok}$} \Return $(\Secure{}, T)$ \EndIf
@@ -121,7 +120,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
 \Function{GeneralRewrite}{$\mathbf{w}, \mathit{used}, \mathit{fuel}, \mathit{factored}, T$}
   \If{\Call{SecretFree}{$\mathbf{w}$}} \Return $(\mathit{true}, T)$ \EndIf
   \If{$\mathit{fuel} = 0$} \Return $(\mathit{false}, T)$ \EndIf
-  \State $r \gets \Call{FindSimple}{\mathbf{w}}$ \Comment{single-occurrence, non-root, additive}
+  \State $r \gets \Call{FindSimple}{\mathbf{w}}$ \Comment{single-occurrence, additive, non-root}
   \If{$r = \bot$} \ $r \gets \Call{FindGeneral}{\mathbf{w}, \mathit{used}}$ \Comment{multi-occurrence, at least one additive instance} \EndIf
   \If{$r = \bot$}
     \If{$\mathit{factored}$} \Return $(\mathit{false}, T)$ \EndIf
@@ -136,6 +135,25 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
 \end{minipage}
 \end{algorithm}
 
+  \subsection{The Record \NoCaseChange{$T$}}
+  \label{sec:record-T}
+
+  A piece of data the algorithm keeps track of through every routine is $T$, so we
+  clarify its contents. It is a list of pairs, initially empty and only ever
+  appended to,
+  \[
+    T \;=\; \big\langle (r_1, t_1), \dots, (r_K, t_K) \big\rangle ,
+    \qquad t_i \;=\; e_i \oplus r_i ,
+  \]
+  where the entry $(r_i, t_i)$ records that the engine replaced the random $r_i$ by
+  the expression $t_i$, i.e.\ that it applied the substitution
+  $\sigma_i = (r_i \mapsto t_i)$ of Definition~\ref{def:substitution}. The pairs
+  appear in the order the steps were taken. Both rewriting routines push in the
+  same format, \textproc{SimpleRewrite} pushes $(r, x)$ for the unique additive
+  parent $x = e \oplus r$ it collapses, \textproc{GeneralRewrite} pushes $(r, t)$
+  for the target $t = e \oplus r$ it substitutes.
+  So $T$ is exactly a derivation in the sense of Definition~\ref{def:derivation}.
+
   \subsection{The Simple Rewrite Rule}
   \label{sec:simple-rule}
 
@@ -149,7 +167,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   distributed as a fresh, independent randomness. The tier applies this rewrite
   repeatedly, and with each rewrite it possibly creates further randoms fitting the pattern,
   until either no secret variable is reachable from the probe (success) or no candidate
-  remains.
+  remains (fallback).
 
   The exclusion of probe roots is a soundness condition. A
   root's value is what the adversary observes, so it is fixed, and relabelling
@@ -186,15 +204,14 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   multi-occurrence random into a single-occurrence one; it also prefers the shallowest
   candidate. Failing that, \textproc{FindGeneral} looks for any random, not yet used
   by a previous general step, occurring at least twice with some additive parent
-  $x_1$ whose other children do not themselves depend on it --- the side condition
+  $x_1$ whose other children do not themselves depend on it, with the side condition
   $r \notin \mathrm{vars}(e)$ that Lemma~\ref{lem:substitution} requires.
 
   When both find-rules stall on the probe's current form, the engine factors
   (Section~\ref{sec:factoring}) once and retries, rather than declaring failure
   immediately. Factoring can move a random from a purely multiplicative position,
-  where neither find-rule can see it, into an additive one, but on its own it
-  eliminates no secret, so it must be interleaved with substitution rather than run
-  once up front or once at the end. Factoring is symmetrically not tried before the
+  where neither find-rule can see it, into an additive one.
+  Factoring is symmetrically not tried before the
   simple rule either. Algorithm~\ref{alg:rewrite-engine} always tries
   \textproc{SimpleRewrite} unfactored first, because factoring can destroy a
   single-occurrence opportunity the unfactored form exposes, so trying the cheap,
@@ -219,8 +236,7 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   offers no guarantee beyond trying. Even granting unlimited fuel, it only composes
   single-coordinate shears $\widehat{\sigma}$, so it can only certify
   secret-independence witnessed by a chain of substitutions, possibly interleaved
-  with factoring. Also, it should be noted that the completeness of this approach
-  is proved only in the linear/affine case.
+  with factoring.
   % TODO: the proof for the linear/affine case is not given.
 
   Termination is only argued informally, not proved. Each general substitution
@@ -230,122 +246,159 @@ bijection on the randomness space. Which becomes the \gls{coupling} that Compone
   per stall before the engine gives up on the current form. Interleaving factoring
   with two mutually triggering find-rules resists a clean potential-function
   argument, so a generous fuel counter backstops the loop instead. Exhausting fuel is
-  treated as failure, which is sound (Theorem~\ref{thm:rewrite-soundness} is never
-  invoked on a fuel-out) but not necessarily tight: a fuel-out reports the probe as
+  treated as failure, which is sound (Corollary~\ref{thm:rewrite-soundness} is never
+  invoked on a fuel-out) but not necessarily tight. So, a fuel-out reports the probe as
   though it were genuinely insecure, without exhibiting an actual distinguishing
   observation.
+
+  \subsection{The Factoring Step}
+  \label{sec:factoring-step}
+
+  \textproc{Factor} appears twice in Algorithm~\ref{alg:rewrite-engine}, as the
+  second tier and again lazily inside the third, so we explain what
+  it actually does.
+
+  Both find-rules look for a random in \emph{additive} position, as an operand of a
+  sum, because that is the only shape Lemma~\ref{lem:substitution} rewrites. A
+  random sitting only inside products is therefore invisible to them, even when the
+  probe could in fact be discharged. \textproc{Factor} reshapes the expression to
+  expose such a random, by applying the distributive law right to left over a sum of
+  products,
+  \[
+    (f \odot a) \;\oplus\; (f \odot b) \;\oplus\; \mathit{rest}
+    \;=\;
+    \big(f \odot (a \oplus b)\big) \;\oplus\; \mathit{rest} ,
+  \]
+  pulling out a factor $f$ shared by two or more summands. The inner sum
+  $a \oplus b$ is new additive structure, and a random trapped in it becomes
+  reachable. Which factor to pull out is a heuristic choice, and the pass is run
+  repeatedly and bottom-up; Section~\ref{sec:factoring} gives further implementation
+  details.
+
+  What matters here is that \textproc{Factor} is not a rewrite in the sense of
+  Section~\ref{sec:randomness-substitution}. It substitutes nothing, retires no
+  random, and pushes nothing onto $T$. The displayed equation is an identity over
+  $\mathbb{F}_2$, so the expression changes while the function it denotes does not.
+  Factoring only changes what the find-rules can see.
+
+  \subsection{Soundness of the Rules}
+  \label{sec:rule-soundness}
+
+  We can now prove the soundess of Algorithm~\ref{alg:rewrite-engine} one
+  routine at a time. Throughout, ``$T$ is a derivation
+  for $\mathbf{w}$'' means in the sense of Definition~\ref{def:derivation}, as
+  we have discussed in Section~\ref{sec:record-T}.
+
+  \begin{lemma}[\textproc{Factor} preserves values]
+  \label{lem:factor-sound}
+  For every probe $\mathbf{w}$ and every secret assignment $\mathbf{a}$,
+  $\textproc{Factor}(\mathbf{w})$ and $\mathbf{w}$ denote the same function:
+  $\textproc{Factor}(\mathbf{w})(\rho; \mathbf{a}) = \mathbf{w}(\rho; \mathbf{a})$
+  for every tape $\rho$.
+  \end{lemma}
+
+  % \begin{proof}
+  %   This is trivial.
+  % % Each application of the factoring identity replaces a subexpression by one with
+  % % the same value, since distributivity holds in $\mathbb{F}_2$
+  % % (Section~\ref{sec:field-f2}), and the denotation of an expression is built
+  % % compositionally from its subexpressions
+  % % (Section~\ref{sec:bool-circuits}). The pass is a finite number of such
+  % % replacements.
+  % \end{proof}
+  This is clear.
+
+  \begin{lemma}[\textproc{SimpleRewrite} is sound]
+  \label{lem:simple-sound}
+  If $\textproc{SimpleRewrite}(\mathbf{w}, \langle\rangle)$ returns $(\mathit{true}, T)$, then
+  $T$ is a derivation for $\mathbf{w}$ that ends in a secret-free form.
+  \end{lemma}
+
+  \begin{proof}
+  The loop pushes an entry only for a random $r$ drawn from $\mathit{todo}$, which
+  by construction occurs exactly once in $\mathbf{w}$, additively, and is not a
+  probe root. Its unique additive parent $x = e \oplus r$ satisfies
+  $r \notin \mathrm{vars}(e)$, so $\sigma = (r \mapsto e \oplus r)$ is a
+  substitution in the sense of Definition~\ref{def:substitution} and the step is an
+  instance of Corollary~\ref{cor:single-occurrence-discharge}. Relabelling $x$ as a
+  fresh random and dropping $r$ is simply the effect of applying $\sigma$. Each
+  iteration therefore appends one legitimate substitution to the record. The loop
+  returns $\mathit{true}$ only when \textproc{SecretFree}$(\mathbf{w})$ holds, that
+  is when the current expression is secret-free.
+  \end{proof}
+
+  \begin{lemma}[\textproc{GeneralRewrite} is sound]
+  \label{lem:general-sound}
+  If a call to \textproc{GeneralRewrite} on $\mathbf{w}$ with record $T_0$ returns
+  $(\mathit{true}, T)$, then $T$ extends $T_0$ to a derivation for $\mathbf{w}$
+  that ends in a secret-free form.
+  \end{lemma}
+
+  \begin{proof}
+  We do an induction on the recursion. The base case returns $\mathit{true}$ with
+  $T = T_0$ only when $\mathbf{w}$ is already secret-free. A substitution step selects
+  $r$ and an additive parent $x = e \oplus r$ with $r \notin \mathrm{vars}(e)$ (conditions
+  both \textproc{FindSimple} and \textproc{FindGeneral} enforce)
+  so $\sigma = (r \mapsto e \oplus r)$ is again a substitution in the sense of
+  Definition~\ref{def:substitution}, and $\mathbf{w}[r \mapsto t]$ is its
+  application (Lemma~\ref{lem:substitution}). The induction hypothesis applies to
+  the recursive call with the record extended by $(r,t)$. A factoring step recurses
+  on $\textproc{Factor}(\mathbf{w})$ with $T$ untouched, which is sound because
+  Lemma~\ref{lem:factor-sound} leaves the denoted function unchanged, so a
+  derivation for the factored form is a derivation for $\mathbf{w}$.
+  \end{proof}
+
+  % Nothing above depends on the search order, the fuel budget, or the heuristics that
+  % choose which random to retire next. Those govern only whether a derivation is
+  % found, never whether a found one is valid.
 
   \subsection{Relation to the Coupling-Construction View}
   \label{sec:coupling-view}
 
-  A discharge does more than answer \Secure{}/\Insecure{}. Read the
-  right way, it hands back the object Chapter~\ref{chap:couplings} studies, a
-  coupling for the probe. We state that object declaratively first, then show how
-  the engine produces one.
+  A discharge does more than answer \Secure{}/\Insecure{}. Read the right way, it
+  hands back the object Chapter~\ref{chap:couplings} studies: a coupling for the
+  probe, in the sense of Definition~\ref{def:coupling-function}. All the work has
+  been done there, and this subsection only has to observe that what the engine
+  records is a derivation.
 
-  We let the secrets range, rather than staying fixed as in
-  Section~\ref{sec:randomness-substitution}. Write
-  $\mathbf{w}(\rho; \mathbf{a})$ for the value of the probe under randomness
-  assignment $\rho \in \{0,1\}^{\mathcal{R}}$ and secret assignment
-  $\mathbf{a} \in \{0,1\}^{\mathcal{S}}$, the public inputs are held fixed.
+  Discharging a probe amounts to finding a derivation
+  (Definition~\ref{def:derivation}), a finite sequence of substitutions
+  $\sigma_1, \dots, \sigma_K$ after which no secret variable remains. It does not
+  matter which of the three tiers proposed a given step, nor whether the random it
+  retires occurred once or many times: each $\sigma_i$ is a substitution in the
+  sense of Definition~\ref{def:substitution}, hence a shear $\widehat{\sigma_i}$
+  (Lemma~\ref{lem:substitution}), and the coupling is assembled from these shears
+  and from nothing else. That is why the engine can record every step in the same
+  way, and why the construction of Section~\ref{sec:derivation-witness} never needs
+  to know how an individual rewrite was found.
 
-  \begin{definition}[Coupling of a probe]
-  \label{def:probe-coupling}
-  A \emph{coupling} of a probe $\mathbf{w}$ is a family
-  $\{\,\Phi_{\mathbf{a},\mathbf{b}}\,\}_{\mathbf{a},\mathbf{b} \in \{0,1\}^{\mathcal{S}}}$
-  of bijections of $\{0,1\}^{\mathcal{R}}$, one per ordered
-  pair of secret assignments, satisfying
-  \[
-    \mathbf{w}(\rho; \mathbf{a}) \;=\; \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho);\, \mathbf{b}\big)
-    \qquad \text{for every } \rho \in \{0,1\}^{\mathcal{R}} .
-  \]
-  \end{definition}
-
-  Definition~\ref{def:probe-coupling} says precisely where to send the randomness
-  so that a run under $\mathbf{a}$ is reproduced, observation for observation, by
-  a run under $\mathbf{b}$. Each $\Phi_{\mathbf{a},\mathbf{b}}$ dictates the
-  relabelling of the random variables that absorb the change of secrets. Since a
-  bijection preserves the uniform law (Section~\ref{sec:prob-independence}),
-  pushing the uniform randoms through it turns this pointwise
-  identity into an equality of laws, so the distribution of
-  $\mathbf{w}(\cdot;\mathbf{a})$ matches that of $\mathbf{w}(\cdot;\mathbf{b})$. A
-  coupling existing for \emph{every} pair $(\mathbf{a},\mathbf{b})$ is thus the
-  same statement as $\mathbf{w}$ being secret-independent --- which is what makes
-  it the right certificate. The family carries the structure of a groupoid:
-  one may take $\Phi_{\mathbf{a},\mathbf{a}} = \mathrm{id}$,
-  $\Phi_{\mathbf{b},\mathbf{a}} = \Phi_{\mathbf{a},\mathbf{b}}^{-1}$, and
-  $\Phi_{\mathbf{b},\mathbf{c}} \circ \Phi_{\mathbf{a},\mathbf{b}} =
-  \Phi_{\mathbf{a},\mathbf{c}}$, so for any secret assignment $\mathbf{a}_0$,
-  $\{\Phi_{\mathbf{a}_0,\,\cdot}\}$ already generate the rest of the couplings. It is these
-  properties that we care about, not any one procedure that realises them.
-
-  What the engine records is actually such a coupling. Discharging a probe amounts to
-  finding a \emph{derivation} of a finite sequence of rewrites
-  \[
-    \sigma_1 = (r_1 \mapsto e_1 \oplus r_1), \ \dots, \ \sigma_K = (r_K \mapsto e_K \oplus r_K),
-  \]
-  where $r_i \notin \mathrm{vars}(e_i)$. And after the rewrites no secret variable
-  remain. It does not matter which rule proposed it, and whether the random it retires
-  occurred once or many times, each $\sigma_i$ is a substitution in the sense of
-  Definition~\ref{def:substitution}, hence also a shear
-  $\widehat{\sigma_i}$ (Lemma~\ref{lem:substitution}). The coupling is assembled
-  from these shears and from nothing else, so the construction below never needs
-  to know how any individual rewrite was found.
-
-  \begin{theorem}[Soundness of discharge]
+  \begin{corollary}[Soundness of discharge]
   \label{thm:rewrite-soundness}
   If \textup{\textproc{CheckProbe}}$(\mathbf{w})$
-  (Algorithm~\ref{alg:rewrite-engine}) returns \textup{\Secure{}}, then the
-  joint distribution of $\mathbf{w}(\rho; \mathbf{a})$, for $\rho$ sampled
-  uniformly at random, does not depend on the secret assignment $\mathbf{a}$.
-  Moreover the recorded substitutions realise a coupling of $\mathbf{w}$ in the
-  sense of Definition~\ref{def:probe-coupling}.
-  \end{theorem}
+  (Algorithm~\ref{alg:rewrite-engine}) returns \textup{\Secure{}}, then
+  $\mathbf{w}$ is secret-independent, and the recorded derivation $T$ realises a
+  coupling $\Phi_{\mathbf{a},\mathbf{b}} = \varphi_{\mathbf{b}} \circ
+  \varphi_{\mathbf{a}}^{-1}$ of $\mathbf{w}$.
+  \end{corollary}
 
   \begin{proof}
-  Fix a secret assignment $\mathbf{a}$. Each recorded rewrite step contributes the
-  shear $\widehat{\sigma_i}$, whose defining context $e_i$ may itself contain
-  secrets, so write $\widehat{\sigma_i}^{\,\mathbf{a}}$ for its action under
-  $\mathbf{a}$ and set
-  \[
-    \varphi_{\mathbf{a}} \;=\; \widehat{\sigma_1}^{\,\mathbf{a}} \circ
-    \widehat{\sigma_2}^{\,\mathbf{a}} \circ \cdots \circ \widehat{\sigma_K}^{\,\mathbf{a}},
-  \]
-  which is a bijection of $\{0,1\}^{\mathcal{R}}$. It is the ``rewrite recipe''
-  instantiated at $\mathbf{a}$.
-
-  Also let $\overline{\mathbf{w}} = \mathbf{w}\sigma_1 \cdots
-  \sigma_K$ be the probe state the derivation ends on. Applying
-  Lemma~\ref{lem:substitution} once per step and composing gives, for every $\rho$,
-  \[
-    \mathbf{w}\big(\varphi_{\mathbf{a}}(\rho);\, \mathbf{a}\big) \;=\; \overline{\mathbf{w}}(\rho) .
-  \]
-
-  A \Secure{} verdict means $\overline{\mathbf{w}}$ is syntactically
-  secret-free, so its value is
-  one and the same for every secret assignment. Since
-  $\varphi_{\mathbf{a}}$ preserves the uniform law on $\{0,1\}^{\mathcal{R}}$, the
-  normalisation identity makes the law of $\rho \mapsto \mathbf{w}(\rho;
-  \mathbf{a})$ equal to the law of $\overline{\mathbf{w}}$, which does not depend on
-  $\mathbf{a}$. Hence the joint distribution of the probe does not depend on the
-  secret assignment.
-
-  For the coupling consider any two secret assignments
-  $\mathbf{a}, \mathbf{b}$. The normalisation identity sends both to the
-  common normal form,
-  \[
-    \mathbf{w}\big(\varphi_{\mathbf{a}}(\rho); \mathbf{a}\big)
-    \;=\; \overline{\mathbf{w}}(\rho) \;=\;
-    \mathbf{w}\big(\varphi_{\mathbf{b}}(\rho); \mathbf{b}\big) .
-  \]
-  Substituting $\rho \mapsto \varphi_{\mathbf{a}}^{-1}(\rho)$ and setting
-  $\Phi_{\mathbf{a},\mathbf{b}} = \varphi_{\mathbf{b}} \circ
-  \varphi_{\mathbf{a}}^{-1}$ yields $\mathbf{w}(\rho; \mathbf{a}) =
-  \mathbf{w}\big(\Phi_{\mathbf{a},\mathbf{b}}(\rho); \mathbf{b}\big)$ for all
-  $\rho$. Each $\Phi_{\mathbf{a},\mathbf{b}}$ is a composition of
-  bijections, so the family $\{\Phi_{\mathbf{a},\mathbf{b}}\}$
-  is the right coupling of $\mathbf{w}$.
+  \textproc{CheckProbe} returns \Secure{} in three places, and each is covered.
+  The first and third are a $\mathit{true}$ from \textproc{SimpleRewrite} and from
+  \textproc{GeneralRewrite} on $\mathbf{w}$ itself, so
+  Lemma~\ref{lem:simple-sound} and Lemma~\ref{lem:general-sound} make $T$ a
+  derivation for $\mathbf{w}$ ending secret-free. The second is a $\mathit{true}$
+  from \textproc{SimpleRewrite} on the factored probe $\mathbf{w}_f$, which gives a
+  derivation for $\mathbf{w}_f$; by Lemma~\ref{lem:factor-sound} $\mathbf{w}_f$
+  denotes the same function as $\mathbf{w}$, so it is a derivation for $\mathbf{w}$
+  as well. In every case $T$ is a derivation for $\mathbf{w}$ that ends
+  secret-free, and Theorem~\ref{thm:derivation-coupling} applies.
   \end{proof}
+
+  % The engine's task is therefore only to \emph{search} for a derivation; that any
+  % derivation it finds is a valid certificate was settled in
+  % Chapter~\ref{chap:couplings}. Component~III
+  % (Section~\ref{sec:extension}) takes the recorded $T$ and puts it to work on the
+  % rest of the circuit.
 
   % I commented the following two paragraphs as it might be confusing at this point.
   % The composite $\varphi_{\mathbf{a}}$ is displayed above as a product of shears
@@ -604,6 +657,11 @@ them is the certificate they reuse and the test they run on it. Their soundness
 rests on a single fact which is the following: suppose $\varphi$
 is a bijection of the randomness space, and suppose that for
 every wire $u$ in a set $U$ the composite $u \circ \varphi$ is independent of the secrets.
+Here $u$ is read as the wire function of Definition~\ref{def:wire-function}, so
+$u \circ \varphi$ is the map $\rho \mapsto u(\varphi(\rho); \mathbf{a})$; when we
+call it \emph{secret-free} below we mean the expression obtained by applying the
+recorded substitutions to $\wexpr{u}$, and Lemma~\ref{lem:extend-exact} is what
+makes that syntactic test agree with the semantic condition stated here.
 Since $\varphi$ preserves the uniform law, the joint distribution of the wires of
 $U$ agrees with the joint distribution of the composites $u \circ \varphi$, and the
 latter does not move with the secrets.
