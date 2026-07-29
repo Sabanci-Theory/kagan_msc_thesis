@@ -21,7 +21,8 @@ where it appears.
 
   The field $\mathbb{F}_2$ has carrier $\{0,1\}$ with addition $\oplus$, the
   exclusive-or, and multiplication $\odot$, the logical-and. Addition is its own
-  inverse, so $x \oplus x = 0$, and multiplication is idempotent, $x \odot x = x$.
+  inverse, %Suha: Grammar check 
+  so $x \oplus x = 0$, and multiplication is idempotent, $x \odot x = x$.
 
   Every function $f : \mathbb{F}_2^{\,n} \to \mathbb{F}_2$ is a polynomial over
   $\mathbb{F}_2$, and idempotence lets us take that polynomial to have no variable
@@ -52,6 +53,7 @@ where it appears.
   is the \emph{product} of the uniform distribution on each of the $n$ coordinates,
   giving $\mu(x) = 2^{-n}$ for every $x \in X$.
 
+  %Suha (suggestion): Since you are using \mathcal{L} for laws, you can start introducing this notation here.
   A random variable $Z$ into a finite set $X$ induces
   the distribution $x \mapsto \Pr[Z = x]$, its \emph{law}. Two random variables are
   \emph{identically distributed} when their laws agree on every value.
@@ -59,6 +61,7 @@ where it appears.
   The security notion we are after is the independence of a family of laws from a
   parameter, which we state below.
 
+   %Suha (suggestion): Since s is a parameter of Z, why don't you use Z(s) instead of Z_s in the definition below? 
   \begin{definition}[Independence of a parameter]
   \label{def:independence}
   Let $Z$ be a random variable into $X$ whose distribution depends on a parameter
@@ -116,6 +119,7 @@ $C = (\mathcal{W}, \lambda, \mathrm{op})$ in which
 \begin{itemize}
   \item $\mathcal{W}$ is a finite set whose elements we call the \emph{wires},
   the vertices of the graph, partitioned as
+  %Suha: What is the \uplus operation? Is it different than the regular set union?
   \[
     \mathcal{W} \;=\;
       \underbrace{\mathcal{S} \uplus \mathcal{R} \uplus \mathcal{P}}_{\text{input wires } \mathcal{V}}
@@ -124,9 +128,9 @@ $C = (\mathcal{W}, \lambda, \mathrm{op})$ in which
   into \emph{secret}, \emph{random} and \emph{public} inputs (jointly constituting the
   input wires $\mathcal{V}$, and each carrying a variable) together with the
   \emph{computation gates} $\mathcal{G}$,
-  \item $\lambda$ labels each computation gate $w$ with a gate function
+  \item $\lambda$ labels each computation gate $w \in \mathcal{G}$ with a gate function
   $\lambda(w) \in S$,
-  \item $\mathrm{op}$ assigns to each computation gate $w$ its \emph{operand
+  \item $\mathrm{op}$ assigns to each computation gate $w \in \mathclap{G}$ its \emph{operand
   tuple} $\mathrm{op}(w) = (u_1, \dots, u_a) \in \mathcal{W}^{a}$, where $a$ is
   the arity of $\lambda(w)$.
 \end{itemize}
