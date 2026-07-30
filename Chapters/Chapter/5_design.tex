@@ -464,7 +464,7 @@ in batches as large as possible rather than one at a time.
     \big|\llbracket wl \rrbracket\big| \;=\; \prod_{j=1}^{m} \binom{|W_j|}{c_j}.
   \]
   Disjointness of the $W_j$ makes that union a disjoint one, so every probe has
-  size $\sum_j c_j$ and none is described twice. Two vacaous worklists items are
+  size $\sum_j c_j$. Two vacaous worklists items are
   worth mentioning: if some factor asks for more than it holds, $|W_j| < c_j$, then
   $\binom{W_j}{c_j} = \emptyset$ and $\llbracket wl \rrbracket$ is empty; if every
   $c_j = 0$, the sole member is the empty probe. Either way there is nothing to
@@ -479,7 +479,7 @@ in batches as large as possible rather than one at a time.
   each factor about that safe set and recurse on the pieces. The next two
   subsections treat the moves prune-and-extend and split, and presents a proof
   that the split loses nothing. In this section the extension part is kept ambigious,
-  as its inner workings will be descredin in Section~\ref{sec:extension}.
+  as its inner workings will be described in Section~\ref{sec:extension}.
 
 \begin{algorithm}
 \caption{Traversing the subset space (Component II)}
@@ -521,8 +521,8 @@ in batches as large as possible rather than one at a time.
   be secret-\emph{dependent} while every one of its size-$d$ sub-tuples is
   secret-independent, hence failing to discharge $U$ says nothing about the
   individual probes. When the union fails, we descend. We pick a
-  representative $\mathbf{w} \in \llbracket wl \rrbracket$ --- one probe of
-  the target size, $c_j$ wires from each factor --- certify it with Component I,
+  representative $\mathbf{w} \in \llbracket wl \rrbracket$, one probe of
+  the target size, $c_j$ wires from each factor, certify it with Component I,
   and, if it holds, grow it with Component III (Section~\ref{sec:extension}) into a
   \emph{safe set}
   \[
@@ -534,8 +534,9 @@ in batches as large as possible rather than one at a time.
   blinds every wire of $\mathsf{safe}$ simultaneously, so any subset of
   $\mathsf{safe}$, of any size, is secret-independent. Because the
   representative draws at least one wire from every factor, $\mathsf{safe}$ meets
-  every $W_j$. This single fact is what makes the split below both exhaustive and
-  strictly progressing.
+  every $W_j$ at least $c_j$ times.
+  % This single fact is what makes the split below both exhaustive and
+  % strictly progressing.
 
   \subsection{Completeness via Vandermonde's Identity}
   \label{sec:vandermonde}
@@ -594,14 +595,25 @@ in batches as large as possible rather than one at a time.
 
   \begin{proof}
   \emph{Termination.} Order worklists by the multiset $\{ |W_1|, \dots, |W_m| \}$
-  of their ground-set sizes, under the multiset order. Take any cell the algorithm
-  recurses on: it is neither the all-safe cell nor empty, so some factor
-  $j^\ast$ has $i_{j^\ast} < c_{j^\ast}$, forcing $B_{j^\ast} \neq \emptyset$;
-  and $A_{j^\ast} \supseteq \mathbf{w} \cap W_{j^\ast} \neq \emptyset$ because the
-  representative meets every factor. So $W_{j^\ast}$ is replaced by the two
-  strictly smaller ground sets $A_{j^\ast}, B_{j^\ast}$, while no other factor's
-  ground set grows ($A_j, B_j \subseteq W_j$). The multiset strictly decreases, so
-  the recursion is well-founded.
+  of their ground-set sizes, under the multiset order. Consider the partition
+  $W_j = A_j \uplus B_j$, so $|A_j| < |W_j|$ exactly when $B_j \neq \emptyset$ and
+  $|B_j| < |W_j|$ exactly when $A_j \neq \emptyset$, hence a factor's ground set shrinks
+  precisely when the cut is non-trivial, and it never grows.
+
+  Two facts make sure that the cut is non-trivial on some factor. Skipping the all-safe cell is
+  the first. Every cell the algorithm recurses on has $(i_j)_j \neq (c_j)_j$, so
+  some factor $j^\ast$ has $i_{j^\ast} < c_{j^\ast}$, and in particular
+  $c_{j^\ast} \geq 1$. That cell is also non-empty, so its factor
+  $(c_{j^\ast} - i_{j^\ast},\, B_{j^\ast})$ has a positive count and a non-empty
+  ground set, giving $B_{j^\ast} \neq \emptyset$. The representative is the second fact,
+  because $c_{j^\ast} \geq 1$ it draws at least one wire from $W_{j^\ast}$, and it
+  lies in $\mathsf{safe}$, so $A_{j^\ast} \supseteq \mathbf{w} \cap W_{j^\ast} \neq
+  \emptyset$.
+
+  Both parts of $W_{j^\ast}$ are therefore non-empty, hence both strictly smaller
+  than $W_{j^\ast}$,
+  and every other $W_j$ is replaced by ground sets of size at most $|W_j|$. The
+  multiset strictly decreases, so the recursion is well founded.
 
   \emph{Soundness}, by induction along that order. \textproc{CheckAll} returns
   \Secure{} only in one of three ways. If the union $U = \bigcup_j W_j$
@@ -617,7 +629,7 @@ in batches as large as possible rather than one at a time.
   exactly one part, so all are secret-independent. Finally, since
   $\llbracket \langle (d, \mathcal{W}) \rangle \rrbracket = \binom{\mathcal{W}}{d}$,
   a \Secure{} verdict on $\langle (d, \mathcal{W}) \rangle$ certifies that every $d$-subset
-  of $\mathcal{W}$ is secret-independent, i.e.\ $d$-probing secure.
+  of $\mathcal{W}$ is secret-independent, i.e.\ the circuit is $d$-probing secure.
   \end{proof}
 
   We close this section with two remarks. The soundness above is one-directional by design:
@@ -770,10 +782,10 @@ mechanisms from the weakest to the strongest and adopt the last.
   staged. Initially, a fast probabilistic filter throws out the candidate wires
   that are incompatible with the coupling function we derived via evaluations.
 
-% TODO: Elaborating on FastReject, SurfaceFree, and AnfFree is needed. I am thinking whether FastReject should even enjoy its own algoritm block.
 \begin{algorithm}
 \caption{Coupling-driven extension (Component III)}
 \label{alg:extend}
+\begin{minipage}{\linewidth}
 \begin{algorithmic}[1]
 \Function{Extend}{$\mathbf{w}, \varphi, C$}
   \Require certified probe $\mathbf{w}$, coupling $\varphi$, candidate pool $C$ from the worklist
@@ -783,13 +795,14 @@ mechanisms from the weakest to the strongest and adopt the last.
     \If{\Call{FastReject}{$u, \varphi$}}
       \State \textbf{continue} \Comment{Phase 1: probabilistic filter, rejects proven-dependent $u$ only}
     \EndIf
-    \If{\Call{SurfaceFree}{$u, \varphi$} \textbf{ or } \Call{AnfFree}{$u, \varphi$}} \Comment{Phases 2--3: exact, decides $u \circ \varphi$ secret-free}
+    \If{\Call{SecretFree}{$u \circ \varphi$} \textbf{ or } \Call{AnfFree}{$u \circ \varphi$}\footnote{\textproc{AnfFree}$(w)$ returns true exactly when no secret variable occurs in the expression of $w$ after it is taken to its ANF form.}} \Comment{Phases 2--3}
       \State $\mathsf{safe} \gets \mathsf{safe} \cup \{u\}$
     \EndIf
   \EndFor
   \State \Return $\mathsf{safe}$
 \EndFunction
 \end{algorithmic}
+\end{minipage}
 \end{algorithm}
 
   The fast filter is an evaluation under two runs. It fixes random values for the
